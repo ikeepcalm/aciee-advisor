@@ -1,0 +1,28 @@
+# Java / Gradle / Maven
+backend/build/
+backend/target/
+backend/.gradle/
+*.class
+
+# Node
+frontend/node_modules/
+frontend/dist/
+
+# IDE / OS
+.idea/
+.vscode/
+*.iml
+.DS_Store
+Thumbs.db
+
+# Secrets — signing keystores, env files
+*.p12
+*.jks
+*.pem
+.env
+.env.*
+!.env.example
+
+# Local notes
+.claude/
+private/
