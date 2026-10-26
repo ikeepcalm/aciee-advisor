@@ -1,0 +1,13 @@
+spring:
+  application:
+    name: aciee-advisor
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/aciee}
+    username: ${DB_USER:aciee}
+    password: ${DB_PASSWORD:aciee}
+  liquibase:
+    change-log: classpath:db/changelog/db.changelog-master.yaml
+    contexts: ${LIQUIBASE_CONTEXTS:}
+  session:
+    jdbc:
+      initialize-schema: always
