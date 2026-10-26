@@ -4,8 +4,8 @@
 
 | Layer | Choice |
 |---|---|
-| Backend | Java 21, Spring Boot 3, Spring Security, Spring Session JDBC, Liquibase (formatted SQL changelogs) |
-| Database | PostgreSQL 17 (single DBMS) |
+| Backend | Java 25, Spring Boot 4.1, Gradle, Spring Security, Spring Session JDBC, Liquibase (formatted SQL changelogs) |
+| Database | PostgreSQL 18 (single DBMS) |
 | Frontend | Vue 3, Vite, TypeScript, Pinia, PrimeVue, vue-i18n (`ro-RO`), Chart.js via vue-chartjs |
 | Crypto | RFC 9474 blind RSA: Bouncy Castle `bcprov-jdk18on` ≥ 1.85.2 (server), `@cloudflare/blindrsa-ts` (browser), WebCrypto HKDF + AES-GCM |
 | Infra | Docker Compose: postgres + app + Caddy (automatic HTTPS) on one VPS |
@@ -225,7 +225,7 @@ Rules for `anon` tables:
 ## 7. Repository layout
 
 ```
-backend/     Spring Boot app; db/migration (schema), db/seed (fixtures profile only)
+backend/     Spring Boot app; db/changelog/schema (schema), db/changelog/fixtures (context:fixtures only)
 frontend/    Vue 3 SPA; src/crypto holds all blind-RSA code + RFC 9474 test vectors
 infra/       docker-compose.yml, Caddyfile, backup script
 loadtest/    k6 scripts

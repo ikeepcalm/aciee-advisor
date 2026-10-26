@@ -114,3 +114,12 @@ Format: context → decision → consequences. Never rewrite an accepted ADR; su
 - Objections and takedown requests go through a published contact form.
 
 **Consequences.** The assessment should be reviewed by the university's data protection officer before public launch.
+
+## ADR-013 — Java 25, Spring Boot 4.1, PostgreSQL 18
+**Context.** The original stack named Java 21, Spring Boot 3 and PostgreSQL 17. By project start (October 2026) Spring Boot 3.5 was out of open-source support and no longer offered by Spring Initializr; Java 25 and PostgreSQL 18 were the current stable releases.
+
+**Decision.** Java 25 (LTS), Spring Boot 4.1 with Gradle (Groovy DSL), PostgreSQL 18. Supersedes the version in ADR-001; the rest of ADR-001 stands.
+
+**Consequences.**
+- Supported versions for the life of the project.
+- PostgreSQL 18 ships a native `uuidv7()`. It is still forbidden in `anon` tables because it embeds a timestamp.

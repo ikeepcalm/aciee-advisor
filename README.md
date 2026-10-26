@@ -9,7 +9,7 @@ Course survival guides and anonymous, structured teacher evaluations for student
 ## Structure
 
 ```
-backend/     Java 21, Spring Boot 3, Liquibase changelogs and fixtures
+backend/     Java 25, Spring Boot 4, Liquibase changelogs and fixtures
 frontend/    Vue 3 + TypeScript SPA (ro-RO)
 infra/       Docker Compose, Caddy, backups
 loadtest/    k6 scenarios
