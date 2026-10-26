@@ -123,3 +123,100 @@ Format: context → decision → consequences. Never rewrite an accepted ADR; su
 **Consequences.**
 - Supported versions for the life of the project.
 - PostgreSQL 18 ships a native `uuidv7()`. It is still forbidden in `anon` tables because it embeds a timestamp.
+
+## ADR-014 — 3NF, with redundancy only as FK-pinned key columns
+**Context.** The first schema sketch carried derivable columns (`is_elective`, `semester_bucket`, `course_tip.offering_id`, `study_group.specialization_id`) and a few cross-table rules (a group's offerings come from its own plan; a token rates only its own offering's teachers) that are easiest to enforce with a copied column.
+
+**Decision.**
+- Every table is in 3NF; derivable columns are dropped.
+- A copied column is allowed only as part of a composite foreign key to the table it copies from, so the database keeps it equal to its source.
+- The full list of such columns is kept in `DATABASE.md` §4.
+
+**Consequences.** Cross-table rules hold without triggers. The few copied columns break 2NF/3NF on paper but cannot cause update anomalies. Some queries need one more join (for example, an offering's semester).
+
+## ADR-015 — Lookup tables, CHECK constraints and domains instead of ENUM
+**Context.** Many columns take values from small sets. PostgreSQL `ENUM` values cannot be removed or reordered without rewriting the type.
+
+**Decision.**
+- A lookup table in schema `ref` with a text natural key when the value has a UI label or the set can grow.
+- A CHECK constraint when the set is closed and code branches on it (statuses, degree, semester number).
+- Domains (`score`, `pct`, `sha256`, `week_start`) for types reused across tables.
+
+**Consequences.** New components, reason codes or exam formats are data changes, not migrations. A text key means rows read without a join. `ref` is written only by the migrator.
+
+## ADR-016 — Temporal keys; requests separate from memberships
+**Context.** A student has one home group at a time but may move between groups, and may repeat a single course with another group. The first sketch kept requests and approved memberships in one table and needed an `EXCLUDE … WHERE (status = 'approved')`.
+
+**Decision.**
+- `membership_request` holds the workflow (pending, approved, rejected). `group_membership` holds only approved facts.
+- `group_membership` has a surrogate `id` and the PostgreSQL 18 temporal key `UNIQUE (user_id, valid_during WITHOUT OVERLAPS)`, so a student can leave and re-join a group.
+- A repeated single course is an `offering_enrolment`, not a second membership.
+- Leadership is its own table (`group_leader`) keyed by the membership, so it ends when that membership ends.
+
+**Consequences.** The overlap rule is a constraint; its GiST index also serves "what can I rate". Requires `btree_gist`. Membership rows have no status-dependent NULL columns. Temporal keys cannot be `ON CONFLICT DO UPDATE` arbiters, so memberships are never upserted.
+
+## ADR-017 — Study plans own curriculum validity
+**Context.** The curriculum changes for new cohorts while older cohorts finish on the old one. The first sketch put `valid_from_ay / valid_to_ay` on every curriculum item.
+
+**Decision.** A `study_plan` per specialization and intake range (`UNIQUE (specialization_id, intake WITHOUT OVERLAPS)`). Curriculum items and study groups reference the plan; a course offering is a curriculum item given to a group.
+
+**Consequences.** Validity is stated once per plan. A new curriculum is a new plan, and history stays intact. Offerings derive their subject and semester instead of storing them.
+
+## ADR-018 — Tips and comments as versioned posts
+**Context.** Tips and comments share moderation, editing, versioning and reporting. An edit must create a pending version while the approved one stays visible.
+
+**Decision.** One `post` table (kind `tip` or `comment`, CHECK-bound to `teaching_assignment_id`) and one `post_version` table (body, status, reason, weeks). The published text is the highest approved version.
+
+**Consequences.** One moderation queue, one partial index and one report table instead of two of each. The length limit is a CHECK on `post_version` that reads the pinned `kind`.
+
+## ADR-019 — Index policy
+**Context.** Indexes cost write time and storage, and PostgreSQL does not index foreign keys automatically. Stage 4 requires each index to be justified.
+
+**Decision.**
+- Each index answers a query in the `DATABASE.md` §6 catalogue or backs a constraint.
+- Unindexed FKs are listed with the reason.
+- Partial indexes for status-filtered queues (with the status as a literal in the SQL, never a bind parameter), BRIN on the append-only audit log, and extended statistics on the pinned column pairs of the large tables.
+- Unique constraints are declared lookup column first, so one index serves both the FK and the query.
+- Demo-only indexes (the covering radar index) are created and dropped by the Stage 4 scripts, not kept in the schema.
+- Every index is evidenced with `EXPLAIN (ANALYZE, BUFFERS)` before and after.
+
+**Consequences.** No index exists without a query that needs it. A new query adds its row to the catalogue along with its index.
+
+## ADR-020 — Two connection pools with per-role limits
+**Context.** The `ident` and `anon` sides must not share credentials (ARCHITECTURE §4). A slow query or a forgotten transaction must not hold connections or locks indefinitely.
+
+**Decision.**
+- Two HikariCP pools, one per database role, each named via `ApplicationName` and with its own transaction manager. Liquibase uses a third DataSource with the migrator role.
+- Start at 10 connections each; Stage 4 measures and fixes the final size.
+- `statement_timeout`, `lock_timeout` and `idle_in_transaction_session_timeout` set per role with `ALTER ROLE`. The migrator has no statement timeout but a short lock timeout. The nightly refresh runs in a `SECURITY DEFINER` function with its own timeout.
+- No PgBouncer, no driver-level insert batching: request paths write a few rows each.
+
+**Consequences.** Limits hold whichever code path issues the query. Every `@Transactional` must name its transaction manager. Revisit pooling only if the app runs more than one instance.
+
+## ADR-021 — Tokens issued per offering, with stored blind signatures
+**Context.** Issuance keyed per semester could not issue an offering that becomes eligible later (a historical claim, a repeated course), and a response lost after commit left the student with no tokens and no way to get them.
+
+**Decision.**
+- `ident.token_issuance(user_id, offering_id)` stores the blinded message and blind signature.
+- A request must cover every eligible offering not yet issued. A retry returns the stored signatures.
+- Issuance dates are kept to the week (`issued_week`).
+- The client redeems no earlier than the day after issuance.
+
+**Consequences.** Late eligibility and lost responses are handled. Stored blinded values cannot be linked to redeemed tokens (RFC 9474 blindness). The issuance–redemption ordering visible in transaction ids is reduced, not removed; it is listed in ARCHITECTURE §3.
+
+## ADR-022 — Aggregates keep sub-k pairs; k is a setting
+**Context.** ADR-004's `HAVING count(*) >= 5` drops locked pairs from the view, so the UI cannot show "N more ratings needed". Computing N live from `rating` is the leak ADR-004 forbids. k may change.
+
+**Decision.** Partly supersedes ADR-004. The materialised views keep every pair with its count `n`; the averages are NULL until `n >= k`. `k` is read from `ref.setting`. Pooling, rounding and the nightly refresh from ADR-004 stand.
+
+**Consequences.** Counts of locked pairs become visible, scores do not. Changing k is an `UPDATE`, visible after the next refresh.
+
+## ADR-023 — Audit log written and maintained in batches
+**Context.** `audit_log` is the only table that grows without bound (5M fixture rows). A row-level trigger costs one insert per changed row. A DEFAULT partition makes adding next month's partition scan it under an exclusive lock, and fail if any row already belongs to that month.
+
+**Decision.**
+- A statement-level trigger with transition tables writes all rows a statement changed in one `INSERT … SELECT`.
+- Monthly partitions, no DEFAULT. `ensure_audit_partitions(n)` creates every missing month in one call, from a monthly scheduled job and from the creating changeset. `retire_audit_partitions(n)` detaches and drops expired months.
+- Fixture rows are generated one month per statement.
+
+**Consequences.** Bulk changes (rollover, imports) cost one audit insert per statement. An insert for a month with no partition fails loudly instead of landing in a catch-all, so the scheduled job must run; it creates several months ahead.
