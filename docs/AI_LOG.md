@@ -28,3 +28,16 @@ How AI tools were used in this project, and every AI error caught and corrected.
 | 2026-10-26 | Claude Opus 5.5 | DB design | DEFAULT audit partition blocks adding new months; no maintenance | review agent | No DEFAULT, partition functions (ADR-023) | — |
 | 2026-10-26 | Claude Opus 5.5 | DB design | `FOR UPDATE` conflicts with FK `KEY SHARE` locks | review agent | `FOR NO KEY UPDATE`, DATABASE.md §11 | — |
 | 2026-10-26 | Claude Opus 5.5 | DB design | Missing `teaching_assignment(offering_id)` index; extended stats on tiny tables | review agent | Lookup-first UQs; stats moved to large tables | — |
+
+**2026-10-28.** Claude Code (Opus 5.5) implemented W1: schema changesets, email-code authentication, auth screens; a subagent drafted `VIEWS.md`.
+
+| Date | Tool | Intent | Error | Detected by | Fix | Commit |
+|---|---|---|---|---|---|---|
+| 2026-10-28 | Claude Opus 5.5 | DB design | Radar `n = count(*)` counted ratings, not students: a professor with lecture + lab reached k with fewer than k students | implementation review | `count(DISTINCT key_hash)`, DATABASE.md §8 | — |
+| 2026-10-28 | Claude Opus 5.5 | DB design | Query catalogue missed the invite-use count, leaving `membership_request(invite_id)` unindexed | implementation review | Q17 + index | — |
+| 2026-10-28 | Claude Opus 5.5 | Auth | Wrote the session context into `SecurityContextHolder` as well as the session; the thread-local leaked between MockMvc requests | test | Save to the session repository only | — |
+| 2026-10-28 | Claude Opus 5.5 | Liquibase | `includeAll` tried to parse `fixtures/.gitkeep` | app start | Removed it; `errorIfMissingOrEmpty: false` | — |
+| 2026-10-28 | Claude Opus 5.5 | Auth | Re-signing up replaced an unverified account's password, so an attacker could plant one and let the student verify it | code-review agent | Verify requires the password (ARCHITECTURE §2), test `reSigningUpCannotPlantAPasswordOnSomeoneElsesAccount` | — |
+| 2026-10-28 | Claude Opus 5.5 | Auth | Disabled accounts could still verify; a quoted local part passed validation and hit the DB CHECK (500); mail sent inside the transaction | code-review agent | Disabled check in verify, pattern matches the CHECK, mail after commit | — |
+| 2026-10-28 | Claude Opus 5.5 | DB design | Audit UPDATE joined old/new rows on `user_id` alone for composite-key tables, multiplying rows | code-review agent | Trigger pairs on the full primary key (changeset 011) | — |
+| 2026-10-28 | Claude Opus 5.5 | DB design | Read `TG_ARGV[1]` as the first trigger argument; `TG_ARGV` is zero-based | test | 1-based slice `TG_ARGV[0:TG_NARGS - 1]` | — |

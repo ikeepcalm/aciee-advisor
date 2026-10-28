@@ -49,6 +49,10 @@ Also required throughout the semester: consistent git history, `docs/DECISIONS.m
 
 **Traction target by Dec 6:** about 60 real users and at least 8 professor × subject pairs above k.
 
+## Status
+
+**W1 (Oct 28).** Done: view specs (`docs/VIEWS.md`), the full Liquibase schema (`002`–`010`), sign-up / emailed code / sign-in / sign-out with JDBC sessions, and the auth screens. Mailpit in compose for local mail. Still open: registering our own Entra app and testing a student sign-in, and recruiting group leaders. Moved to W2 with the rest of access control: database roles, grants, RLS, per-role timeouts and the two pools.
+
 ## Checked so far
 
 - **Email delivery:** mail from an outside personal address reaches a `@student.ugal.ro` inbox. Still to test: mail from our own sending domain.

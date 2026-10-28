@@ -17,13 +17,16 @@ The SPA and `/api` are served from the same origin, so there is no CORS.
 ## 2. Authentication
 
 - **Email + password + verification code.**
-  - Code: 6 digits, 15-minute expiry, stored hashed, 5 attempts.
+  - Code: 6 digits, 15-minute expiry, stored hashed (`sha256` in SQL), 5 attempts. Sent at sign-up and when an unverified account signs in; a new code is issued at most once a minute and resets the attempts. The mail goes out after the transaction commits, so no connection is held during SMTP.
+  - **Verifying needs the code and the password.** Signing up again for an unverified address replaces its password (so a squatted address can be reclaimed), but the account only becomes verified for whoever knows both the code (owns the mailbox) and the password. Without this, anyone could plant a password on a student's unverified account and wait for the student to type the code.
+  - Sign-up is idempotent: repeating it stores the latest password and keeps the code already sent (no new mail, no error).
+  - Endpoints: `POST /api/auth/signup`, `/verify`, `/verify/resend`, `/signin`, `/signout`; `GET /api/auth/me`, `/csrf`. Errors are RFC 9457 problem details whose `detail` is a stable code (`unverified`, `code_invalid` with `attemptsLeft`, `code_expired`, …).
   - Passwords: Argon2id (`Argon2PasswordEncoder`).
 - **Microsoft sign-in (Entra OIDC)** as an alternative. Accept only the UGAL tenant `tid` and the `@student.ugal.ro` suffix.
 - **Email normalisation**: lowercase, strip `+tag`, unique index on the normalised value.
 - **Sessions**: server-side, Spring Session JDBC.
   - Cookie: `HttpOnly; Secure; SameSite=Lax`.
-  - CSRF: `CookieCsrfTokenRepository.withHttpOnlyFalse()`.
+  - CSRF: `csrf.spa()` (Spring Security 7), i.e. `CookieCsrfTokenRepository.withHttpOnlyFalse()`; the SPA echoes the `XSRF-TOKEN` cookie in `X-XSRF-TOKEN`.
 - **Mail**: sent from our own domain with SPF, DKIM and DMARC. Plain text, code only, no links.
 
 ## 3. Anonymity protocol

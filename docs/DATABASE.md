@@ -20,7 +20,9 @@ PostgreSQL 18. This document is the logical and physical design: entities, keys,
 | `ident` | Token issuance, token vault |
 | `anon` | Offering keys, submissions, ratings, posts, aggregates |
 
-All objects are owned by `aciee_owner` (NOLOGIN).
+All objects are owned by `aciee_owner` (NOLOGIN). Domains (§3.1) live in `ref`; the `ro_ro` ICU collation in `core`.
+
+**Status (W1).** The schema, views, functions and triggers are in place. The roles, grants, RLS policies, per-role limits and the two pools below come in W2 (ROADMAP); until then the app runs on one pool as the database owner.
 
 | Object | `aciee_ident` | `aciee_anon` | `aciee_report` |
 |---|---|---|---|
@@ -92,12 +94,12 @@ Changing a domain's CHECK re-validates every column that uses it (3M rows for `s
 
 | Table | Key | Columns | Notes |
 |---|---|---|---|
-| `user_account` | `id` | `email`, `email_normalized` (`GENERATED ALWAYS AS (…) STORED`) UQ, `password_hash` NULL, `entra_oid` UQ NULL, `created_at`, `disabled_at` | `CHECK (password_hash IS NOT NULL OR entra_oid IS NOT NULL)`; domain CHECK on `@student.ugal.ro` |
-| `email_verification` | `user_id` | `code_hash`, `expires_at`, `attempts` | One pending code per user. A separate table, because the data is short-lived and would otherwise be NULL columns on every account. |
+| `user_account` | `id` | `email`, `email_normalized` (`GENERATED ALWAYS AS (core.normalize_email(email)) STORED`) UQ, `password_hash` NULL, `entra_oid` UQ NULL, `created_at`, `disabled_at` | `CHECK (password_hash IS NOT NULL OR entra_oid IS NOT NULL)`; domain CHECK on `@student.ugal.ro` |
+| `email_verification` | `user_id` | `code_hash`, `sent_at`, `attempts` | One pending code per user. A separate table, because the data is short-lived and would otherwise be NULL columns on every account. |
 | `user_role` | (`user_id`, `role_code`) | | Global roles. Group leadership is scoped, so it lives in `group_leader`. |
 | `group_invite` | `id` | `group_id`, `token_hash` UQ, `expires_at`, `max_uses`, `created_by` | Uses are counted from `membership_request`, not stored. |
 | `membership_request` | `id` | `user_id`, `group_id`, `subgroup_id` NULL, `offering_id` NULL, `kind`, `invite_id` NULL, `status`, `decided_by`, `decided_at` | Workflow state. With `offering_id` set, it asks for one course only (a repeated course). FK (`group_id`, `offering_id`) → `course_offering`; FK (`subgroup_id`, `group_id`) → `subgroup`. |
-| `group_membership` | `id` | `user_id`, `group_id`, `subgroup_id`, `kind`, `source`, `request_id` UQ NULL, `valid_during` | Approved facts only, so no `status` column. `UNIQUE (user_id, valid_during WITHOUT OVERLAPS)`: one home group at a time, while leaving and re-joining a group is two rows. FK (`subgroup_id`, `group_id`) → `subgroup`. `request_id` is NULL for future `university_sync` rows. |
+| `group_membership` | `id` | `user_id`, `group_id`, `subgroup_id`, `kind`, `source` (`request` / `university_sync`, `CHECK ((source = 'request') = (request_id IS NOT NULL))`), `request_id` UQ NULL, `valid_during` | Approved facts only, so no `status` column. `UNIQUE (user_id, valid_during WITHOUT OVERLAPS)`: one home group at a time, while leaving and re-joining a group is two rows. FK (`subgroup_id`, `group_id`) → `subgroup`. `request_id` is NULL for future `university_sync` rows. |
 | `offering_enrolment` | (`user_id`, `offering_id`) | `request_id` UQ | A repeated course taken with another group. Grants a token for that offering only. |
 | `group_leader_claim` | `id` | `user_id`, `group_id`, `status`, `decided_by`, `decided_at` | |
 | `group_leader` | `membership_id` | `claim_id` UQ | A leader is a membership. Leadership ends when that membership's `valid_during` ends; policies check `valid_during @> current_date`. |
@@ -118,7 +120,7 @@ Changing a domain's CHECK re-validates every column that uses it (3M rows for `s
 | `offering_key` | `fingerprint sha256` | `offering_id`, `public_key bytea`, `active boolean` | `UNIQUE (offering_id) WHERE active`: one active key per offering, so a key can be rotated. |
 | `submission` | `key_hash sha256` | `offering_id`, `key_fingerprint` → `offering_key`, survival columns (`exam_difficulty score`, `labs_help score`, `attendance_useful`, `weekly_hours`, `exam_format`, `attendance_strictness score`); UQ(`key_hash`, `offering_id`) | One per token (ADR-011). All tokens of an offering share a key, so `key_fingerprint` reveals nothing new. |
 | `rating` | (`key_hash`, `teaching_assignment_id`) | pinned `offering_id`, `a01..a14 score` | FK (`key_hash`, `offering_id`) → `submission` `ON DELETE CASCADE`. FK (`offering_id`, `teaching_assignment_id`) → `teaching_assignment`: a token can rate only its own offering's teachers. `CHECK (num_nonnulls(a01..a14) >= 1)` |
-| `post` | `id uuid` (v4) | `key_hash`, pinned `offering_id`, `kind`, `teaching_assignment_id` NULL; UQ(`id`, `kind`); UQ(`key_hash`, `teaching_assignment_id`) | Course tips and teaching comments in one table. FK (`key_hash`, `offering_id`) → `submission` `ON DELETE CASCADE`. `CHECK ((kind = 'comment') = (teaching_assignment_id IS NOT NULL))`. At most one tip per submission (partial UQ on `key_hash WHERE kind = 'tip'`) and one comment per assignment per token. |
+| `post` | `id uuid` (v4) | `key_hash`, pinned `offering_id`, `kind`, `teaching_assignment_id` NULL; UQ(`id`, `kind`); UQ(`key_hash`, `teaching_assignment_id`) | Course tips and teaching comments in one table. FK (`key_hash`, `offering_id`) → `submission` `ON DELETE CASCADE`. FK (`offering_id`, `teaching_assignment_id`) → `teaching_assignment`, as on `rating`. `CHECK ((kind = 'comment') = (teaching_assignment_id IS NOT NULL))`. At most one tip per submission (partial UQ on `key_hash WHERE kind = 'tip'`) and one comment per assignment per token. |
 | `post_version` | (`post_id`, `version_no`) | pinned `kind`, `body`, `status`, `reason_code` NULL, `submitted_week`, `moderated_week` | Cascades from `post`. Each edit adds a version. The length CHECK depends on `kind` (1,000 / 280). `CHECK ((status = 'rejected') = (reason_code IS NOT NULL))` |
 | `post_report` | `id uuid` (v4) | `post_id`, `reason_code`, `reported_week`, `status CHECK IN ('open','dismissed','upheld')` | Cascades from `post`. No reporter id: `anon` holds no account ids. |
 
@@ -254,10 +256,11 @@ PostgreSQL does not index foreign keys automatically. Each FK below is either in
 | Q14 | Audit by time range, paged | partition pruning + `BRIN(created_at)`; pages keyset on `id` | Pruning picks the month, BRIN narrows it, the PK orders pages |
 | Q15 | Sign-in | UQ `user_account(email_normalized)`, UQ `entra_oid` | Sargable: no function applied to the indexed column at query time |
 | Q16 | Delete or archive a professor | `teaching_assignment(professor_id)` | Without it, every RESTRICT check scans the 60k assignments |
+| Q17 | Invite uses: `count(*) … WHERE invite_id = ?` | `membership_request(invite_id)` | Runs under the invite row lock on every join, so it must not scan the 220k-row table |
 
 **Partial indexes need literal predicates.** The planner matches `WHERE status = 'pending'` only when the query contains the same literal. Status values are written into the SQL text, never passed as bind parameters, or a generic plan will ignore the index.
 
-**FKs left unindexed on purpose:** `decided_by`, `created_by`, `actor_user_id` and `subject.replaced_by_id`. Nobody queries by them, and the referenced rows are never deleted (accounts are disabled, subjects replaced).
+**FKs left unindexed on purpose:** `decided_by`, `created_by`, `actor_user_id` and `subject.replaced_by_id`. Nobody queries by them, and the referenced rows are never deleted (accounts are disabled, subjects replaced). Also the offering and assignment references from `group_invite.group_id`, `offering_enrolment.offering_id`, `token_issuance.offering_id`, `submission.offering_id` and `rating(offering_id, teaching_assignment_id)`: offerings and assignments are never deleted once anyone is enrolled or has rated (a teacher change closes `valid_during`), so no RESTRICT check ever scans them.
 
 **Indexes deliberately not in the schema:**
 - `rating(teaching_assignment_id) INCLUDE (a01..a14)`. About 150 MB on 3M rows, used only by the Stage 4 index-only-scan demo, which creates and drops it.
@@ -282,15 +285,16 @@ PostgreSQL does not index foreign keys automatically. Each FK below is either in
   - Monthly range partitions, **no DEFAULT partition**: with one, creating next month's partition would scan the DEFAULT under an exclusive lock and fail if any row already matched.
   - `core.ensure_audit_partitions(months_ahead)` creates every missing month in one call. It runs from a monthly Spring `@Scheduled` job and from the changeset that creates the table.
   - `core.retire_audit_partitions(keep_months)` detaches and drops every expired month in one call. No `DELETE`, no bloat.
-  - The audit trigger is **statement-level with transition tables** (`REFERENCING OLD TABLE … NEW TABLE`). One `INSERT … SELECT` writes all rows a statement changed, instead of one insert per row.
+  - The audit trigger is **statement-level with transition tables** (`REFERENCING OLD TABLE … NEW TABLE`). One `INSERT … SELECT` writes all rows a statement changed, instead of one insert per row. PostgreSQL allows transition tables only on single-event triggers, so `core.attach_audit(table)` creates three (insert, update, delete) sharing one function. It reads the table's primary-key columns from `pg_index` and passes them to the trigger, which pairs old and new rows on the whole key (each row is serialised to `jsonb` once, then hash-joined). `row_id` is the first key column (`id`; `user_id` for `user_role` and `offering_enrolment`; `membership_id` for `group_leader`).
+  - Audited tables: `subject`, `curriculum_item`, `study_group`, `course_offering`, `professor`, `teaching_assignment`, `user_role`, `group_invite`, `membership_request`, `group_membership`, `offering_enrolment`, `group_leader_claim`, `group_leader`. Not `user_account` (the password hash would be copied into `jsonb`), `email_verification` or the session tables.
   - Fixture audit rows are generated one month per `INSERT … SELECT generate_series`, followed by `ANALYZE`.
 - **Extensions.** `btree_gist` only, for scalar columns inside GiST temporal keys and exclusions. `gen_random_uuid()` is built in.
 
 ## 8. Aggregates
 
 - `anon.rating_v` is a plain view over `rating` joined to its assignment and root subject. Both materialised views read it, so adding an axis changes one view.
-- **Root subject** is resolved with `WITH RECURSIVE … CYCLE id SET is_cycle USING path`. A subject merged twice still pools, and a replacement cycle ends the recursion instead of hanging the refresh.
-- `anon.prof_subject_radar`: every (`professor_id`, root subject) pair with `n = count(*)`. The 14 averages are `CASE WHEN n >= k THEN round(avg, 1) END`, with `k` from `ref.setting`. The UI shows "locked — `k - n` more ratings needed" from the same row. Unique index on (`professor_id`, `subject_id`).
+- **Root subject** is resolved once, in the view `core.subject_root_v(subject_id, root_id)`: `WITH RECURSIVE` walks each subject up its `replaced_by_id` chain with `CYCLE current_id SET is_cycle USING path`. A subject merged twice still pools, and a replacement cycle ends the recursion instead of hanging the refresh; subjects on a cycle have no root and drop out of the aggregates until the data is fixed.
+- `anon.prof_subject_radar`: every (`professor_id`, root subject) pair with `n = count(DISTINCT key_hash)`. Not `count(*)`: one submission rates a professor once per assignment, so a professor teaching both the lecture and the lab would reach k with fewer than k students. The 14 averages are `CASE WHEN n >= k THEN round(avg, 1) END`, with `k` from `ref.setting`. The UI shows "locked — `k - n` more ratings needed" from the same row. Unique index on (`professor_id`, `subject_id`).
 - `anon.course_survival`: per root subject, the same rule.
 - `anon.refresh_aggregates()` refreshes both with `REFRESH MATERIALIZED VIEW CONCURRENTLY` nightly, so readers are never blocked.
 - Known limit: a student who repeats a course rates it once per offering and counts twice towards k.
