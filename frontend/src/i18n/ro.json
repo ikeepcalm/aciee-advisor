@@ -2,5 +2,35 @@
   "app": {
     "title": "ACIEE Advisor",
     "tagline": "Ghiduri de supraviețuire pentru cursuri și evaluări anonime ale profesorilor"
+  },
+  "auth": {
+    "email": "E-mail instituțional",
+    "emailPlaceholder": "prenume.nume{'@'}student.ugal.ro",
+    "password": "Parolă",
+    "confirmPassword": "Confirmă parola",
+    "signUp": "Creează cont",
+    "signIn": "Autentificare",
+    "signInAction": "Autentifică-te",
+    "signOut": "Deconectare",
+    "haveAccount": "Ai deja cont?",
+    "noAccount": "Nu ai cont?",
+    "signedInAs": "Conectat ca {email}",
+    "verifyTitle": "Verifică adresa de e-mail",
+    "verifySent": "Am trimis un cod de 6 cifre la {email}. Codul expiră în 15 minute.",
+    "verifyAction": "Verifică",
+    "resend": "Retrimite codul",
+    "resent": "Ți-am trimis un cod nou.",
+    "errors": {
+      "domain": "Folosește adresa ta {'@'}student.ugal.ro.",
+      "passwordLength": "Parola trebuie să aibă între 10 și 128 de caractere.",
+      "passwordsDiffer": "Parolele nu coincid.",
+      "already_registered": "Există deja un cont cu această adresă. Autentifică-te.",
+      "bad_credentials": "E-mail sau parolă greșită.",
+      "disabled": "Contul este dezactivat.",
+      "code_invalid": "Cod greșit. Încercări rămase: {attemptsLeft}.",
+      "code_expired": "Codul a expirat sau ai depășit numărul de încercări. Cere un cod nou.",
+      "code_recently_sent": "Ai cerut un cod de curând. Mai așteaptă un minut.",
+      "generic": "Ceva nu a mers. Încearcă din nou."
+    }
   }
 }

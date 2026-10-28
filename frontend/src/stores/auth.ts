@@ -1,0 +1,46 @@
+import { ref } from 'vue'
+import { defineStore } from 'pinia'
+import { api } from '@/api'
+
+export interface Account {
+  id: number
+  email: string
+  roles: string[]
+}
+
+export const useAuthStore = defineStore('auth', () => {
+  const user = ref<Account | null>(null)
+  const pendingPassword = ref('')
+  let loading: Promise<void> | null = null
+
+  function load() {
+    loading ??= api<Account>('GET', '/api/auth/me').then(
+      (account) => void (user.value = account),
+      () => void (user.value = null),
+    )
+    return loading
+  }
+
+  async function signUp(email: string, password: string) {
+    pendingPassword.value = password
+    await api('POST', '/api/auth/signup', { email, password })
+  }
+
+  async function signIn(email: string, password: string) {
+    pendingPassword.value = password
+    user.value = await api<Account>('POST', '/api/auth/signin', { email, password })
+    pendingPassword.value = ''
+  }
+
+  async function verify(email: string, code: string, password: string) {
+    user.value = await api<Account>('POST', '/api/auth/verify', { email, code, password })
+    pendingPassword.value = ''
+  }
+
+  async function signOut() {
+    await api('POST', '/api/auth/signout')
+    user.value = null
+  }
+
+  return { user, pendingPassword, load, signUp, signIn, verify, signOut }
+})
