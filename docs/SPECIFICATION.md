@@ -78,7 +78,7 @@ Collected with each rating submission and shown on the course page:
 
 ## 6. Views
 
-Each view gets a full spec (wireframe, roles, data, actions) as part of the Stage 0 deliverable.
+Full spec for each view (route, roles, wireframe, data, actions): [VIEWS.md](VIEWS.md).
 
 | View | Role | Purpose |
 |---|---|---|

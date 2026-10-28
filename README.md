@@ -19,6 +19,7 @@ docs/        specification, architecture, roadmap, decisions, AI log
 ## Documentation
 
 - [Specification](docs/SPECIFICATION.md): problem, roles, evaluation model, views
+- [Views](docs/VIEWS.md): route, roles, wireframe, data and actions for every view
 - [Architecture](docs/ARCHITECTURE.md): stack, authentication, anonymity protocol, access control
 - [Database](docs/DATABASE.md): tables, normal forms, constraints, indexes, connections
 - [Roadmap](docs/ROADMAP.md): course stages, scope, timeline
