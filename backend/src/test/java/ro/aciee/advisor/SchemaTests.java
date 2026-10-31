@@ -36,7 +36,7 @@ class SchemaTests {
         int departmentId = insert("INSERT INTO core.department (faculty_id, name_ro) VALUES (%d, 'Calculatoare') RETURNING id".formatted(facultyId));
         int specializationId = insert("""
                 INSERT INTO core.specialization (faculty_id, code, name_ro, degree, duration_years)
-                VALUES (%d, 'C', 'Calculatoare', 'BSc', 4) RETURNING id""".formatted(facultyId));
+                VALUES (%d, 'T', 'Test', 'BSc', 4) RETURNING id""".formatted(facultyId));
         int yearId = insert("INSERT INTO core.academic_year (during) VALUES ('[2025-10-01,2026-10-01)') RETURNING id");
         insert("""
                 INSERT INTO core.semester (academic_year_id, no, during, rating_opens_at)
@@ -58,6 +58,26 @@ class SchemaTests {
         assignmentId = insert("""
                 INSERT INTO core.teaching_assignment (offering_id, group_id, professor_id, component, valid_during)
                 VALUES (%d, %d, %d, 'lecture', '[2025-10-01,2026-02-15)') RETURNING id""".formatted(offeringId, groupId, professorId));
+    }
+
+    @Test
+    void curriculumSeedHoldsEveryCalculatoarePlan() {
+        var items = jdbc.sql("""
+                        SELECT lower(p.intake) AS intake, count(*) AS items
+                        FROM core.curriculum_item ci
+                        JOIN core.study_plan p ON p.id = ci.plan_id
+                        JOIN core.specialization s ON s.id = p.specialization_id
+                        WHERE s.code = 'C'
+                        GROUP BY p.intake ORDER BY p.intake""")
+                .query().listOfRows();
+        assertThat(items).extracting(row -> row.get("intake")).containsExactly(2023, 2024, 2025);
+        assertThat(jdbc.sql("""
+                        SELECT array_agg(sub.name_ro ORDER BY sub.name_ro)::text
+                        FROM core.curriculum_item ci
+                        JOIN core.subject sub ON sub.id = ci.subject_id
+                        JOIN core.study_plan p ON p.id = ci.plan_id
+                        WHERE lower(p.intake) = 2025 AND ci.study_year = 4 AND ci.semester_no = 2 AND ci.elective_slot = 3""")
+                .query(String.class).single()).isEqualTo("{E-commerce,\"Regăsirea informației\"}");
     }
 
     @Test

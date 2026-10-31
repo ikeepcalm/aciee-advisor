@@ -187,7 +187,8 @@ The app uses two DataSources, so a SQL injection on one side cannot read the oth
 ## 7. Repository layout
 
 ```
-backend/     Spring Boot app; db/changelog/schema (schema), db/changelog/fixtures (fixtures contexts only)
+backend/     Spring Boot app; db/changelog/schema (schema), db/changelog/seed (real curriculum, every environment), db/changelog/fixtures (fixtures contexts only)
+tools/       curriculum/plans_to_sql.py: study-plan PDFs → the seed changeset
 frontend/    Vue 3 SPA; src/crypto holds all blind-RSA code + RFC 9474 test vectors
 infra/       docker-compose.yml, Caddyfile, backup script
 loadtest/    k6 scripts

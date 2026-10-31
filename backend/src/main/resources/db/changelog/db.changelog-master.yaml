@@ -2,5 +2,7 @@ databaseChangeLog:
   - includeAll:
       path: db/changelog/schema/
   - includeAll:
+      path: db/changelog/seed/
+  - includeAll:
       path: db/changelog/fixtures/
       errorIfMissingOrEmpty: false
