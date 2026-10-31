@@ -41,3 +41,11 @@ How AI tools were used in this project, and every AI error caught and corrected.
 | 2026-10-28 | Claude Opus 5.5 | Auth | Disabled accounts could still verify; a quoted local part passed validation and hit the DB CHECK (500); mail sent inside the transaction | code-review agent | Disabled check in verify, pattern matches the CHECK, mail after commit | — |
 | 2026-10-28 | Claude Opus 5.5 | DB design | Audit UPDATE joined old/new rows on `user_id` alone for composite-key tables, multiplying rows | code-review agent | Trigger pairs on the full primary key (changeset 011) | — |
 | 2026-10-28 | Claude Opus 5.5 | DB design | Read `TG_ARGV[1]` as the first trigger argument; `TG_ARGV` is zero-based | test | 1-based slice `TG_ARGV[0:TG_NARGS - 1]` | — |
+
+**2026-10-31.** Claude Code (Opus 5.5) implemented W2 access control and the group workflow.
+
+| Date | Tool | Intent | Error | Detected by | Fix | Commit |
+|---|---|---|---|---|---|---|
+| 2026-10-31 | Claude Opus 5.5 | RLS | Setting `app.user_id` in the transaction manager read the security context, which loaded the JDBC session through the same manager and recursed until the pool was exhausted | test (pool timeout) | Separate `@SpringSessionTransactionManager` | — |
+| 2026-10-31 | Claude Opus 5.5 | Groups | The invite cap counted `membership_request` rows under RLS, so a student saw only their own and the cap never held | design review | `SECURITY DEFINER` `core.invite_uses()` | — |
+| 2026-10-31 | Claude Opus 5.5 | Groups | A student calling approve on their own request matched zero rows under RLS and got a silent success | design review | Leader check before the CTE; zero inserted rows → `already_decided` | — |

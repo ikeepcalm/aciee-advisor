@@ -83,13 +83,13 @@ The full design (tables, keys, normal forms, constraints, indexes, connections a
 
 ### Roles
 
-- `aciee_owner` (NOLOGIN) owns all objects.
-- `aciee_migrator` runs Liquibase and has BYPASSRLS.
+- The migrator (the cluster's bootstrap user, `aciee`) runs Liquibase at startup and owns all objects, so it bypasses RLS as the owner. There is no separate NOLOGIN owner: `REFRESH MATERIALIZED VIEW` requires ownership, so `refresh_aggregates()` would have to run as the owner anyway, and a migrator that is a member of the owner role has the same power.
+- The login roles below and their passwords are created by `infra/postgres/init-roles.sh` (run once by the Postgres image, and by Testcontainers). Grants, RLS and per-role limits are schema, in changeset `012-access`.
 - `aciee_ident` writes `core` and `ident` and has no privileges on `anon`.
 - `aciee_anon` writes `anon` and has no privileges on `ident`.
 - `aciee_report` is read-only and can only read the report views.
 
-The app uses two DataSources, so a SQL injection on one side cannot read the other.
+The app uses two DataSources, so a SQL injection on one side cannot read the other. **Status (W2):** the ident pool is live; the anon pool is added with redemption in W3, the first code that needs it.
 
 ### History edge cases
 
@@ -110,6 +110,8 @@ The app uses two DataSources, so a SQL injection on one side cannot read the oth
 **Where RLS applies.** On the ident pool only, because that is where a user id exists:
 - `group_membership` and `membership_request`: students see their own rows; leaders see their group's rows while their leadership's membership is current, with `WITH CHECK`; admins see all (to revoke a leader and undo approvals).
 - `token_issuance`: own rows only.
+- Only a student can file their own request (`WITH CHECK user_id = me AND status = 'pending'`); only a leader or admin can decide one or insert a membership.
+- Helper functions: `core.app_user_id()`, `core.is_admin()`, `core.leads_group(group)`. `leads_group` is `SECURITY DEFINER`: it reads `group_membership`, and a policy on `group_membership` that queried `group_membership` under RLS would recurse. `core.invite_uses(invite)` is `SECURITY DEFINER` for the same reason: a student must not see other students' requests, but the invite cap counts them.
 
 `FORCE ROW LEVEL SECURITY` is not used: it only affects the table owner, and no app role owns a table. FK checks bypass RLS by design; no policy here relies on hiding a row from an FK check.
 
@@ -120,6 +122,8 @@ The app uses two DataSources, so a SQL injection on one side cannot read the oth
 **Pool safety** (the per-request user id must never leak to the next request on a pooled connection):
 - Every request is `@Transactional`, with `open-in-view=false`.
 - The user id is set with `set_config('app.user_id', ?, true)`. The `true` makes it transaction-local, so it never survives in the pool.
+- `UserTransactionManager` does this in `prepareTransactionalConnection`, right after `BEGIN`, so every `@Transactional` method gets it and the audit trigger records the actor.
+- Spring Session gets its own plain transaction manager. Reading the security context inside `BEGIN` lazily loads the session from JDBC; through the same manager that load would open another transaction, read the context again, and recurse until the pool is empty.
 - Policies read it as `nullif(current_setting('app.user_id', true), '')::integer`, wrapped in `(SELECT …)` so it is evaluated once per query, not once per row.
 
 **Limit.** A superuser bypasses all of this. Protection against the operator comes from the protocol in §3.

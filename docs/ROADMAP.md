@@ -53,6 +53,8 @@ Also required throughout the semester: consistent git history, `docs/DECISIONS.m
 
 **W1 (Oct 28).** Done: view specs (`docs/VIEWS.md`), the full Liquibase schema (`002`–`010`), sign-up / emailed code / sign-in / sign-out with JDBC sessions, and the auth screens. Mailpit in compose for local mail. Still open: registering our own Entra app and testing a student sign-in, and recruiting group leaders. Moved to W2 with the rest of access control: database roles, grants, RLS, per-role timeouts and the two pools.
 
+**W2 (Oct 31), in progress.** Done: login roles (`infra/postgres/init-roles.sh`), grants, RLS on memberships, requests and issuance, per-role timeouts (changeset `012`); the app runs as `aciee_ident` with `app.user_id` set per transaction. Group leader claims (admin approval, which also admits the claimant to an empty group), invite links with caps, join requests and leader approval with the `max_size` lock (changeset `013`), with screens. Still open: real curriculum seed, synthetic fixtures, admin CRUD for curriculum, calendar, groups, professors and assignments, the leader's subgroup → assistant mapping, first deploy. The anon pool moves to W3 with redemption.
+
 ## Checked so far
 
 - **Email delivery:** mail from an outside personal address reaches a `@student.ugal.ro` inbox. Still to test: mail from our own sending domain.

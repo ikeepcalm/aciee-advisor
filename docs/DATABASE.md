@@ -20,9 +20,9 @@ PostgreSQL 18. This document is the logical and physical design: entities, keys,
 | `ident` | Token issuance, token vault |
 | `anon` | Offering keys, submissions, ratings, posts, aggregates |
 
-All objects are owned by `aciee_owner` (NOLOGIN). Domains (§3.1) live in `ref`; the `ro_ro` ICU collation in `core`.
+All objects are owned by the migrator (ARCHITECTURE §4). Domains (§3.1) live in `ref`; the `ro_ro` ICU collation in `core`.
 
-**Status (W1).** The schema, views, functions and triggers are in place. The roles, grants, RLS policies, per-role limits and the two pools below come in W2 (ROADMAP); until then the app runs on one pool as the database owner.
+**Status (W2).** Roles, grants, RLS policies and per-role limits are in changeset `012-access`; the app connects as `aciee_ident`. The anon pool comes with redemption in W3.
 
 | Object | `aciee_ident` | `aciee_anon` | `aciee_report` |
 |---|---|---|---|
@@ -36,7 +36,7 @@ All objects are owned by `aciee_owner` (NOLOGIN). Domains (§3.1) live in `ref`;
 
 - `anon` references `core` only through the public tables, never `user_account`. No FK path leads from `anon` to an account, and the anonymous role cannot read one.
 - Moderation runs on the `anon` pool through `anon.moderation_queue`, a view that omits `key_hash`. The application checks the moderator role before running it, because no user identity reaches the `anon` pool.
-- The materialised views are refreshed by `anon.refresh_aggregates()`, a `SECURITY DEFINER` function owned by `aciee_owner` with its own `statement_timeout` (§9).
+- The materialised views are refreshed by `anon.refresh_aggregates()`, a `SECURITY DEFINER` function owned by the migrator with its own `statement_timeout` (§9).
 
 ## 3. Logical model
 
@@ -81,7 +81,7 @@ Changing a domain's CHECK re-validates every column that uses it (3M rows for `s
 | `subgroup` | `id` | `group_id`, `label`; UQ(`group_id`, `label`); UQ(`id`, `group_id`) | |
 | `course_offering` | `id` | `curriculum_item_id`, `group_id`, pinned `plan_id`, `study_year`, `title_snapshot`; UQ(`curriculum_item_id`, `group_id`); UQ(`group_id`, `id`) | One course taught to one group. Its semester is `semester(academic_year_id, no)` = (group's `academic_year_id`, item's `semester_no`). |
 
-`core.offering_v` joins offering, item, subject, group and semester into one row, so every screen and the defence use one name for "an offering with its subject and semester". It is a plain view, not materialised.
+`core.group_v` names a group with its specialisation and academic-year label the same way. `core.offering_v` joins offering, item, subject, group and semester into one row, so every screen and the defence use one name for "an offering with its subject and semester". It is a plain view, not materialised.
 
 ### 3.5 Teaching (`core`)
 
@@ -257,6 +257,7 @@ PostgreSQL does not index foreign keys automatically. Each FK below is either in
 | Q15 | Sign-in | UQ `user_account(email_normalized)`, UQ `entra_oid` | Sargable: no function applied to the indexed column at query time |
 | Q16 | Delete or archive a professor | `teaching_assignment(professor_id)` | Without it, every RESTRICT check scans the 60k assignments |
 | Q17 | Invite uses: `count(*) … WHERE invite_id = ?` | `membership_request(invite_id)` | Runs under the invite row lock on every join, so it must not scan the 220k-row table |
+| Q18 | Group roster and occupancy: current memberships of a group | `group_membership(group_id)` | Runs on every approval under the group row lock and on every leader screen; without it each call scans 220k memberships |
 
 **Partial indexes need literal predicates.** The planner matches `WHERE status = 'pending'` only when the query contains the same literal. Status values are written into the SQL text, never passed as bind parameters, or a generic plan will ignore the index.
 
@@ -307,7 +308,7 @@ PostgreSQL does not index foreign keys automatically. Each FK below is either in
 |---|---|---|---|
 | ident | `aciee_ident` | accounts, groups, issuance, sessions, admin CRUD | `identTx` (primary) |
 | anon | `aciee_anon` | redeem, ratings, posts, moderation, public pages | `anonTx` |
-| migrator | `aciee_migrator` | Liquibase at startup only | none |
+| migrator | bootstrap user (`aciee`) | Liquibase at startup only | none |
 
 - Every `@Transactional` names its manager. `set_config('app.user_id', ?, true)` runs on the ident connection inside `identTx`; the anon pool never receives a user id.
 - **Pool size.**
@@ -319,7 +320,7 @@ PostgreSQL does not index foreign keys automatically. Each FK below is either in
 |---|---|---|---|
 | `aciee_ident`, `aciee_anon` | 5 s | 2 s | 10 s |
 | `aciee_report` | 60 s | 2 s | 10 s |
-| `aciee_migrator` | none | 5 s | none |
+| migrator | none | not set yet (it is the bootstrap superuser locally) | none |
 | `refresh_aggregates()` | 10 min (`SET` on the function) | | |
 
 - `lock_timeout` on the migrator makes a migration fail fast instead of queueing behind a long query and blocking every session on that table.
