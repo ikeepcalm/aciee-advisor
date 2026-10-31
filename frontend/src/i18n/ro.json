@@ -45,6 +45,9 @@
     "invite_not_found": "Linkul nu mai este activ.",
     "leader_not_found": "Șeful de grupă a fost deja revocat.",
     "year_ended": "Anul universitar al grupei s-a încheiat.",
+    "next_year_missing": "Adaugă întâi anul universitar următor.",
+    "invalid_slot": "Componenta sau subgrupa nu există în planul grupei.",
+    "invalid_professor": "Profesorul nu există sau a fost arhivat.",
     "generic": "Ceva nu a mers. Încearcă din nou.",
     "foreign_key": "Nu se poate: înregistrarea este folosită în altă parte sau trimite la ceva inexistent ({constraint}).",
     "duplicate": "Există deja o înregistrare cu aceste valori ({constraint}).",
@@ -85,7 +88,8 @@
     "tabs": {
       "members": "Membri",
       "requests": "Cereri ({n})",
-      "invites": "Invitații"
+      "invites": "Invitații",
+      "teaching": "Profesori"
     },
     "occupancy": "Locuri ocupate: {members} / {max}",
     "noRequests": "Nu ai cereri noi.",
@@ -104,7 +108,16 @@
     "subgroup": "Subgrupa",
     "sendRequest": "Trimite cererea",
     "joinHint": "Șeful de grupă îți va aproba cererea.",
-    "joinSent": "Cererea a fost trimisă."
+    "joinSent": "Cererea a fost trimisă.",
+    "component": {
+      "seminar": "Seminar",
+      "lab": "Laborator",
+      "project": "Proiect"
+    },
+    "wholeGroup": "Toată grupa",
+    "pickProfessor": "alege profesorul",
+    "noTeaching": "Grupa nu are încă laboratoare, seminare sau proiecte în plan.",
+    "teachingSaved": "Profesorii au fost salvați."
   },
   "admin": {
     "leadersTitle": "Șefi de grupă",
@@ -165,7 +178,11 @@
       "professor_id": "Profesor",
       "component": "Componentă",
       "subgroup_id": "Subgrupă",
-      "valid_during": "Valabil în perioada"
+      "valid_during": "Valabil în perioada",
+      "lecture_hours": "Ore curs / săpt.",
+      "seminar_hours": "Ore seminar / săpt.",
+      "lab_hours": "Ore laborator / săpt.",
+      "project_hours": "Ore proiect / săpt."
     },
     "search": "Caută",
     "add": "Adaugă",
@@ -175,6 +192,8 @@
     "archive": "Arhivează",
     "createOfferings": "Generează cursurile grupei",
     "offeringsCreated": "Cursuri create: {n}.",
+    "rollover": "Trecere în anul următor",
+    "rolloverDone": "Grupe create în anul următor: {n}. Șefii și membrii trebuie să reconfirme.",
     "more": "Mai mult",
     "historyTable": "Tabel (ex. professor)",
     "historyRow": "Id rând",

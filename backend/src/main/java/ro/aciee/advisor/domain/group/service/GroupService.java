@@ -10,6 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 import ro.aciee.advisor.domain.group.model.CreatedInvite;
 import ro.aciee.advisor.domain.group.model.GroupSummary;
+import ro.aciee.advisor.domain.group.model.GroupTeaching;
 import ro.aciee.advisor.domain.group.model.Invite;
 import ro.aciee.advisor.domain.group.model.InvitePreview;
 import ro.aciee.advisor.domain.group.model.JoinRequest;
@@ -17,13 +18,18 @@ import ro.aciee.advisor.domain.group.model.Membership;
 import ro.aciee.advisor.domain.group.model.MyGroups;
 import ro.aciee.advisor.domain.group.model.Occupancy;
 import ro.aciee.advisor.domain.group.model.PendingRequests;
+import ro.aciee.advisor.domain.group.model.ProfessorOption;
 import ro.aciee.advisor.domain.group.model.RosterEntry;
 import ro.aciee.advisor.domain.group.model.Subgroup;
+import ro.aciee.advisor.domain.group.model.TeachingSlot;
 
 import java.security.SecureRandom;
 import java.time.OffsetDateTime;
 import java.util.Base64;
 import java.util.List;
+import java.util.Objects;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -272,6 +278,108 @@ public class GroupService {
                 .update();
         if (updated == 0) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "invite_not_found");
+        }
+    }
+
+    @Transactional(readOnly = true)
+    public GroupTeaching teaching(int groupId) {
+        requireLeader(groupId);
+        var professors = jdbc.sql("""
+                        SELECT p.id, t.label_ro || ' ' || p.full_name || ' · ' || d.name_ro AS label
+                        FROM core.professor p
+                        JOIN ref.academic_title t ON t.code = p.title_code
+                        JOIN core.department d ON d.id = p.department_id
+                        WHERE p.archived_at IS NULL
+                        ORDER BY p.full_name, d.name_ro""")
+                .query(ProfessorOption.class)
+                .list();
+        return new GroupTeaching(slots(groupId), professors);
+    }
+
+    @Transactional
+    public void assignTeachers(int groupId, List<TeachingSlot> changes) {
+        requireLeader(groupId);
+        boolean yearOpen = jdbc.sql("""
+                        SELECT upper(ay.during) > current_date
+                        FROM core.study_group g JOIN core.academic_year ay ON ay.id = g.academic_year_id
+                        WHERE g.id = :group FOR NO KEY UPDATE OF g""")
+                .param("group", groupId)
+                .query(Boolean.class)
+                .optional()
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "not_found"));
+        if (!yearOpen) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "year_ended");
+        }
+        var current = slots(groupId).stream().collect(Collectors.toMap(TeachingSlot::key, Function.identity()));
+        for (var change : changes) {
+            var slot = current.get(change.key());
+            if (slot == null) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "invalid_slot");
+            }
+            if (!Objects.equals(slot.getProfessorId(), change.getProfessorId())) {
+                endAssignment(change);
+                if (change.getProfessorId() != null) {
+                    startAssignment(groupId, change);
+                }
+            }
+        }
+    }
+
+    private List<TeachingSlot> slots(int groupId) {
+        return jdbc.sql("""
+                        SELECT o.id AS offering_id, o.title_snapshot AS title, ci.semester_no, c.component,
+                               s.id AS subgroup_id, s.label AS subgroup,
+                               (SELECT ta.professor_id FROM core.teaching_assignment ta
+                                WHERE ta.offering_id = o.id AND ta.component = c.component
+                                  AND ta.subgroup_id IS NOT DISTINCT FROM s.id
+                                  AND ta.valid_during && daterange(current_date, NULL)
+                                ORDER BY lower(ta.valid_during) DESC LIMIT 1) AS professor_id
+                        FROM core.course_offering o
+                        JOIN core.curriculum_item ci ON ci.id = o.curriculum_item_id
+                        CROSS JOIN LATERAL (VALUES ('seminar', ci.seminar_hours), ('lab', ci.lab_hours),
+                                                   ('project', ci.project_hours)) c(component, hours)
+                        LEFT JOIN core.subgroup s ON s.group_id = o.group_id
+                        WHERE o.group_id = :group AND c.hours > 0
+                        ORDER BY ci.semester_no, o.title_snapshot, c.component, s.label""")
+                .param("group", groupId)
+                .query(TeachingSlot.class)
+                .list();
+    }
+
+    private void endAssignment(TeachingSlot slot) {
+        var match = """
+                offering_id = :offering AND component = :component
+                  AND subgroup_id IS NOT DISTINCT FROM CAST(:subgroup AS integer)
+                  AND valid_during && daterange(current_date, NULL)""";
+        jdbc.sql("DELETE FROM core.teaching_assignment WHERE lower(valid_during) >= current_date AND " + match)
+                .param("offering", slot.getOfferingId())
+                .param("component", slot.getComponent())
+                .param("subgroup", slot.getSubgroupId())
+                .update();
+        jdbc.sql("UPDATE core.teaching_assignment SET valid_during = daterange(lower(valid_during), current_date) WHERE " + match)
+                .param("offering", slot.getOfferingId())
+                .param("component", slot.getComponent())
+                .param("subgroup", slot.getSubgroupId())
+                .update();
+    }
+
+    private void startAssignment(int groupId, TeachingSlot slot) {
+        int inserted = jdbc.sql("""
+                        INSERT INTO core.teaching_assignment (offering_id, group_id, professor_id, component, subgroup_id, valid_during)
+                        SELECT :offering, g.id, p.id, :component, :subgroup,
+                               daterange(greatest(current_date, lower(ay.during)), upper(ay.during))
+                        FROM core.study_group g
+                        JOIN core.academic_year ay ON ay.id = g.academic_year_id
+                        JOIN core.professor p ON p.id = :professor AND p.archived_at IS NULL
+                        WHERE g.id = :group""")
+                .param("offering", slot.getOfferingId())
+                .param("component", slot.getComponent())
+                .param("subgroup", slot.getSubgroupId())
+                .param("professor", slot.getProfessorId())
+                .param("group", groupId)
+                .update();
+        if (inserted == 0) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "invalid_professor");
         }
     }
 

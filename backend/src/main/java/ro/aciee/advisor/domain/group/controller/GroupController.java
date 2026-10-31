@@ -7,12 +7,14 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import ro.aciee.advisor.domain.group.model.CreatedInvite;
 import ro.aciee.advisor.domain.group.model.GroupSummary;
+import ro.aciee.advisor.domain.group.model.GroupTeaching;
 import ro.aciee.advisor.domain.group.model.Invite;
 import ro.aciee.advisor.domain.group.model.InviteBody;
 import ro.aciee.advisor.domain.group.model.InvitePreview;
@@ -20,6 +22,7 @@ import ro.aciee.advisor.domain.group.model.JoinBody;
 import ro.aciee.advisor.domain.group.model.MyGroups;
 import ro.aciee.advisor.domain.group.model.PendingRequests;
 import ro.aciee.advisor.domain.group.model.RosterEntry;
+import ro.aciee.advisor.domain.group.model.TeachingSlot;
 import ro.aciee.advisor.domain.group.service.GroupService;
 
 import java.util.List;
@@ -78,6 +81,17 @@ public class GroupController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void reject(@PathVariable int requestId) {
         groupService.reject(requestId);
+    }
+
+    @GetMapping("/{groupId}/teaching")
+    public GroupTeaching teaching(@PathVariable int groupId) {
+        return groupService.teaching(groupId);
+    }
+
+    @PutMapping("/{groupId}/teaching")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void assignTeachers(@PathVariable int groupId, @RequestBody List<TeachingSlot> changes) {
+        groupService.assignTeachers(groupId, changes);
     }
 
     @GetMapping("/{groupId}/invites")

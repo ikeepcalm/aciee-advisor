@@ -162,6 +162,14 @@ watch(key, () => {
           text
           @click="act('POST', `/api/admin/tables/study_group/${row.id}/offerings`, 'admin.offeringsCreated')"
         />
+        <Button
+          v-if="key === 'academic_year'"
+          :label="t('admin.rollover')"
+          size="small"
+          severity="secondary"
+          text
+          @click="act('POST', `/api/admin/tables/academic_year/${row.id}/rollover`, 'admin.rolloverDone')"
+        />
       </div>
     </div>
     <Button v-if="more" :label="t('admin.more')" text @click="load(true)" />

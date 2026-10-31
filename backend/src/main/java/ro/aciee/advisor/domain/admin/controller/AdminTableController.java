@@ -70,4 +70,9 @@ public class AdminTableController {
     public Map<String, Integer> createOfferings(@PathVariable int id) {
         return Map.of("created", adminTableService.createOfferings(id));
     }
+
+    @PostMapping("/academic_year/{id}/rollover")
+    public Map<String, Integer> rollover(@PathVariable int id) {
+        return Map.of("created", adminTableService.rollover(id));
+    }
 }
