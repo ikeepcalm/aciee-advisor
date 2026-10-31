@@ -1,0 +1,64 @@
+services:
+  db:
+    build: ./postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: aciee
+      POSTGRES_USER: aciee
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?}
+      ACIEE_IDENT_PASSWORD: ${ACIEE_IDENT_PASSWORD:?}
+      ACIEE_ANON_PASSWORD: ${ACIEE_ANON_PASSWORD:?}
+      ACIEE_REPORT_PASSWORD: ${ACIEE_REPORT_PASSWORD:?}
+    volumes:
+      - pgdata:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U aciee -d aciee"]
+      interval: 5s
+      retries: 30
+
+  backend:
+    build: ../backend
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DB_URL: jdbc:postgresql://db:5432/aciee
+      DB_IDENT_PASSWORD: ${ACIEE_IDENT_PASSWORD:?}
+      DB_MIGRATOR_PASSWORD: ${POSTGRES_PASSWORD:?}
+      LIQUIBASE_CONTEXTS: ${LIQUIBASE_CONTEXTS:-prod}
+      MAIL_HOST: ${MAIL_HOST:?}
+      MAIL_PORT: ${MAIL_PORT:-587}
+      MAIL_USER: ${MAIL_USER:-}
+      MAIL_PASSWORD: ${MAIL_PASSWORD:-}
+      MAIL_SMTP_SECURE: ${MAIL_SMTP_SECURE:-true}
+      MAIL_FROM: ${MAIL_FROM:-ACIEE Advisor <no-reply@acieeadvisor.ro>}
+
+  web:
+    build: ../frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+
+  backup:
+    image: postgres:18
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      PGHOST: db
+      PGUSER: aciee
+      PGDATABASE: aciee
+      PGPASSWORD: ${POSTGRES_PASSWORD:?}
+    volumes:
+      - backups:/backups
+    command: >
+      sh -c 'while true; do
+        pg_dump -Fc -f /backups/aciee-$$(date +%F).dump && find /backups -name "*.dump" -mtime +14 -delete;
+        sleep 86400;
+      done'
+
+volumes:
+  pgdata:
+  backups:

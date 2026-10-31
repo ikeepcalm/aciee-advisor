@@ -13,7 +13,7 @@ spring:
     user: ${DB_MIGRATOR_USER:aciee}
     password: ${DB_MIGRATOR_PASSWORD:aciee}
     change-log: classpath:db/changelog/db.changelog-master.yaml
-    contexts: ${LIQUIBASE_CONTEXTS:}
+    contexts: ${LIQUIBASE_CONTEXTS:prod}
   session:
     timeout: 30d
     jdbc:
@@ -27,6 +27,10 @@ spring:
     port: ${MAIL_PORT:1025}
     username: ${MAIL_USER:}
     password: ${MAIL_PASSWORD:}
+    properties:
+      mail.smtp.auth: ${MAIL_SMTP_SECURE:false}
+      mail.smtp.starttls.enable: ${MAIL_SMTP_SECURE:false}
+      mail.smtp.starttls.required: ${MAIL_SMTP_SECURE:false}
 
 server:
   forward-headers-strategy: native
