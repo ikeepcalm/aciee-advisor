@@ -12,7 +12,14 @@ const app = createApp(App)
 
 app.use(createPinia())
 app.use(router)
-app.use(createI18n({ legacy: false, locale: 'ro-RO', messages: { 'ro-RO': ro } }))
+app.use(
+  createI18n({
+    legacy: false,
+    locale: 'ro-RO',
+    messages: { 'ro-RO': ro },
+    datetimeFormats: { 'ro-RO': { short: { day: 'numeric', month: 'short', year: 'numeric' } } },
+  }),
+)
 app.use(PrimeVue, { theme: { preset: Aura } })
 
 app.mount('#app')

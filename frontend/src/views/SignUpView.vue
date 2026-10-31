@@ -20,15 +20,15 @@ const busy = ref(false)
 
 async function submit() {
   if (!/^[^@\s]+@student\.ugal\.ro$/i.test(email.value)) {
-    error.value = t('auth.errors.domain')
+    error.value = t('errors.domain')
     return
   }
   if (password.value.length < 10 || password.value.length > 128) {
-    error.value = t('auth.errors.passwordLength')
+    error.value = t('errors.passwordLength')
     return
   }
   if (password.value !== confirm.value) {
-    error.value = t('auth.errors.passwordsDiffer')
+    error.value = t('errors.passwordsDiffer')
     return
   }
   error.value = ''

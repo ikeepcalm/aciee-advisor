@@ -13,6 +13,12 @@ const auth = useAuthStore()
       {{ $t('auth.signedInAs', { email: auth.user.email }) }}
       <Button :label="$t('auth.signOut')" link @click="auth.signOut().catch(() => {})" />
     </p>
+    <nav v-if="auth.user">
+      <RouterLink :to="{ name: 'group' }">{{ $t('nav.groups') }}</RouterLink>
+      <template v-if="auth.user.roles.includes('admin')">
+        · <RouterLink :to="{ name: 'admin-leaders' }">{{ $t('nav.admin') }}</RouterLink>
+      </template>
+    </nav>
     <p v-else>
       <RouterLink :to="{ name: 'signin' }">{{ $t('auth.signIn') }}</RouterLink> ·
       <RouterLink :to="{ name: 'signup' }">{{ $t('auth.signUp') }}</RouterLink>

@@ -37,7 +37,7 @@ type Translate = (key: string, params: Record<string, unknown>) => string
 
 export function describeError(t: Translate, error: unknown): string {
   const detail = error instanceof ApiError ? String(error.problem.detail) : ''
-  return Object.hasOwn(ro.auth.errors, detail) ? t(`auth.errors.${detail}`, (error as ApiError).problem) : t('auth.errors.generic', {})
+  return Object.hasOwn(ro.errors, detail) ? t(`errors.${detail}`, (error as ApiError).problem) : t('errors.generic', {})
 }
 
 export function safeNext(query: LocationQuery): string {

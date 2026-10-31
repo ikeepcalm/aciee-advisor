@@ -19,18 +19,92 @@
     "verifySent": "Am trimis un cod de 6 cifre la {email}. Codul expiră în 15 minute.",
     "verifyAction": "Verifică",
     "resend": "Retrimite codul",
-    "resent": "Ți-am trimis un cod nou.",
-    "errors": {
-      "domain": "Folosește adresa ta {'@'}student.ugal.ro.",
-      "passwordLength": "Parola trebuie să aibă între 10 și 128 de caractere.",
-      "passwordsDiffer": "Parolele nu coincid.",
-      "already_registered": "Există deja un cont cu această adresă. Autentifică-te.",
-      "bad_credentials": "E-mail sau parolă greșită.",
-      "disabled": "Contul este dezactivat.",
-      "code_invalid": "Cod greșit. Încercări rămase: {attemptsLeft}.",
-      "code_expired": "Codul a expirat sau ai depășit numărul de încercări. Cere un cod nou.",
-      "code_recently_sent": "Ai cerut un cod de curând. Mai așteaptă un minut.",
-      "generic": "Ceva nu a mers. Încearcă din nou."
-    }
+    "resent": "Ți-am trimis un cod nou."
+  },
+  "errors": {
+    "domain": "Folosește adresa ta {'@'}student.ugal.ro.",
+    "passwordLength": "Parola trebuie să aibă între 10 și 128 de caractere.",
+    "passwordsDiffer": "Parolele nu coincid.",
+    "already_registered": "Există deja un cont cu această adresă. Autentifică-te.",
+    "bad_credentials": "E-mail sau parolă greșită.",
+    "disabled": "Contul este dezactivat.",
+    "code_invalid": "Cod greșit. Încercări rămase: {attemptsLeft}.",
+    "code_expired": "Codul a expirat sau ai depășit numărul de încercări. Cere un cod nou.",
+    "code_recently_sent": "Ai cerut un cod de curând. Mai așteaptă un minut.",
+    "invite_expired": "Linkul de invitație a expirat.",
+    "invite_used_up": "Linkul a atins numărul maxim de utilizări.",
+    "request_pending": "Ai deja o cerere în așteptare.",
+    "invalid_subgroup": "Alege o subgrupă a acestei grupe.",
+    "claim_pending": "Ai deja o cerere de șef de grupă în așteptare.",
+    "already_decided": "Cererea a fost deja decisă.",
+    "group_full": "Grupa a atins numărul maxim de membri.",
+    "already_member": "Studentul este deja membru al altei grupe în această perioadă.",
+    "not_leader": "Nu ești șeful acestei grupe.",
+    "not_member": "Solicitantul nu este membru al grupei.",
+    "already_leader": "Studentul este deja șef de grupă.",
+    "invite_not_found": "Linkul nu mai este activ.",
+    "leader_not_found": "Șeful de grupă a fost deja revocat.",
+    "year_ended": "Anul universitar al grupei s-a încheiat.",
+    "generic": "Ceva nu a mers. Încearcă din nou."
+  },
+  "nav": {
+    "groups": "Grupa mea",
+    "admin": "Administrare",
+    "home": "Acasă",
+    "forbidden": "Nu ai acces la această pagină."
+  },
+  "group": {
+    "title": "Grupa mea",
+    "summary": "{code} · {specialization} · Anul {year}",
+    "subgroupSince": "Subgrupa {subgroup} · membru din {since}",
+    "since": "Membru din {since}",
+    "noGroup": "Nu faci parte din nicio grupă. Cere linkul de invitație șefului de grupă.",
+    "myRequests": "Cererile mele",
+    "status": {
+      "pending": "În așteptare",
+      "approved": "Aprobată",
+      "rejected": "Respinsă"
+    },
+    "kind": {
+      "regular": "membru",
+      "repeat": "restanță",
+      "historical_claim": "istoric"
+    },
+    "claim": "Sunt șeful acestei grupe",
+    "claimOther": "Sunt șef de grupă",
+    "pickGroup": "Alege grupa",
+    "claimSent": "Cererea a fost trimisă administratorului.",
+    "tabs": {
+      "members": "Membri",
+      "requests": "Cereri ({n})",
+      "invites": "Invitații"
+    },
+    "occupancy": "Locuri ocupate: {members} / {max}",
+    "noRequests": "Nu ai cereri noi.",
+    "approve": "Aprobă",
+    "reject": "Respinge",
+    "leader": "șef",
+    "newInvite": "Link nou",
+    "expiresInDays": "Expiră după (zile)",
+    "maxUses": "Utilizări",
+    "generate": "Generează link",
+    "inviteOnce": "Copiază linkul acum. Nu îl vei mai putea vedea.",
+    "activeInvites": "Active",
+    "inviteLine": "{uses}/{max} · până {until}",
+    "deactivate": "Dezactivează",
+    "joinTitle": "Alătură-te grupei",
+    "subgroup": "Subgrupa",
+    "sendRequest": "Trimite cererea",
+    "joinHint": "Șeful de grupă îți va aproba cererea.",
+    "joinSent": "Cererea a fost trimisă."
+  },
+  "admin": {
+    "leadersTitle": "Șefi de grupă",
+    "pendingClaims": "Cereri în așteptare",
+    "noClaims": "Nu există cereri.",
+    "memberSince": "Membru din {since}",
+    "notMemberYet": "Încă nu este membru",
+    "activeLeaders": "Șefi activi",
+    "revoke": "Revocă"
   }
 }
