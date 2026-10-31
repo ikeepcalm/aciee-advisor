@@ -17,7 +17,7 @@ import java.util.Map;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-@SpringBootTest
+@SpringBootTest(properties = {"spring.datasource.username=test", "spring.datasource.password=test"})
 @Transactional
 @Import(TestcontainersConfiguration.class)
 class SchemaTests {

@@ -5,10 +5,14 @@ services:
       POSTGRES_DB: aciee
       POSTGRES_USER: aciee
       POSTGRES_PASSWORD: aciee
+      ACIEE_IDENT_PASSWORD: aciee_ident
+      ACIEE_ANON_PASSWORD: aciee_anon
+      ACIEE_REPORT_PASSWORD: aciee_report
     ports:
       - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql
+      - ./postgres/init-roles.sh:/docker-entrypoint-initdb.d/init-roles.sh:ro
 
   mailpit:
     image: axllent/mailpit:v1.27

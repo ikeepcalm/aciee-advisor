@@ -16,6 +16,14 @@ loadtest/    k6 scenarios
 docs/        specification, architecture, roadmap, decisions, AI log
 ```
 
+## Local setup
+
+```
+docker compose -f infra/docker-compose.yml up -d
+```
+
+The Postgres image creates the `aciee_ident`, `aciee_anon` and `aciee_report` login roles (`infra/postgres/init-roles.sh`) only when its volume is first created. A volume created before those roles existed needs `docker compose -f infra/docker-compose.yml down -v` once, or the script run by hand. The app reads `DB_IDENT_USER` / `DB_IDENT_PASSWORD` for its pool and `DB_MIGRATOR_USER` / `DB_MIGRATOR_PASSWORD` for Liquibase.
+
 ## Documentation
 
 - [Specification](docs/SPECIFICATION.md): problem, roles, evaluation model, views
