@@ -11,7 +11,7 @@ Course survival guides and anonymous, structured teacher evaluations for student
 ```
 backend/     Java 25, Spring Boot 4, Liquibase changelogs and fixtures
 frontend/    Vue 3 + TypeScript SPA (ro-RO)
-infra/       Docker Compose, Caddy, backups
+infra/       Docker Compose (local and production), Postgres role script
 loadtest/    k6 scenarios
 docs/        specification, architecture, roadmap, decisions, AI log
 ```
@@ -23,6 +23,10 @@ docker compose -f infra/docker-compose.yml up -d
 ```
 
 The Postgres image creates the `aciee_ident`, `aciee_anon` and `aciee_report` login roles (`infra/postgres/init-roles.sh`) only when its volume is first created. A volume created before those roles existed needs `docker compose -f infra/docker-compose.yml down -v` once, or the script run by hand. The app reads `DB_IDENT_USER` / `DB_IDENT_PASSWORD` for its pool and `DB_MIGRATOR_USER` / `DB_MIGRATOR_PASSWORD` for Liquibase.
+
+Synthetic data: start the backend with `LIQUIBASE_CONTEXTS=fixtures` on a fresh volume (about 2% of the target volumes, demo accounts `demo.admin` / `demo.leader` / `demo.student` `@student.ugal.ro`, password `demo-parola`). `fixtures-large` loads the full volumes. Without the variable the context is `prod` and no fixtures run.
+
+Deployment: [docs/DEPLOY.md](docs/DEPLOY.md) (the deploy tool, Docker Compose).
 
 ## Documentation
 

@@ -737,7 +737,7 @@ Tabs: **Membri**, **Cereri (N)**, **Invitații**, **Profesori pe subgrupe**.
 - Roster: `core.group_membership` for the group, current rows, with `core.user_account.email` and subgroup (RLS: leader of this group while the leadership's membership is current).
 - Pending requests: `core.membership_request` `WHERE status = 'pending'` (Q10).
 - Invites: `core.group_invite` for the group; uses counted from `membership_request.invite_id`.
-- Mapping: the group's offerings (`core.offering_v`) and their non-lecture `core.teaching_assignment` rows; professors from `core.professor` (not archived).
+- Mapping: one slot per offering × non-lecture component with hours in `curriculum_item` × subgroup (`GET /api/groups/:id/teaching`), with the professor of the current `core.teaching_assignment`; professors from `core.professor` (not archived). Saving (`PUT`) closes the current assignment at today and starts a new one, or deletes it if it had not started yet.
 
 **Actions**
 
@@ -933,7 +933,7 @@ Sections: **Curriculum**, **Calendar**, **Grupe**, **Profesori**, **Repartizări
 8. **Outbox delivery.** The random next-day redemption needs the app to be open. What happens if the student never comes back: send on next visit only, or warn after N days?
 9. **Re-rating after delete.** Deleting a submission frees its `key_hash`, so the same token could redeem again. Intended?
 10. **Report handling owner and effect.** Who handles `post_report` (assumed moderators), and what "upheld" does to the post: hide it, or reject the published version? `anon.published_post` does not filter on reports today.
-11. **Reporting without a session.** `/anon` calls carry no session, so the Report button cannot be limited to signed-in students or rate-limited per user. Is per-IP limiting at Caddy enough?
+11. **Reporting without a session.** `/anon` calls carry no session, so the Report button cannot be limited to signed-in students or rate-limited per user. Is per-IP limiting at the nginx in front of the app enough?
 12. **Moderation queue order.** ARCHITECTURE §6 says the filter "sorts" the queue; Q8 is oldest first. Flagged first, or oldest first with flags shown?
 13. **Historical claims: who approves.** A past group has no current leader. Is the claim routed to the leader of its rolled-over successor group, and how is that link found?
 14. **Archived professors.** Should `/professors/:slug` for an archived professor return 404, or show the anonymised name with aggregates?

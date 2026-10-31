@@ -238,3 +238,10 @@ Format: context → decision → consequences. Never rewrite an accepted ADR; su
 - `DatabaseErrorAdvice` turns PostgreSQL errors into problem details once, by SQLSTATE: FK → `foreign_key`, unique / exclusion → `duplicate`, CHECK → `check_failed`, NOT NULL → `required`, bad input → `invalid_value`, with the constraint and column names attached.
 
 **Consequences.** A new table needs one enum entry and its labels. The database stays the only validator: the form shows the constraint the row broke. Domain screens (groups, ratings) keep their own endpoints and messages.
+
+## ADR-026 — the deploy tool with Docker Compose instead of Caddy
+**Context.** The plan was Docker Compose plus Caddy for HTTPS on one VPS. The server is a VPS that already runs the deploy tool, whose Traefik proxy issues certificates and routes domains to containers.
+
+**Decision.** Deploy each environment as a deploy-tool Docker Compose resource (`infra/docker-compose.prod.yml`). An nginx container serves the SPA and proxies `/api` and `/anon` to the backend, so one domain covers both and there is still no CORS. The Postgres image bakes in the role script instead of bind-mounting it from the repository. A `backup` service runs `pg_dump` daily.
+
+**Consequences.** No Caddyfile. The compose file also runs with plain `docker compose` given the same environment variables. nginx passes on Traefik's `X-Forwarded-Proto`, which Spring trusts from private addresses, so secure cookies work behind two proxies.

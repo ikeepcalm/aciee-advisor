@@ -22,7 +22,7 @@ PostgreSQL 18. This document is the logical and physical design: entities, keys,
 
 All objects are owned by the migrator (ARCHITECTURE §4). Domains (§3.1) live in `ref`; the `ro_ro` ICU collation in `core`.
 
-**Status (W2).** Roles, grants, RLS policies and per-role limits are in changeset `012-access`; the app connects as `aciee_ident`. The anon pool comes with redemption in W3.
+**Status (W2).** Roles, grants, RLS policies and per-role limits are in changeset `012-access`; the app connects as `aciee_ident`. Changeset `014` adds weekly hours per component and `core.rollover`. The anon pool comes with redemption in W3.
 
 | Object | `aciee_ident` | `aciee_anon` | `aciee_report` |
 |---|---|---|---|
@@ -75,7 +75,7 @@ Changing a domain's CHECK re-validates every column that uses it (3M rows for `s
 |---|---|---|---|
 | `subject` | `id` | `code` UQ, `name_ro`, `name_en`, `replaced_by_id` → `subject` | `CHECK (replaced_by_id <> id)`. Longer cycles are cut by the `CYCLE` clause in §8. |
 | `study_plan` | `id` | `specialization_id`, `intake int4range` | The curriculum a cohort follows, by intake year. `UNIQUE (specialization_id, intake WITHOUT OVERLAPS)` |
-| `curriculum_item` | `id` | `plan_id`, `subject_id`, `study_year`, `semester_no`, `elective_slot` NULL; UQ(`plan_id`, `subject_id`); UQ(`id`, `plan_id`, `study_year`) | No grading weights (ADR-024). An elective package is the set of items sharing (`plan_id`, `study_year`, `semester_no`, `elective_slot`), so its options cannot span years or semesters. |
+| `curriculum_item` | `id` | `plan_id`, `subject_id`, `study_year`, `semester_no`, `elective_slot` NULL, `lecture_hours`, `seminar_hours`, `lab_hours`, `project_hours` (weekly, from the plan); UQ(`plan_id`, `subject_id`); UQ(`id`, `plan_id`, `study_year`) | No grading weights (ADR-024). An elective package is the set of items sharing (`plan_id`, `study_year`, `semester_no`, `elective_slot`), so its options cannot span years or semesters. |
 | `study_group` | `id` | `plan_id`, `academic_year_id`, `study_year`, `code`, `max_size`; UQ(`academic_year_id`, `code`); UQ(`id`, `plan_id`, `study_year`) | Specialisation is reached through the plan. |
 | `subgroup` | `id` | `group_id`, `label`; UQ(`group_id`, `label`); UQ(`id`, `group_id`) | |
 | `course_offering` | `id` | `curriculum_item_id`, `group_id`, pinned `plan_id`, `study_year`, `title_snapshot`; UQ(`curriculum_item_id`, `group_id`); UQ(`group_id`, `id`) | One course taught to one group. Its semester is `semester(academic_year_id, no)` = (group's `academic_year_id`, item's `semester_no`). |

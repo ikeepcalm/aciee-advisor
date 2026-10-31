@@ -8,7 +8,7 @@
 | Database | PostgreSQL 18 (single DBMS) |
 | Frontend | Vue 3, Vite, TypeScript, Pinia, PrimeVue, vue-i18n (`ro-RO`), Chart.js via vue-chartjs |
 | Crypto | RFC 9474 blind RSA: Bouncy Castle `bcprov-jdk18on` ≥ 1.85.2 (server), `@cloudflare/blindrsa-ts` (browser), WebCrypto HKDF + AES-GCM |
-| Infra | Docker Compose: postgres + app + Caddy (automatic HTTPS) on one VPS |
+| Infra | Docker Compose on one VPS under the deploy tool: postgres, app, nginx (SPA + `/api` proxy), backup; the deploy tool's proxy terminates HTTPS (DEPLOY.md) |
 | Load test | k6 |
 | CI | GitHub Actions + Testcontainers |
 
@@ -103,14 +103,14 @@ The app uses two DataSources, so a SQL injection on one side cannot read the oth
 | Repeating a year | Membership in the new group with `kind = 'repeat'` |
 | Repeating one course with another group | `offering_enrolment` for that offering only |
 | Professor erasure request | Archive and anonymise the name; FKs restrict, nothing cascades into ratings |
-| Academic year rollover | PL/pgSQL `rollover(ay)` copies groups to `study_year + 1`; leaders re-confirm |
+| Academic year rollover | PL/pgSQL `rollover(ay)` copies groups to `study_year + 1` in the following year (code `3111A` → `3211A` when its second character is the study year), with subgroups and offerings; each member gets a pending request and each leader a pending claim, so leaders re-confirm |
 
 ### Row-level security and grants
 
 **Where RLS applies.** On the ident pool only, because that is where a user id exists:
 - `group_membership` and `membership_request`: students see their own rows; leaders see their group's rows while their leadership's membership is current, with `WITH CHECK`; admins see all (to revoke a leader and undo approvals).
 - `token_issuance`: own rows only.
-- Only a student can file their own request (`WITH CHECK user_id = me AND status = 'pending'`); only a leader or admin can decide one or insert a membership.
+- Only a student can file their own request (`WITH CHECK user_id = me AND status = 'pending'`), except that an admin may file pending requests for others (rollover); only a leader or admin can decide one or insert a membership.
 - Helper functions: `core.app_user_id()`, `core.is_admin()`, `core.leads_group(group)`. `leads_group` is `SECURITY DEFINER`: it reads `group_membership`, and a policy on `group_membership` that queried `group_membership` under RLS would recurse. `core.invite_uses(invite)` is `SECURITY DEFINER` for the same reason: a student must not see other students' requests, but the invite cap counts them.
 
 `FORCE ROW LEVEL SECURITY` is not used: it only affects the table owner, and no app role owns a table. FK checks bypass RLS by design; no policy here relies on hiding a row from an FK check.
@@ -140,21 +140,24 @@ The app uses two DataSources, so a SQL injection on one side cannot read the oth
 - Fixture changesets are formatted SQL under `db/changelog/fixtures/`. Two contexts share one parametrised script:
   - `fixtures`: about 2% of the volumes below, for development, CI and the demo environment.
   - `fixtures-large`: the full volumes, for Stage 4 only.
-- They run only when `spring.liquibase.contexts` names one; prod names neither.
+- They run only when `spring.liquibase.contexts` names one. The default context is `prod`, because Liquibase runs every changeset when no context is given. The scale is a changelog property (`fixture_scale`: 0.02 or 1) set per context in the master changelog.
 - Data comes from `generate_series` with `setseed`, followed by `ANALYZE` / `VACUUM`.
-- Target volumes:
+- Shape: one synthetic faculty `FIX`, 24 specializations × 10 groups per study year × 6 academic years, 28 students per group, intakes over 9 years, 2 subgroups per group, 12 courses per year with seminar or lab hours and some projects. A professor teaches the same subject component across groups and years, so professor × subject pairs reach k. 10% of current first-years have a pending request instead of a membership; seat 1 of each current group is its leader.
+- Volumes at `fixtures-large`, computed from the shape and not yet measured (`fixtures` is about 2%, checked by `FixturesTests`):
 
 | Table | Rows |
 |---|---|
 | users | 60k |
-| memberships | 220k |
+| memberships | 160k |
 | professors (with namesakes) | 600 |
-| offerings | 17k |
-| assignments | 60k |
-| submissions | 1.5M |
-| ratings | 3M |
-| posts and versions | 300k |
+| offerings | 69k |
+| assignments | 230k |
+| submissions (75% of member × offering) | 1.4M |
+| ratings (lecture + own subgroup) | 3.3M |
+| posts and versions | 350k |
 | audit rows | 5M |
+
+  Groups of 28 with a full plan give more offerings and assignments per user than first estimated; users, ratings and audit rows match the original targets.
 
 - Production never runs this profile.
 
@@ -190,11 +193,11 @@ The app uses two DataSources, so a SQL injection on one side cannot read the oth
 backend/     Spring Boot app; db/changelog/schema (schema), db/changelog/seed (real curriculum, every environment), db/changelog/fixtures (fixtures contexts only)
 tools/       curriculum/plans_to_sql.py: study-plan PDFs → the seed changeset
 frontend/    Vue 3 SPA; src/crypto holds all blind-RSA code + RFC 9474 test vectors
-infra/       docker-compose.yml, Caddyfile, backup script
+infra/       docker-compose.yml (local), docker-compose.prod.yml (the deploy tool), postgres/ (role script + image)
 loadtest/    k6 scripts
 docs/        specification, architecture, roadmap, decisions, AI log, explain-plan captures
 ```
 
 ## 8. Operations
-- Two environments: `app.` holds real data with no fixtures; `demo.` is seeded with one account per role and reset nightly.
-- A nightly `pg_dump` is copied off the server. The restore is tested before launch.
+- Two environments (DEPLOY.md): `acieeadvisor.ro` holds real data with no fixtures; `demo.acieeadvisor.ro` is seeded with one account per role. A nightly reset of the demo is not automated yet: redeploying with a fresh volume resets it.
+- A nightly `pg_dump` runs in the `backup` service; copying it off the server and a tested restore are required before launch.
