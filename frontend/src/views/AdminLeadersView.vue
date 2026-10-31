@@ -3,6 +3,7 @@ import { onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import Button from 'primevue/button'
 import Message from 'primevue/message'
+import AdminSections from '@/components/AdminSections.vue'
 import { api, describeError } from '@/api'
 
 interface Claim {
@@ -46,6 +47,7 @@ onMounted(() => load().catch((e) => (error.value = describeError(t, e))))
 <template>
   <main>
     <h1>{{ t('admin.leadersTitle') }}</h1>
+    <AdminSections />
     <Message v-if="error" severity="error">{{ error }}</Message>
 
     <h2>{{ t('admin.pendingClaims') }}</h2>

@@ -12,7 +12,10 @@ const router = createRouter({
     { path: '/verify', name: 'verify', component: () => import('../views/VerifyView.vue'), meta: { guestOnly: true } },
     { path: '/group', name: 'group', component: () => import('../views/GroupView.vue'), meta: { signedIn: true } },
     { path: '/join/:token', name: 'join', component: () => import('../views/JoinView.vue'), meta: { signedIn: true } },
+    { path: '/admin', redirect: { name: 'admin-leaders' } },
     { path: '/admin/leaders', name: 'admin-leaders', component: () => import('../views/AdminLeadersView.vue'), meta: { role: 'admin' } },
+    { path: '/admin/history', name: 'admin-history', component: () => import('../views/AdminHistoryView.vue'), meta: { role: 'admin' } },
+    { path: '/admin/:table', name: 'admin-table', component: () => import('../views/AdminTableView.vue'), meta: { role: 'admin' } },
     { path: '/forbidden', name: 'forbidden', component: () => import('../views/ForbiddenView.vue') },
   ],
 })
