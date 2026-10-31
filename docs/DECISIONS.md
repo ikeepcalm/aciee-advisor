@@ -227,3 +227,14 @@ Format: context → decision → consequences. Never rewrite an accepted ADR; su
 **Decision.** Drop `lab_pct`, `exam_pct`, `project_pct`, their CHECK and the `pct` domain. Supersedes the `pct` entry in ADR-015's domain list.
 
 **Consequences.** Course pages no longer show a split we could only guess. Students describe how a course is passed through the survival metadata instead.
+
+## ADR-025 — Admin CRUD driven by one table list; database errors mapped once
+**Context.** The admin screens edit 13 tables (curriculum, calendar, groups, professors, assignments). Hand-written endpoints and forms per table would repeat the same list / create / update / delete code 13 times, and each would map constraint errors on its own.
+
+**Decision.**
+- `AdminTable` (an enum) lists the editable tables: columns with their SQL types, foreign keys to other entries, a label expression, and columns the server fills itself (a pinned `plan_id` or `group_id` derived from the chosen group or offering). Table and column names come only from the enum; values are bound parameters cast to the column type.
+- One service builds the SQL; one Vue view renders any table from the metadata. Lists page by key (keyset), never `OFFSET`.
+- Rules that are not constraints stay explicit: a semester must lie inside its year (DATABASE §3.3), archiving a professor anonymises the name (ADR-012), and "generate the group's courses" inserts one offering per curriculum item of the group's plan and year.
+- `DatabaseErrorAdvice` turns PostgreSQL errors into problem details once, by SQLSTATE: FK → `foreign_key`, unique / exclusion → `duplicate`, CHECK → `check_failed`, NOT NULL → `required`, bad input → `invalid_value`, with the constraint and column names attached.
+
+**Consequences.** A new table needs one enum entry and its labels. The database stays the only validator: the form shows the constraint the row broke. Domain screens (groups, ratings) keep their own endpoints and messages.
