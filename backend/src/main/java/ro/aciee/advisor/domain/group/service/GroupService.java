@@ -93,45 +93,43 @@ public class GroupService {
     @Transactional
     public void join(String token, Integer subgroupId) {
         var invite = jdbc.sql("""
-                        SELECT id, group_id, max_uses, expires_at > now() AS live
-                        FROM core.group_invite WHERE token_hash = sha256(convert_to(:token, 'UTF8'))
-                        FOR NO KEY UPDATE""")
+                        SELECT i.id, i.group_id, i.max_uses, i.expires_at > now() AS live,
+                               upper(ay.during) > current_date AS year_open,
+                               EXISTS (SELECT 1 FROM core.group_membership m
+                                       WHERE m.user_id = core.app_user_id() AND m.group_id = i.group_id
+                                         AND m.valid_during && daterange(current_date, NULL)) AS member
+                        FROM core.group_invite i
+                        JOIN core.study_group g ON g.id = i.group_id
+                        JOIN core.academic_year ay ON ay.id = g.academic_year_id
+                        WHERE i.token_hash = sha256(convert_to(:token, 'UTF8'))
+                        FOR NO KEY UPDATE OF i""")
                 .param("token", token)
                 .query()
                 .listOfRows();
         if (invite.isEmpty() || !(Boolean) invite.getFirst().get("live")) {
             throw new ResponseStatusException(HttpStatus.GONE, "invite_expired");
         }
-        long uses = jdbc.sql("SELECT core.invite_uses(:id)")
-                .param("id", invite.getFirst().get("id"))
-                .query(Long.class)
-                .single();
-        if (uses >= ((Number) invite.getFirst().get("max_uses")).intValue()) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "invite_used_up");
-        }
-        var group = jdbc.sql("""
-                        SELECT upper(ay.during) > current_date AS year_open,
-                               EXISTS (SELECT 1 FROM core.group_membership m
-                                       WHERE m.user_id = core.app_user_id() AND m.group_id = g.id
-                                         AND m.valid_during && daterange(current_date, NULL)) AS member
-                        FROM core.study_group g JOIN core.academic_year ay ON ay.id = g.academic_year_id
-                        WHERE g.id = :group""")
-                .param("group", invite.getFirst().get("group_id"))
-                .query()
-                .singleRow();
-        if (!(Boolean) group.get("year_open")) {
+        var row = invite.getFirst();
+        if (!(Boolean) row.get("year_open")) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "year_ended");
         }
-        if ((Boolean) group.get("member")) {
+        if ((Boolean) row.get("member")) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "already_member");
+        }
+        long uses = jdbc.sql("SELECT core.invite_uses(:id)")
+                .param("id", row.get("id"))
+                .query(Long.class)
+                .single();
+        if (uses >= ((Number) row.get("max_uses")).intValue()) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "invite_used_up");
         }
         try {
             jdbc.sql("""
                             INSERT INTO core.membership_request (user_id, group_id, subgroup_id, kind, invite_id)
                             VALUES (core.app_user_id(), :group, :subgroup, 'regular', :invite)""")
-                    .param("group", invite.getFirst().get("group_id"))
+                    .param("group", row.get("group_id"))
                     .param("subgroup", subgroupId)
-                    .param("invite", invite.getFirst().get("id"))
+                    .param("invite", row.get("id"))
                     .update();
         } catch (DuplicateKeyException e) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "request_pending");
@@ -366,18 +364,14 @@ public class GroupService {
 
     private void endAssignment(TeachingSlot slot) {
         var match = """
-                offering_id = :offering AND component = :component
-                  AND subgroup_id IS NOT DISTINCT FROM CAST(:subgroup AS integer)
+                offering_id = :offeringId AND component = :component
+                  AND subgroup_id IS NOT DISTINCT FROM CAST(:subgroupId AS integer)
                   AND valid_during && daterange(current_date, NULL)""";
         jdbc.sql("DELETE FROM core.teaching_assignment WHERE lower(valid_during) >= current_date AND " + match)
-                .param("offering", slot.getOfferingId())
-                .param("component", slot.getComponent())
-                .param("subgroup", slot.getSubgroupId())
+                .paramSource(slot)
                 .update();
         jdbc.sql("UPDATE core.teaching_assignment SET valid_during = daterange(lower(valid_during), current_date) WHERE " + match)
-                .param("offering", slot.getOfferingId())
-                .param("component", slot.getComponent())
-                .param("subgroup", slot.getSubgroupId())
+                .paramSource(slot)
                 .update();
     }
 

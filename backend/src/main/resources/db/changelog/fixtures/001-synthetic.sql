@@ -208,7 +208,7 @@ INSERT INTO anon.post (key_hash, offering_id, kind)
 SELECT key_hash, offering_id, 'tip' FROM fx_submission WHERE get_byte(key_hash, 0) < 26;
 INSERT INTO anon.post (key_hash, offering_id, kind, teaching_assignment_id)
 SELECT r.key_hash, r.offering_id, 'comment', r.teaching_assignment_id
-FROM fx_submission s JOIN anon.rating r ON r.key_hash = s.key_hash
+FROM anon.rating r
 WHERE (get_byte(r.key_hash, 1) + r.teaching_assignment_id) % 20 = 0;
 
 INSERT INTO anon.post_version (post_id, version_no, kind, body, status, reason_code, submitted_week, moderated_week)
@@ -216,7 +216,6 @@ SELECT p.id, v.no, p.kind,
        CASE p.kind WHEN 'tip' THEN 'Sfat sintetic: începe proiectul din primele săptămâni.' ELSE 'Comentariu sintetic.' END,
        v.status, CASE v.status WHEN 'rejected' THEN 'off_topic' END, v.week, CASE WHEN v.status <> 'pending' THEN v.week + 7 END
 FROM anon.post p
-JOIN fx_submission s ON s.key_hash = p.key_hash
 CROSS JOIN LATERAL (
     SELECT no,
            CASE WHEN no < versions THEN 'approved'
@@ -230,13 +229,17 @@ CROSS JOIN LATERAL (
 
 INSERT INTO anon.post_report (post_id, reason_code, reported_week)
 SELECT p.id, 'insult', date_trunc('week', current_date)::date
-FROM anon.post p JOIN fx_submission s ON s.key_hash = p.key_hash
+FROM anon.post p
 WHERE get_byte(p.key_hash, 5) < 3;
 
 INSERT INTO core.audit_log (created_at, table_name, row_id, op, old, new)
-SELECT now() - random() * interval '350 days', 'membership_request', floor(random() * 100000)::int, 'UPDATE',
-       '{"status": "pending"}', '{"status": "approved"}'
-FROM fx, generate_series(1, greatest(0, round(5000000 * fx.scale)::int - (SELECT count(*) FROM core.audit_log)::int));
+SELECT now() - interval '350 days' * (1 - n.i::float8 / n.total), 'membership_request', floor(random() * 100000)::int,
+       'UPDATE', '{"status": "pending"}', '{"status": "approved"}'
+FROM (SELECT i, count(*) OVER () AS total
+      FROM fx, generate_series(1, greatest(0, round(5000000 * fx.scale)::int - (SELECT count(*) FROM core.audit_log)::int)) i) n
+ORDER BY n.i;
+
+ANALYZE anon.submission, anon.rating, core.teaching_assignment, core.course_offering, core.curriculum_item;
 
 REFRESH MATERIALIZED VIEW anon.prof_subject_radar;
 REFRESH MATERIALIZED VIEW anon.course_survival;

@@ -16,6 +16,6 @@ public class AdminColumn {
     private String derivedFrom;
 
     public boolean isEditable() {
-        return !readOnly && derivedFrom == null;
+        return !readOnly;
     }
 }

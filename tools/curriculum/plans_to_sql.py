@@ -51,6 +51,7 @@ def parse(path):
                     'hours1': hours(cells[at + 1:at + 7]), 'hours2': hours(cells[at + 7:at + 13]),
                 })
     items = []
+    twins = {}
     previous = None
     slots = {}
     for row in rows:
@@ -69,11 +70,11 @@ def parse(path):
                 row['slot'] = slots[key]
         assert row['sem1'] or row['sem2'], row
         item = row | {'semester': semester, 'hours': row['hours1'] if semester == 1 else row['hours2']}
-        twin = next((i for i in items if (match_key(i['name']), i['year'], i['semester'])
-                     == (match_key(item['name']), item['year'], item['semester'])), None)
-        if twin:
-            twin['hours'] = [a + b for a, b in zip(twin['hours'], item['hours'])]
+        key = (match_key(item['name']), item['year'], item['semester'])
+        if key in twins:
+            twins[key]['hours'] = [a + b for a, b in zip(twins[key]['hours'], item['hours'])]
         else:
+            twins[key] = item
             items.append(item)
         previous = row
     names = [item['name'] for item in items]
@@ -111,10 +112,10 @@ def main(code, name, args):
     ranges = []
     for i, (intake, _) in enumerate(plans):
         upper = str(plans[i + 1][0]) if i + 1 < len(plans) else ''
-        ranges.append(f"({intake}, '[{intake},{upper})')")
+        ranges.append(f"('[{intake},{upper})')")
     print("INSERT INTO core.study_plan (specialization_id, intake)\n"
           "SELECT s.id, v.intake::int4range FROM core.specialization s\n"
-          f"CROSS JOIN (VALUES {', '.join(ranges)}) v(start, intake)\nWHERE s.code = {quote(code)};")
+          f"CROSS JOIN (VALUES {', '.join(ranges)}) v(intake)\nWHERE s.code = {quote(code)};")
     print('INSERT INTO core.subject (code, name_ro) VALUES\n'
           + ',\n'.join(f'    ({quote(code)}, {quote(name)})' for code, name in sorted(subjects.values()))
           + ';')

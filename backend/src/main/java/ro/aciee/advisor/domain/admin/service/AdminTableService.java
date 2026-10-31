@@ -127,20 +127,11 @@ public class AdminTableService {
 
     @Transactional
     public int rollover(int academicYearId) {
-        boolean nextYearExists = jdbc.sql("""
-                        SELECT EXISTS (SELECT 1 FROM core.academic_year f
-                                       JOIN core.academic_year n ON lower(n.during) = upper(f.during)
-                                       WHERE f.id = :year)""")
-                .param("year", academicYearId)
-                .query(Boolean.class)
-                .single();
-        if (!nextYearExists) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "next_year_missing");
-        }
         return jdbc.sql("SELECT core.rollover(:year)")
                 .param("year", academicYearId)
                 .query(Integer.class)
-                .single();
+                .optional()
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.CONFLICT, "next_year_missing"));
     }
 
     private void checkSemesterInsideYear(AdminTable table, String id) {

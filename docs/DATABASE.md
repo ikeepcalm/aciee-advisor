@@ -22,7 +22,7 @@ PostgreSQL 18. This document is the logical and physical design: entities, keys,
 
 All objects are owned by the migrator (ARCHITECTURE §4). Domains (§3.1) live in `ref`; the `ro_ro` ICU collation in `core`.
 
-**Status (W2).** Roles, grants, RLS policies and per-role limits are in changeset `012-access`; the app connects as `aciee_ident`. Changeset `014` adds weekly hours per component and `core.rollover`. The anon pool comes with redemption in W3.
+**Status (W2).** Roles, grants, RLS policies and per-role limits are in changeset `012-access`; the app connects as `aciee_ident`. Changeset `014` adds weekly hours per component, `core.rollover` (set-based, one statement per table), `core.archive_professor` and the audit history index. The anon pool comes with redemption in W3.
 
 | Object | `aciee_ident` | `aciee_anon` | `aciee_report` |
 |---|---|---|---|

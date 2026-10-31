@@ -63,7 +63,7 @@ RETURN EXISTS (SELECT 1
                FROM core.group_leader l
                JOIN core.group_membership m ON m.id = l.membership_id
                WHERE m.user_id = core.app_user_id() AND m.group_id = target_group
-                 AND m.valid_during @> current_date);
+                 AND m.valid_during && daterange(current_date, NULL));
 
 GRANT EXECUTE ON FUNCTION core.app_user_id(), core.is_admin(), core.leads_group(integer) TO aciee_ident;
 
@@ -79,6 +79,8 @@ CREATE POLICY own_led_or_admin_read ON core.membership_request FOR SELECT
     USING (user_id = (SELECT core.app_user_id()) OR (SELECT core.is_admin()) OR core.leads_group(group_id));
 CREATE POLICY own_pending_insert ON core.membership_request FOR INSERT
     WITH CHECK (user_id = (SELECT core.app_user_id()) AND status = 'pending');
+CREATE POLICY admin_insert ON core.membership_request FOR INSERT
+    WITH CHECK ((SELECT core.is_admin()) AND status = 'pending');
 CREATE POLICY led_or_admin_decide ON core.membership_request FOR UPDATE
     USING ((SELECT core.is_admin()) OR core.leads_group(group_id))
     WITH CHECK ((SELECT core.is_admin()) OR core.leads_group(group_id));
@@ -90,6 +92,7 @@ CREATE POLICY own_rows ON ident.token_issuance FOR ALL
 --rollback ALTER TABLE ident.token_issuance DISABLE ROW LEVEL SECURITY; DROP POLICY own_rows ON ident.token_issuance;
 --rollback ALTER TABLE core.membership_request DISABLE ROW LEVEL SECURITY;
 --rollback DROP POLICY led_or_admin_decide ON core.membership_request; DROP POLICY own_pending_insert ON core.membership_request;
+--rollback DROP POLICY admin_insert ON core.membership_request;
 --rollback DROP POLICY own_led_or_admin_read ON core.membership_request;
 --rollback ALTER TABLE core.group_membership DISABLE ROW LEVEL SECURITY;
 --rollback DROP POLICY led_or_admin_write ON core.group_membership; DROP POLICY own_led_or_admin_read ON core.group_membership;

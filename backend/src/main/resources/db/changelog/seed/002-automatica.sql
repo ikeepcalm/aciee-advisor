@@ -8,7 +8,7 @@ INSERT INTO core.specialization (faculty_id, code, name_ro, degree, duration_yea
 SELECT id, 'AIA', 'Automatică și informatică aplicată', 'BSc', 4 FROM core.faculty WHERE code = 'ACIEE';
 INSERT INTO core.study_plan (specialization_id, intake)
 SELECT s.id, v.intake::int4range FROM core.specialization s
-CROSS JOIN (VALUES (2023, '[2023,2024)'), (2024, '[2024,2025)'), (2025, '[2025,)')) v(start, intake)
+CROSS JOIN (VALUES ('[2023,2024)'), ('[2024,2025)'), ('[2025,)')) v(intake)
 WHERE s.code = 'AIA';
 INSERT INTO core.subject (code, name_ro) VALUES
     ('0501.1OB01F', 'Analiză matematică'),

@@ -2,9 +2,8 @@ FROM eclipse-temurin:25-jdk AS build
 WORKDIR /src
 COPY gradlew settings.gradle build.gradle ./
 COPY gradle gradle
-RUN chmod +x gradlew && ./gradlew --no-daemon dependencies > /dev/null
 COPY src src
-RUN ./gradlew --no-daemon bootJar
+RUN --mount=type=cache,target=/root/.gradle chmod +x gradlew && ./gradlew --no-daemon bootJar
 
 FROM eclipse-temurin:25-jre
 RUN useradd --system app

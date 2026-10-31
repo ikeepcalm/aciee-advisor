@@ -129,7 +129,11 @@ function claim(groupId: number) {
 function decide(requestId: number, decision: 'approve' | 'reject') {
   return run(async () => {
     await api('POST', `/api/groups/requests/${requestId}/${decision}`)
-    await loadLeaderTabs(current.value!.groupId)
+    const groupId = current.value!.groupId
+    ;[pending.value, roster.value] = await Promise.all([
+      api<typeof pending.value>('GET', `/api/groups/${groupId}/requests`),
+      api<RosterEntry[]>('GET', `/api/groups/${groupId}/members`),
+    ])
   })
 }
 
@@ -140,21 +144,21 @@ function createInvite(groupId: number) {
       maxUses: inviteUses.value,
     })
     newInviteLink.value = `${location.origin}/join/${created.token}`
-    await loadLeaderTabs(groupId)
+    invites.value = await api<Invite[]>('GET', `/api/groups/${groupId}/invites`)
   })
 }
 
 function deactivate(inviteId: number) {
   return run(async () => {
     await api('PATCH', `/api/groups/invites/${inviteId}`)
-    await loadLeaderTabs(current.value!.groupId)
+    invites.value = await api<Invite[]>('GET', `/api/groups/${current.value!.groupId}/invites`)
   })
 }
 
 function saveTeaching(groupId: number) {
   return run(async () => {
     await api('PUT', `/api/groups/${groupId}/teaching`, teaching.value.slots)
-    await loadLeaderTabs(groupId)
+    teaching.value = await api<typeof teaching.value>('GET', `/api/groups/${groupId}/teaching`)
   }, t('group.teachingSaved'))
 }
 
