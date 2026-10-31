@@ -61,23 +61,31 @@ class SchemaTests {
     }
 
     @Test
-    void curriculumSeedHoldsEveryCalculatoarePlan() {
-        var items = jdbc.sql("""
-                        SELECT lower(p.intake) AS intake, count(*) AS items
-                        FROM core.curriculum_item ci
-                        JOIN core.study_plan p ON p.id = ci.plan_id
+    void curriculumSeedHoldsEveryPlanOfBothProgrammes() {
+        var plans = jdbc.sql("""
+                        SELECT s.code || ' ' || lower(p.intake)
+                        FROM core.study_plan p
                         JOIN core.specialization s ON s.id = p.specialization_id
-                        WHERE s.code = 'C'
-                        GROUP BY p.intake ORDER BY p.intake""")
-                .query().listOfRows();
-        assertThat(items).extracting(row -> row.get("intake")).containsExactly(2023, 2024, 2025);
+                        WHERE s.code IN ('AIA', 'C')
+                        ORDER BY 1""")
+                .query(String.class).list();
+        assertThat(plans).containsExactly("AIA 2023", "AIA 2024", "AIA 2025", "C 2023", "C 2024", "C 2025");
         assertThat(jdbc.sql("""
                         SELECT array_agg(sub.name_ro ORDER BY sub.name_ro)::text
                         FROM core.curriculum_item ci
                         JOIN core.subject sub ON sub.id = ci.subject_id
                         JOIN core.study_plan p ON p.id = ci.plan_id
-                        WHERE lower(p.intake) = 2025 AND ci.study_year = 4 AND ci.semester_no = 2 AND ci.elective_slot = 3""")
+                        JOIN core.specialization s ON s.id = p.specialization_id
+                        WHERE s.code = 'C' AND lower(p.intake) = 2025
+                          AND ci.study_year = 4 AND ci.semester_no = 2 AND ci.elective_slot = 3""")
                 .query(String.class).single()).isEqualTo("{E-commerce,\"Regăsirea informației\"}");
+        assertThat(jdbc.sql("""
+                        SELECT ci.lecture_hours || 'C ' || ci.seminar_hours || 'S ' || ci.lab_hours || 'L'
+                        FROM core.curriculum_item ci
+                        JOIN core.subject sub ON sub.id = ci.subject_id
+                        WHERE sub.code = '0502.1OB03F' AND ci.plan_id = (SELECT p.id FROM core.study_plan p
+                            JOIN core.specialization s ON s.id = p.specialization_id WHERE s.code = 'C' AND lower(p.intake) = 2025)""")
+                .query(String.class).single()).isEqualTo("2C 1S 2L");
     }
 
     @Test

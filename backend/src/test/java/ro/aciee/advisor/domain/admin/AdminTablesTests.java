@@ -83,14 +83,16 @@ class AdminTablesTests {
         int groupId = jdbc.sql("""
                         INSERT INTO core.study_group (plan_id, academic_year_id, study_year, code, max_size)
                         SELECT p.id, (SELECT id FROM core.academic_year WHERE during @> current_date), 2, :code, 30
-                        FROM core.study_plan p WHERE lower(p.intake) = 2025
+                        FROM core.study_plan p JOIN core.specialization s ON s.id = p.specialization_id
+                        WHERE s.code = 'C' AND lower(p.intake) = 2025
                         RETURNING id""")
                 .param("code", prefix)
                 .query(Integer.class)
                 .single();
         long expected = jdbc.sql("""
-                        SELECT count(*) FROM core.curriculum_item ci JOIN core.study_plan p ON p.id = ci.plan_id
-                        WHERE lower(p.intake) = 2025 AND ci.study_year = 2""")
+                        SELECT count(*) FROM core.curriculum_item ci JOIN core.study_group g ON g.plan_id = ci.plan_id
+                        WHERE g.id = :group AND ci.study_year = 2""")
+                .param("group", groupId)
                 .query(Long.class).single();
 
         as(post("/api/admin/tables/study_group/%d/offerings".formatted(groupId))).andExpect(jsonPath("$.created").value(expected));
