@@ -220,3 +220,10 @@ Format: context → decision → consequences. Never rewrite an accepted ADR; su
 - Fixture rows are generated one month per statement.
 
 **Consequences.** Bulk changes (rollover, imports) cost one audit insert per statement. An insert for a month with no partition fails loudly instead of landing in a catch-all, so the scheduled job must run; it creates several months ahead.
+
+## ADR-024 — No official grading weights
+**Context.** The schema stored a lab / exam / project split (summing to 100) for every curriculum item, shown on course pages as "official weights". The study plans list hours, credits and the evaluation form (exam or colloquium) but not this split. It lives in the per-course descriptions, which are not published for every course, and professors do not always announce it.
+
+**Decision.** Drop `lab_pct`, `exam_pct`, `project_pct`, their CHECK and the `pct` domain. Supersedes the `pct` entry in ADR-015's domain list.
+
+**Consequences.** Course pages no longer show a split we could only guess. Students describe how a course is passed through the survival metadata instead.

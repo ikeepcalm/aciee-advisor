@@ -44,8 +44,8 @@ class SchemaTests {
         planId = insert("INSERT INTO core.study_plan (specialization_id, intake) VALUES (%d, '[2020,2030)') RETURNING id".formatted(specializationId));
         int subjectId = insert("INSERT INTO core.subject (code, name_ro) VALUES ('BD', 'Baze de date') RETURNING id");
         int itemId = insert("""
-                INSERT INTO core.curriculum_item (plan_id, subject_id, study_year, semester_no, lab_pct, exam_pct, project_pct)
-                VALUES (%d, %d, 3, 1, 40, 60, 0) RETURNING id""".formatted(planId, subjectId));
+                INSERT INTO core.curriculum_item (plan_id, subject_id, study_year, semester_no)
+                VALUES (%d, %d, 3, 1) RETURNING id""".formatted(planId, subjectId));
         groupId = insert("""
                 INSERT INTO core.study_group (plan_id, academic_year_id, study_year, code, max_size)
                 VALUES (%d, %d, 3, '3311', 30) RETURNING id""".formatted(planId, yearId));
@@ -82,8 +82,8 @@ class SchemaTests {
     void auditPairsRowsByTheWholePrimaryKey() {
         int subjectId = insert("INSERT INTO core.subject (code, name_ro) VALUES ('SO', 'Sisteme de operare') RETURNING id");
         int itemId = insert("""
-                INSERT INTO core.curriculum_item (plan_id, subject_id, study_year, semester_no, lab_pct, exam_pct, project_pct)
-                VALUES (%d, %d, 3, 1, 50, 50, 0) RETURNING id""".formatted(planId, subjectId));
+                INSERT INTO core.curriculum_item (plan_id, subject_id, study_year, semester_no)
+                VALUES (%d, %d, 3, 1) RETURNING id""".formatted(planId, subjectId));
         int secondOfferingId = insert("""
                 INSERT INTO core.course_offering (curriculum_item_id, group_id, plan_id, study_year, title_snapshot)
                 VALUES (%d, %d, %d, 3, 'Sisteme de operare') RETURNING id""".formatted(itemId, groupId, planId));

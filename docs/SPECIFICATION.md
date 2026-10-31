@@ -68,7 +68,6 @@ Each teaching assignment (a professor teaching one component — lecture, lab, s
 ## 5. Survival metadata (structured, per course)
 
 Collected with each rating submission and shown on the course page:
-- Official weights (seeded): lab % / exam % / project %.
 - Exam difficulty (0–10).
 - How much the labs help with the exam (0–10).
 - Whether lecture attendance is useful (yes / partly / no).

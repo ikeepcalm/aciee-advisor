@@ -24,10 +24,6 @@ CREATE TABLE core.curriculum_item (
     study_year    smallint NOT NULL CHECK (study_year >= 1),
     semester_no   smallint NOT NULL CHECK (semester_no IN (1, 2)),
     elective_slot smallint CHECK (elective_slot >= 1),
-    lab_pct       ref.pct NOT NULL,
-    exam_pct      ref.pct NOT NULL,
-    project_pct   ref.pct NOT NULL,
-    CHECK (lab_pct + exam_pct + project_pct = 100),
     UNIQUE (plan_id, subject_id),
     UNIQUE (id, plan_id, study_year)
 );
@@ -107,10 +103,7 @@ SELECT o.id AS offering_id,
        ci.subject_id,
        sub.code AS subject_code,
        o.title_snapshot,
-       ci.elective_slot,
-       ci.lab_pct,
-       ci.exam_pct,
-       ci.project_pct
+       ci.elective_slot
 FROM core.course_offering o
 JOIN core.curriculum_item ci ON ci.id = o.curriculum_item_id
 JOIN core.subject sub ON sub.id = ci.subject_id

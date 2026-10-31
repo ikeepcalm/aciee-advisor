@@ -197,7 +197,7 @@ Routes for a role the user lacks redirect: a visitor goes to `/signin?next=<rout
 
 **Data read**
 - `core.specialization`, `core.study_plan` (default: the plan whose `intake` contains the current intake year).
-- `core.curriculum_item` joined to `core.subject` for the plan, year and semester (Q1). Weights from `lab_pct`, `exam_pct`, `project_pct`; zero weights are omitted.
+- `core.curriculum_item` joined to `core.subject` for the plan, year and semester (Q1).
 - Elective packages: items sharing (`plan_id`, `study_year`, `semester_no`, `elective_slot`), shown together under "Pachet opțional N".
 
 **Actions**
@@ -211,13 +211,13 @@ Routes for a role the user lacks redirect: a visitor goes to `/signin?next=<rout
 
 ## 5. Course page
 
-**Route** `/courses/:itemId` (a `curriculum_item`, so the page knows plan, year, semester and weights).
+**Route** `/courses/:itemId` (a `curriculum_item`, so the page knows plan, year and semester).
 
 **Who**
 
 | Role | Sees |
 |---|---|
-| Visitor | Header, official weights, list of teaching assignments (professor, component). A sign-in prompt replaces survival data, radars and tips. |
+| Visitor | Header, list of teaching assignments (professor, component). A sign-in prompt replaces survival data, radars and tips. |
 | Student and above | Everything below. |
 
 ```text
@@ -226,9 +226,6 @@ Routes for a role the user lacks redirect: a visitor goes to `/signin?next=<rout
 +--------------------------------------+
 | Programarea calculatoarelor          |
 | Calculatoare · An I · Sem. 1         |
-|                                      |
-| Ponderi oficiale                     |
-| Lab 40% | Examen 60% | Proiect 0%    |
 |                                      |
 | Cum se trece (din 23 evaluări)       |
 | Dificultate examen        6.8 / 10   |
@@ -274,7 +271,7 @@ Visitor variant of the middle part:
 ```
 
 **Data read**
-- Header and weights: `core.curriculum_item`, `core.subject`, `core.study_plan`, `core.specialization`.
+- Header: `core.curriculum_item`, `core.subject`, `core.study_plan`, `core.specialization`.
 - Offerings of the subject (Q2) through `core.offering_v`, filtered by the chosen academic year; default the latest year with an offering.
 - Assignments of those offerings (Q3): `core.teaching_assignment` → `core.professor` → `ref.academic_title`, `ref.component`. Lab and seminar rows show the subgroup label. Professors repeated across groups (ADR-010) appear once per component.
 - Survival block: `anon.course_survival` for the root subject. Weights stay the seeded ones from `curriculum_item`.
@@ -366,7 +363,6 @@ Visitor variant of the middle part:
 |        [ radar suprapus A, B ]       |
 |                                      |
 |                      A      B        |
-| Ponderi L/E/P   30/70/0  50/20/30    |
 | Dificultate ex.    7.1     5.4       |
 | Ajutor lab         6.0     8.3       |
 | Ore / săptămână    4.0     6.5       |
@@ -380,7 +376,7 @@ Visitor variant of the middle part:
 
 **Data read**
 - Package options: `core.curriculum_item` sharing (`plan_id`, `study_year`, `semester_no`, `elective_slot`) (Q1).
-- Per option: professors of its lecture and other components (Q2, Q3); radar from `anon.prof_subject_radar` for the chosen professor (Q4); survival from `anon.course_survival`; weights from `curriculum_item`.
+- Per option: professors of its lecture and other components (Q2, Q3); radar from `anon.prof_subject_radar` for the chosen professor (Q4); survival from `anon.course_survival`.
 
 **Actions**
 - Tick 2–3 options; a 4th tick is disabled ("Poți compara cel mult 3 opționale").
@@ -868,7 +864,7 @@ Sections: **Curriculum**, **Calendar**, **Grupe**, **Profesori**, **Repartizări
 
 | Section | Tables | Rules enforced (database first) |
 |---|---|---|
-| Curriculum | `faculty`, `department`, `specialization`, `subject` (with `replaced_by_id`), `study_plan`, `curriculum_item` | `lab_pct + exam_pct + project_pct = 100`; plan `intake` ranges do not overlap; `study_year ≤ duration_years` (trigger); `replaced_by_id <> id`. |
+| Curriculum | `faculty`, `department`, `specialization`, `subject` (with `replaced_by_id`), `study_plan`, `curriculum_item` | Plan `intake` ranges do not overlap; `study_year ≤ duration_years` (trigger); `replaced_by_id <> id`. |
 | Calendar | `academic_year`, `semester` incl. `rating_opens_at` | Years and semesters do not overlap (EXCLUDE, temporal UQ); semester inside its year is checked by this form (DATABASE §3.3). |
 | Grupe | `study_group`, `subgroup`, `course_offering` (with `title_snapshot`) | Group and offering share plan and year (pinned FK). "Trecere în anul următor" runs `rollover(ay)`. |
 | Profesori | `professor` | "Șterge" only when no assignment exists (`EXISTS`, Q16); otherwise "Arhivează" sets `archived_at` and anonymises the name (ADR-012). |
