@@ -75,3 +75,31 @@ $$;
 
 GRANT EXECUTE ON FUNCTION core.rollover(integer) TO aciee_ident;
 --rollback DROP FUNCTION core.rollover(integer); DROP POLICY admin_insert ON core.membership_request;
+
+--changeset aciee:014-upcoming-years splitStatements:false
+CREATE OR REPLACE FUNCTION core.leads_group(target_group integer) RETURNS boolean
+LANGUAGE sql STABLE SECURITY DEFINER SET search_path = pg_catalog
+RETURN EXISTS (SELECT 1
+               FROM core.group_leader l
+               JOIN core.group_membership m ON m.id = l.membership_id
+               WHERE m.user_id = core.app_user_id() AND m.group_id = target_group
+                 AND m.valid_during && daterange(current_date, NULL));
+
+CREATE FUNCTION core.archive_professor(target integer) RETURNS boolean
+LANGUAGE plpgsql SECURITY DEFINER SET search_path = pg_catalog AS $$
+BEGIN
+    UPDATE core.professor
+    SET archived_at = now(), full_name = 'Profesor arhivat', slug = 'arhivat-' || id
+    WHERE id = target AND archived_at IS NULL;
+    IF NOT FOUND THEN
+        RETURN false;
+    END IF;
+    UPDATE core.audit_log
+    SET old = old - 'full_name' - 'slug', new = new - 'full_name' - 'slug'
+    WHERE table_name = 'professor' AND row_id = target;
+    RETURN true;
+END
+$$;
+
+GRANT EXECUTE ON FUNCTION core.archive_professor(integer) TO aciee_ident;
+--rollback DROP FUNCTION core.archive_professor(integer);

@@ -102,13 +102,11 @@ public class AdminTableService {
 
     @Transactional
     public void archiveProfessor(int id) {
-        int archived = jdbc.sql("""
-                        UPDATE core.professor
-                        SET archived_at = now(), full_name = 'Profesor arhivat', slug = 'arhivat-' || id
-                        WHERE id = :id AND archived_at IS NULL""")
+        boolean archived = jdbc.sql("SELECT core.archive_professor(:id)")
                 .param("id", id)
-                .update();
-        if (archived == 0) {
+                .query(Boolean.class)
+                .single();
+        if (!archived) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "not_found");
         }
     }

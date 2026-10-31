@@ -84,6 +84,7 @@ class GroupFlowTests {
         send(post("/api/groups/requests/%d/approve".formatted(requestId)), leaderId).andExpect(status().isNoContent());
         send(post("/api/groups/requests/%d/approve".formatted(requestId)), leaderId)
                 .andExpect(jsonPath("$.detail").value("already_decided"));
+        join(token, studentId).andExpect(jsonPath("$.detail").value("already_member"));
 
         send(get("/api/groups/mine"), studentId)
                 .andExpect(jsonPath("$.memberships[0].subgroup").value("1"))
@@ -132,13 +133,14 @@ class GroupFlowTests {
                 .formatted(itemId, groupId));
 
         send(get("/api/groups/%d/teaching".formatted(groupId)), leaderId)
-                .andExpect(jsonPath("$.slots.length()").value(1))
-                .andExpect(jsonPath("$.slots[0].component").value("lab"))
-                .andExpect(jsonPath("$.slots[0].subgroup").value("1"))
-                .andExpect(jsonPath("$.slots[0].professorId").doesNotExist());
+                .andExpect(jsonPath("$.slots.length()").value(2))
+                .andExpect(jsonPath("$.slots[0].subgroup").doesNotExist())
+                .andExpect(jsonPath("$.slots[1].component").value("lab"))
+                .andExpect(jsonPath("$.slots[1].subgroup").value("1"))
+                .andExpect(jsonPath("$.slots[1].professorId").doesNotExist());
         assign(offeringId, "lab", first, leaderId).andExpect(status().isNoContent());
         assign(offeringId, "lab", second, leaderId).andExpect(status().isNoContent());
-        send(get("/api/groups/%d/teaching".formatted(groupId)), leaderId).andExpect(jsonPath("$.slots[0].professorId").value(second));
+        send(get("/api/groups/%d/teaching".formatted(groupId)), leaderId).andExpect(jsonPath("$.slots[1].professorId").value(second));
         assertThat(jdbc.sql("SELECT count(*) FROM core.teaching_assignment WHERE offering_id = :id").param("id", offeringId)
                 .query(Long.class).single()).isEqualTo(1);
 
@@ -185,6 +187,11 @@ class GroupFlowTests {
         send(get("/api/groups/%d/requests".formatted(newGroup)), adminId)
                 .andExpect(jsonPath("$.requests.length()").value(1))
                 .andExpect(jsonPath("$.requests[0].email").value("leader.%s@student.ugal.ro".formatted(prefix)));
+
+        approveClaim(newGroup, "14r" + prefix);
+        send(get("/api/groups/%d/requests".formatted(newGroup)), leaderId)
+                .andExpect(jsonPath("$.requests.length()").value(0))
+                .andExpect(jsonPath("$.members").value(1));
     }
 
     private void becomeLeader(int userId, int group, String code) throws Exception {

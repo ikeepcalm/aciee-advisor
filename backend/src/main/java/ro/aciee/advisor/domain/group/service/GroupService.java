@@ -109,6 +109,22 @@ public class GroupService {
         if (uses >= ((Number) invite.getFirst().get("max_uses")).intValue()) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "invite_used_up");
         }
+        var group = jdbc.sql("""
+                        SELECT upper(ay.during) > current_date AS year_open,
+                               EXISTS (SELECT 1 FROM core.group_membership m
+                                       WHERE m.user_id = core.app_user_id() AND m.group_id = g.id
+                                         AND m.valid_during && daterange(current_date, NULL)) AS member
+                        FROM core.study_group g JOIN core.academic_year ay ON ay.id = g.academic_year_id
+                        WHERE g.id = :group""")
+                .param("group", invite.getFirst().get("group_id"))
+                .query()
+                .singleRow();
+        if (!(Boolean) group.get("year_open")) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "year_ended");
+        }
+        if ((Boolean) group.get("member")) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "already_member");
+        }
         try {
             jdbc.sql("""
                             INSERT INTO core.membership_request (user_id, group_id, subgroup_id, kind, invite_id)
@@ -138,7 +154,7 @@ public class GroupService {
                         SELECT core.app_user_id(), :group, 'regular'
                         WHERE NOT EXISTS (SELECT 1 FROM core.group_membership m
                                           WHERE m.user_id = core.app_user_id() AND m.group_id = :group
-                                            AND m.valid_during @> current_date)
+                                            AND m.valid_during && daterange(current_date, NULL))
                         ON CONFLICT (user_id, group_id) WHERE status = 'pending' DO NOTHING""")
                 .param("group", groupId)
                 .update();
@@ -164,7 +180,7 @@ public class GroupService {
                         FROM core.group_membership m
                         JOIN core.user_account a ON a.id = m.user_id
                         LEFT JOIN core.subgroup s ON s.id = m.subgroup_id
-                        WHERE m.group_id = :group AND m.valid_during @> current_date
+                        WHERE m.group_id = :group AND m.valid_during && daterange(current_date, NULL)
                         ORDER BY s.label NULLS LAST, a.email""")
                 .param("group", groupId)
                 .query(RosterEntry.class)
@@ -338,9 +354,11 @@ public class GroupService {
                         JOIN core.curriculum_item ci ON ci.id = o.curriculum_item_id
                         CROSS JOIN LATERAL (VALUES ('seminar', ci.seminar_hours), ('lab', ci.lab_hours),
                                                    ('project', ci.project_hours)) c(component, hours)
-                        LEFT JOIN core.subgroup s ON s.group_id = o.group_id
+                        CROSS JOIN LATERAL (SELECT NULL::integer AS id, NULL AS label
+                                            UNION ALL
+                                            SELECT id, label FROM core.subgroup WHERE group_id = o.group_id) s
                         WHERE o.group_id = :group AND c.hours > 0
-                        ORDER BY ci.semester_no, o.title_snapshot, c.component, s.label""")
+                        ORDER BY ci.semester_no, o.title_snapshot, c.component, s.label NULLS FIRST""")
                 .param("group", groupId)
                 .query(TeachingSlot.class)
                 .list();
@@ -387,7 +405,7 @@ public class GroupService {
         return jdbc.sql("""
                         SELECT g.max_size,
                                (SELECT count(*) FROM core.group_membership m
-                                WHERE m.group_id = g.id AND m.valid_during @> current_date) AS members
+                                WHERE m.group_id = g.id AND m.valid_during && daterange(current_date, NULL)) AS members
                         FROM core.study_group g WHERE g.id = :group""")
                 .param("group", groupId)
                 .query(Occupancy.class)

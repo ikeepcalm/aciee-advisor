@@ -27,7 +27,7 @@ public class LeadershipService {
                         JOIN core.user_account a ON a.id = c.user_id
                         JOIN core.group_v g ON g.id = c.group_id
                         LEFT JOIN core.group_membership m
-                            ON m.user_id = c.user_id AND m.group_id = c.group_id AND m.valid_during @> current_date
+                            ON m.user_id = c.user_id AND m.group_id = c.group_id AND m.valid_during && daterange(current_date, NULL)
                         WHERE c.status = 'pending'
                         ORDER BY c.id""")
                 .query(LeaderClaim.class)
@@ -38,7 +38,7 @@ public class LeadershipService {
                         JOIN core.group_membership m ON m.id = l.membership_id
                         JOIN core.user_account a ON a.id = m.user_id
                         JOIN core.group_v g ON g.id = m.group_id
-                        WHERE m.valid_during @> current_date
+                        WHERE m.valid_during && daterange(current_date, NULL)
                         ORDER BY g.code""")
                 .query(Leader.class)
                 .list();
@@ -72,7 +72,7 @@ public class LeadershipService {
             int inserted = jdbc.sql("""
                             INSERT INTO core.group_leader (membership_id, claim_id)
                             SELECT m.id, :claim FROM core.group_membership m
-                            WHERE m.user_id = :user AND m.group_id = :group AND m.valid_during @> current_date""")
+                            WHERE m.user_id = :user AND m.group_id = :group AND m.valid_during && daterange(current_date, NULL)""")
                     .param("claim", claimId)
                     .param("user", userId)
                     .param("group", groupId)

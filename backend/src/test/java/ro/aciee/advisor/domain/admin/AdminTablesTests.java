@@ -19,6 +19,8 @@ import ro.aciee.advisor.TestcontainersConfiguration;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.authentication;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
@@ -58,7 +60,7 @@ class AdminTablesTests {
                 .andExpect(jsonPath("$.detail").value("duplicate"));
         String departmentId = created(write(post("/api/admin/tables/department"),
                 "{\"faculty_id\":\"%s\",\"name_ro\":\"Calculatoare\"}".formatted(facultyId)));
-        created(write(post("/api/admin/tables/professor"),
+        String professorId = created(write(post("/api/admin/tables/professor"),
                 "{\"full_name\":\"Ion Popescu\",\"title_code\":\"conf\",\"department_id\":\"%s\",\"slug\":\"ion-popescu-%s\"}"
                         .formatted(departmentId, prefix)));
 
@@ -72,6 +74,11 @@ class AdminTablesTests {
                 .andExpect(jsonPath("$.detail").value("invalid_value"));
         as(get("/api/admin/audit").param("table", "professor"))
                 .andExpect(jsonPath("$[0].actor").value("admin.%s@student.ugal.ro".formatted(prefix)));
+        as(post("/api/admin/tables/professor/%s/archive".formatted(professorId))).andExpect(status().isNoContent());
+        assertThat(as(get("/api/admin/audit").param("table", "professor").param("rowId", professorId))
+                .andReturn().getResponse().getContentAsString())
+                .contains("archived_at")
+                .doesNotContain("Popescu");
         mvc.perform(get("/api/admin/tables").with(authentication(UsernamePasswordAuthenticationToken.authenticated(
                         adminId, null, AuthorityUtils.createAuthorityList("ROLE_STUDENT")))))
                 .andExpect(status().isForbidden());
