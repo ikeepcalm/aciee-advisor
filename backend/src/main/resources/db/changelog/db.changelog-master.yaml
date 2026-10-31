@@ -1,4 +1,12 @@
 databaseChangeLog:
+  - property:
+      name: fixture_scale
+      value: 0.02
+      context: fixtures
+  - property:
+      name: fixture_scale
+      value: 1
+      context: fixtures-large
   - includeAll:
       path: db/changelog/schema/
   - includeAll:
