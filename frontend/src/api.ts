@@ -21,11 +21,32 @@ export async function api<T = void>(method: string, path: string, body?: unknown
   if (method !== 'GET' && !xsrfToken()) {
     await fetch('/api/auth/csrf')
   }
-  const response = await fetch(path, {
-    method,
-    headers: { 'Content-Type': 'application/json', 'X-XSRF-TOKEN': xsrfToken() ?? '' },
-    body: body === undefined ? undefined : JSON.stringify(body),
-  })
+  return parse<T>(
+    await fetch(path, {
+      method,
+      headers: { 'Content-Type': 'application/json', 'X-XSRF-TOKEN': xsrfToken() ?? '' },
+      body: body === undefined ? undefined : JSON.stringify(body),
+    }),
+  )
+}
+
+export async function anonApi<T = void>(
+  method: string,
+  path: string,
+  body?: unknown,
+  token?: string,
+): Promise<T> {
+  return parse<T>(
+    await fetch(path, {
+      method,
+      credentials: 'omit',
+      headers: { 'Content-Type': 'application/json', ...(token ? { 'X-Token': token } : {}) },
+      body: body === undefined ? undefined : JSON.stringify(body),
+    }),
+  )
+}
+
+async function parse<T>(response: Response): Promise<T> {
   if (!response.ok) {
     throw new ApiError(response.status, await response.json().catch(() => ({})))
   }
@@ -33,11 +54,36 @@ export async function api<T = void>(method: string, path: string, body?: unknown
   return (text ? JSON.parse(text) : undefined) as T
 }
 
+export interface Option {
+  code: string
+  label: string
+  group: string | null
+}
+
+export interface Lookups {
+  axes: Option[]
+  pillars: Option[]
+  examFormats: Option[]
+  attendance: Option[]
+  reportReasons: Option[]
+  moderationReasons: Option[]
+  threshold: number
+}
+
+let lookupsRequest: Promise<Lookups> | null = null
+
+export function lookups(): Promise<Lookups> {
+  lookupsRequest ??= api<Lookups>('GET', '/api/catalog/lookups')
+  return lookupsRequest
+}
+
 type Translate = (key: string, params: Record<string, unknown>) => string
 
 export function describeError(t: Translate, error: unknown): string {
   const detail = error instanceof ApiError ? String(error.problem.detail) : ''
-  return Object.hasOwn(ro.errors, detail) ? t(`errors.${detail}`, (error as ApiError).problem) : t('errors.generic', {})
+  return Object.hasOwn(ro.errors, detail)
+    ? t(`errors.${detail}`, (error as ApiError).problem)
+    : t('errors.generic', {})
 }
 
 export function safeNext(query: LocationQuery): string {

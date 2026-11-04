@@ -17,7 +17,7 @@ const { t, d } = useI18n()
 const router = useRouter()
 const userId = useAuthStore().user!.id
 const offerings = ref<RateableOffering[] | null>(null)
-const tokens = ref(new Set<number>())
+const tokens = ref(new Map<number, boolean>())
 const error = ref('')
 const retryable = ref(false)
 const busy = ref(false)
@@ -40,7 +40,10 @@ function status(offering: RateableOffering): string {
   if (!offering.fingerprint) {
     return t('rate.opensLater')
   }
-  return tokens.value.has(offering.offeringId) ? t('rate.ready') : t('rate.otherDevice')
+  if (!tokens.value.has(offering.offeringId)) {
+    return t('rate.otherDevice')
+  }
+  return tokens.value.get(offering.offeringId) ? t('rate.submitted') : t('rate.ready')
 }
 
 async function load() {
@@ -48,7 +51,9 @@ async function load() {
   busy.value = true
   try {
     offerings.value = await issueTokens(userId)
-    tokens.value = new Set((await localTokens(userId)).map((token) => token.offeringId))
+    tokens.value = new Map(
+      (await localTokens(userId)).map((token) => [token.offeringId, !!token.submitted]),
+    )
   } catch (e) {
     retryable.value = !(e instanceof UnknownKeyError)
     error.value = retryable.value ? t('rate.issueFailed') : t('rate.unknownKey')
@@ -85,6 +90,14 @@ onMounted(async () => {
         <article v-for="offering in items" :key="offering.offeringId">
           <strong>{{ offering.title }}</strong>
           <br />{{ status(offering) }}
+          <Button
+            v-if="tokens.has(offering.offeringId)"
+            as="router-link"
+            :to="`/rate/${offering.offeringId}`"
+            :label="tokens.get(offering.offeringId) ? t('rateForm.edit') : t('rate.action')"
+            size="small"
+            class="go"
+          />
         </article>
       </section>
       <p>
@@ -100,6 +113,12 @@ onMounted(async () => {
 h2 {
   font-size: 1rem;
   margin: 1.25rem 0 0.5rem;
+}
+
+.go {
+  margin-top: 0.5rem;
+  display: flex;
+  width: fit-content;
 }
 
 article {

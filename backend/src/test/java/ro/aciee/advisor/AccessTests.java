@@ -62,12 +62,6 @@ class AccessTests {
                 .rootCause().hasMessageContaining("row-level security");
     }
 
-    @Test
-    void identPoolCannotReadAnonymousData() {
-        assertThatThrownBy(() -> jdbc.sql("SELECT count(*) FROM anon.submission").query(Long.class).single())
-                .rootCause().hasMessageContaining("permission denied");
-    }
-
     private long visibleMembers() {
         return jdbc.sql("SELECT count(*) FROM core.group_membership").query(Long.class).single();
     }

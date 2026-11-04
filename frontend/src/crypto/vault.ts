@@ -5,6 +5,7 @@ export interface StoredToken {
   offeringId: number
   fingerprint: string
   sig: string
+  submitted?: boolean
 }
 
 export function toBase64(bytes: Uint8Array): string {

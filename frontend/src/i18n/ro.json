@@ -55,15 +55,23 @@
     "required": "Câmpul {column} este obligatoriu.",
     "invalid_value": "Valoare în format greșit.",
     "semester_outside_year": "Semestrul trebuie să fie în interiorul anului universitar.",
-    "not_found": "Înregistrarea nu mai există.",
-    "table_not_found": "Secțiune necunoscută."
+    "not_found": "Pagina nu există.",
+    "table_not_found": "Secțiune necunoscută.",
+    "already_submitted": "Acest curs a fost deja evaluat de pe acest cont.",
+    "invalid_token": "Tokenul nu este valid.",
+    "submission_not_found": "Nu am găsit evaluarea.",
+    "already_moderated": "Textul a fost deja moderat."
   },
   "nav": {
     "groups": "Grupa mea",
     "admin": "Administrare",
     "home": "Acasă",
     "forbidden": "Nu ai acces la această pagină.",
-    "rate": "Evaluează"
+    "rate": "Evaluează",
+    "courses": "Cursuri",
+    "submissions": "Contribuțiile mele",
+    "moderation": "Moderare",
+    "menu": "Meniu"
   },
   "group": {
     "title": "Grupa mea",
@@ -214,7 +222,10 @@
     "pastYearsLink": "Grupa mea",
     "issueFailed": "Nu am putut obține tokenurile. Reîncearcă.",
     "retry": "Reîncearcă",
-    "unknownKey": "Cheie de semnare necunoscută. Nu trimite evaluarea și anunță administratorul."
+    "unknownKey": "Cheie de semnare necunoscută. Nu trimite evaluarea și anunță administratorul.",
+    "semester": "Semestrul {n}",
+    "submitted": "Trimis",
+    "action": "Evaluează"
   },
   "recovery": {
     "title": "Cod de recuperare",
@@ -230,5 +241,110 @@
     "wrongCode": "Cod incorect.",
     "lostTitle": "Am pierdut codul",
     "lostBody": "Tokenurile nu pot fi emise din nou. Evaluările trimise rămân publicate, dar nu le mai poți modifica, iar tokenurile nefolosite se pierd odată cu codul."
+  },
+  "common": {
+    "back": "Înapoi",
+    "cancel": "Anulează"
+  },
+  "catalog": {
+    "title": "Ghidul cursurilor ACIEE",
+    "tagline": "Află ce cere fiecare curs, de la studenții din anii mai mari.",
+    "specialization": "Specializare",
+    "plan": "Plan de învățământ",
+    "intakeRange": "Admiși {from}–{to}",
+    "intakeFrom": "Admiși din {from}",
+    "year": "An {n}",
+    "semester": "Semestrul {n}",
+    "elective": "Semestrul {semester} · Pachet opțional {slot}",
+    "lecture": "Curs",
+    "seminar": "Seminar",
+    "lab": "Lab",
+    "project": "Proiect",
+    "noItems": "Nu există cursuri pentru acest an în planul selectat.",
+    "noPlan": "Planul de învățământ nu a fost încă introdus."
+  },
+  "course": {
+    "subtitle": "{specialization} · An {year} · Sem. {semester}",
+    "survival": "Cum se trece",
+    "survivalCount": "Cum se trece (din {n} evaluări)",
+    "signInPrompt": "Autentifică-te cu adresa {'@'}student.ugal.ro ca să vezi evaluările și sfaturile.",
+    "teachers": "Profesori",
+    "academicYear": "An universitar",
+    "subgroups": "gr. {list}",
+    "noTeachers": "Profesorii acestui an nu au fost încă introduși.",
+    "noRatings": "Încă nu există evaluări.",
+    "locked": "Blocat: mai sunt necesare {missing} evaluări",
+    "comments": "Comentarii ({n})",
+    "tips": "Sfaturi de la colegi ({n})",
+    "noTips": "Încă nu există sfaturi publicate.",
+    "week": "Săpt. {date}",
+    "rateThis": "Evaluează acest curs",
+    "updated": "Rezultatele se actualizează în fiecare oră."
+  },
+  "professor": {
+    "subjects": "Discipline predate",
+    "noSubjects": "Acest profesor nu are discipline înregistrate.",
+    "archived": "Profesorul nu mai predă la facultate."
+  },
+  "rateForm": {
+    "anonymous": "Evaluarea este anonimă.",
+    "howToPass": "Cum se trece",
+    "examDifficulty": "Dificultate examen",
+    "labsHelp": "Cât ajută laboratorul",
+    "attendanceUseful": "Prezența la curs e utilă",
+    "weeklyHours": "Ore pe săptămână",
+    "examFormat": "Format examen",
+    "attendanceStrictness": "Strictețe prezență",
+    "teachers": "Profesori",
+    "teachersHint": "Deschide doar profesorii pe care i-ai avut. Un criteriu neatins rămâne N/A.",
+    "noTeachers": "Profesorii acestui curs nu au fost încă introduși de șeful de grupă.",
+    "subgroup": "gr. {label}",
+    "comment": "Comentariu (opțional)",
+    "commentHint": "Scrie despre cum se predă, nu despre persoană. Fără nume, date personale sau acuzații.",
+    "tip": "Sfat pentru colegi (opțional)",
+    "submit": "Trimite",
+    "save": "Salvează modificările",
+    "edit": "Editează",
+    "noToken": "Nu ai un token pentru acest curs pe acest dispozitiv.",
+    "saved": "Evaluarea a fost trimisă anonim. Textele apar după moderare; rezultatele apar când există cel puțin 5 evaluări."
+  },
+  "submissions": {
+    "deviceOnly": "Vizibile doar pe acest dispozitiv (sau după restaurarea codului).",
+    "restore": "Restaurează codul de recuperare ca să îți vezi contribuțiile.",
+    "none": "Nu ai trimis încă nicio evaluare.",
+    "notFound": "Nu am găsit evaluarea. Poate a fost ștearsă de pe alt dispozitiv.",
+    "ratingSent": "Evaluare: trimisă",
+    "tip": "Sfat",
+    "comment": "Comentariu",
+    "pending": "În moderare",
+    "published": "Publicat",
+    "publishedPendingEdit": "Publicat · modificare în moderare",
+    "hiddenUntil": "Aprobat · ascuns până la {k} evaluări",
+    "rejected": "Respins · Motiv: {reason}",
+    "delete": "Șterge",
+    "deleteWarning": "Ștergerea elimină evaluarea și textele tale. Nu poate fi anulată."
+  },
+  "moderation": {
+    "texts": "Texte {n}",
+    "reports": "Raportări {n}",
+    "empty": "Nu există texte de moderat.",
+    "noReports": "Nu există raportări deschise.",
+    "submitted": "Trimis: săpt. {date}",
+    "previous": "Versiunea anterioară publicată",
+    "approve": "Aprobă",
+    "rejectFor": "Respinge pentru:",
+    "next": "Următorul",
+    "alreadyDone": "Textul a fost deja moderat.",
+    "flagEmail": "Posibile date personale (e-mail)",
+    "flagPhone": "Posibile date personale (telefon)",
+    "reportLine": "Motiv: {reasons} · raportat de {n} ori · săpt. {date}",
+    "dismiss": "Respinge raportarea",
+    "upholdFor": "Confirmă raportarea și ascunde textul pentru:"
+  },
+  "report": {
+    "action": "Raportează",
+    "reason": "Motiv",
+    "send": "Trimite",
+    "thanks": "Mulțumim. Un moderator va verifica."
   }
 }

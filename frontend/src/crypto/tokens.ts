@@ -109,7 +109,8 @@ export async function restoreMaster(
 async function syncVault(userId: number, master: Uint8Array<ArrayBuffer>) {
   const vault = await remoteVault()
   const remote = (vault && (await openVault(master, vault))) ?? []
-  for (const token of remote) {
+  const local = new Set((await localTokens(userId)).map((t) => t.offeringId))
+  for (const token of remote.filter((t) => !local.has(t.offeringId))) {
     await run(userId, 'tokens', (s) => s.put(token))
   }
   await api('PUT', '/api/vault', await sealVault(master, await localTokens(userId)))
@@ -217,4 +218,23 @@ export async function issueTokens(userId: number): Promise<RateableOffering[]> {
   return offerings.map((o) =>
     issued.some((t) => t.offeringId === o.offeringId) ? { ...o, issued: true } : o,
   )
+}
+
+export async function tokenFor(userId: number, offeringId: number) {
+  const master = await localMaster(userId)
+  const token = (await localTokens(userId)).find((t) => t.offeringId === offeringId)
+  if (!master || !token) {
+    return null
+  }
+  return { ...token, msg: toBase64(await tokenMessage(master, offeringId)) }
+}
+
+export async function markSubmitted(userId: number, offeringId: number, submitted: boolean) {
+  const master = await localMaster(userId)
+  const token = (await localTokens(userId)).find((t) => t.offeringId === offeringId)
+  if (!master || !token) {
+    return
+  }
+  await run(userId, 'tokens', (s) => s.put({ ...token, submitted }))
+  await syncVault(userId, master)
 }

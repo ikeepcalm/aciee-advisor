@@ -1,12 +1,23 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import HomeView from '../views/HomeView.vue'
+import CatalogView from '../views/CatalogView.vue'
 import { useAuthStore } from '@/stores/auth'
 import { safeNext } from '@/api'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
-    { path: '/', name: 'home', component: HomeView },
+    { path: '/', name: 'home', component: CatalogView },
+    {
+      path: '/courses/:itemId',
+      name: 'course',
+      component: () => import('../views/CourseView.vue'),
+    },
+    {
+      path: '/professors/:slug',
+      name: 'professor',
+      component: () => import('../views/ProfessorView.vue'),
+      meta: { signedIn: true },
+    },
     {
       path: '/signup',
       name: 'signup',
@@ -36,6 +47,24 @@ const router = createRouter({
       name: 'rate',
       component: () => import('../views/RateView.vue'),
       meta: { signedIn: true },
+    },
+    {
+      path: '/rate/:offeringId',
+      name: 'rate-form',
+      component: () => import('../views/RateFormView.vue'),
+      meta: { signedIn: true },
+    },
+    {
+      path: '/me/submissions',
+      name: 'submissions',
+      component: () => import('../views/SubmissionsView.vue'),
+      meta: { signedIn: true },
+    },
+    {
+      path: '/moderation',
+      name: 'moderation',
+      component: () => import('../views/ModerationView.vue'),
+      meta: { role: ['moderator', 'admin'] },
     },
     {
       path: '/me/recovery',
@@ -89,7 +118,10 @@ router.beforeEach(async (to) => {
   if (!auth.user) {
     return { name: 'signin', query: { next: to.fullPath } }
   }
-  if (to.meta.role && !auth.user.roles.includes(to.meta.role as string)) {
+  if (
+    to.meta.role &&
+    ![to.meta.role].flat().some((role) => auth.user!.roles.includes(role as string))
+  ) {
     return { name: 'forbidden' }
   }
 })

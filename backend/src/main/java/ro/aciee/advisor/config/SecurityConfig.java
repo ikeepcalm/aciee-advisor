@@ -22,11 +22,13 @@ public class SecurityConfig {
     @Bean
     SecurityFilterChain securityFilterChain(HttpSecurity http, SecurityContextRepository securityContextRepository) {
         return http
-                .csrf(csrf -> csrf.spa())
+                .csrf(csrf -> csrf.spa().ignoringRequestMatchers("/anon/**"))
                 .securityContext(context -> context.securityContextRepository(securityContextRepository))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/signup", "/api/auth/signin", "/api/auth/verify", "/api/auth/verify/resend", "/api/auth/csrf").permitAll()
+                        .requestMatchers("/api/catalog/**").permitAll()
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                        .requestMatchers("/api/moderation/**").hasAnyRole("MODERATOR", "ADMIN")
                         .requestMatchers("/api/**").authenticated()
                         .anyRequest().permitAll())
                 .exceptionHandling(errors -> errors.authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)))

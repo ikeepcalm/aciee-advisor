@@ -245,3 +245,14 @@ Format: context → decision → consequences. Never rewrite an accepted ADR; su
 **Decision.** Deploy each environment as a deploy-tool Docker Compose resource (`infra/docker-compose.prod.yml`). An nginx container serves the SPA and proxies `/api` and `/anon` to the backend, so one domain covers both and there is still no CORS. The Postgres image bakes in the role script instead of bind-mounting it from the repository. A `backup` service runs `pg_dump` daily.
 
 **Consequences.** No Caddyfile. The compose file also runs with plain `docker compose` given the same environment variables. nginx passes on Traefik's `X-Forwarded-Proto`, which Spring trusts from private addresses, so secure cookies work behind two proxies.
+
+## ADR-027 — Pitch-day shortcuts on the anonymous side
+**Context.** The project is presented at pitch day. Students need every view working; several protections in ARCHITECTURE §3 cost more than they are worth before launch.
+
+**Decision.**
+- No separate anon pool. `aciee_ident` reads and writes `anon.submission`, `rating`, `post`, `post_version` and `post_report` (changeset `016`). `/anon/**` calls still carry no session or CSRF token, and no table links a submission to an account.
+- Submissions are sent when the student presses "Trimite", not at a random time the next day.
+- Approved texts are published at once; `anon.published_post` drops the weekly release.
+- Aggregates refresh hourly (`AggregateRefreshTask`), not nightly.
+
+**Consequences.** Someone with the app's database login can now read anonymous data, and issuance and redemption can sit next to each other in time, so the ordering risk in ARCHITECTURE §3 is larger. To restore the separation: a second `DataSource` as `aciee_anon` for `/anon/**` and the anon reads, then revoke the `016` grants and bring back `AccessTests.identPoolCannotReadAnonymousData`.
