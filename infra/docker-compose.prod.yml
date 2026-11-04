@@ -33,6 +33,9 @@ services:
       MAIL_PASSWORD: ${MAIL_PASSWORD:-}
       MAIL_SMTP_SECURE: ${MAIL_SMTP_SECURE:-true}
       MAIL_FROM: ${MAIL_FROM:-ACIEE Advisor <no-reply@acieeadvisor.ro>}
+      TOKEN_KEYS_DIR: /keys
+    volumes:
+      - token-keys:/keys
 
   web:
     build: ../frontend
@@ -62,3 +65,4 @@ services:
 volumes:
   pgdata:
   backups:
+  token-keys:

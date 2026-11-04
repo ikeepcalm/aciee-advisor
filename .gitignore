@@ -19,6 +19,7 @@ Thumbs.db
 *.p12
 *.jks
 *.pem
+token-keys/
 .env
 .env.*
 !.env.example

@@ -42,3 +42,4 @@ server:
 
 app:
   mail-from: ${MAIL_FROM:ACIEE Advisor <no-reply@localhost>}
+  token-keys-dir: ${TOKEN_KEYS_DIR:token-keys}

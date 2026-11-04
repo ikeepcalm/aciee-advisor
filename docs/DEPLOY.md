@@ -68,3 +68,7 @@ pg_restore -U aciee -d aciee --clean --if-exists /backups/aciee-YYYY-MM-DD.dump
 ```
 
 Test a restore into the demo resource before launch (ARCHITECTURE §8).
+
+## Signing keys
+
+The private key of each offering is a PKCS#8 file named by its fingerprint in the `token-keys` volume (`/keys`), and is never in the database or the dumps. Before a semester's ratings open, an admin calls `POST /api/admin/semesters/{id}/token-keys` once; it creates a key for every offering of that semester that has none, so rerunning it after a failure only fills the gaps. Then publish the new `/anon/keys.json` (ARCHITECTURE §3). Copy the volume off the server together with the dumps: a lost private key stops new issuance for its offering, while existing submissions stay valid because redemption only needs the public key.

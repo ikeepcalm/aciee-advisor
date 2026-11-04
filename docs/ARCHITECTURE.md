@@ -45,12 +45,13 @@ Rows written in one transaction share `xmin`. Rows written in back-to-back trans
 **Unit of eligibility.** The unit is the **course offering** (subject × group × semester). One token buys one submission: survival metadata, plus one rating per teaching assignment of that offering, plus an optional tip and comments.
 
 **Keys.** One RSA-2048 key pair per offering.
-- Private keys live in a keystore on the app host, never in the database.
-- Public keys are published in `keys.json`, and its hash is committed to the repository.
+- Keys are created in one batch per semester, before its ratings open (DEPLOY.md, "Signing keys"). Issuance never creates a key, so the key list is fixed for the whole term.
+- Private keys live in a keystore on the app host (one PKCS#8 file per key in the `token-keys` volume), never in the database. The public half is in `anon.offering_key`, which the ident role may read and insert.
+- Public keys are published at `/anon/keys.json`, and its hash is committed to the repository after each batch.
 - The client rejects any key that is not in that list. This prevents per-user tagging keys.
 
 **Flow:**
-1. **Client setup.** The client generates a 128-bit `master` secret and shows it once as a recovery code, then stores it in IndexedDB. The message for each offering is `msg = HMAC(master, "aciee-v1" || offering_id)`.
+1. **Client setup.** The client generates a 128-bit `master` secret and shows it once as a recovery code, then stores it in IndexedDB. The message for each offering is `msg = HMAC-SHA256(master, "aciee-v1" || offering_id)`, with `offering_id` as a 4-byte big-endian integer.
 2. **Issue** (authenticated, opens when the semester ends; past semesters open on membership approval).
    - The client blinds `msg` for **every** eligible offering not yet issued and sends them in one request. It stores its blinding factors first, so a retry can reuse them.
    - The server rejects partial sets, checks eligibility (memberships and single-course enrolments), records one `token_issuance(user_id, offering_id)` row per offering with the blinded message and blind signature, and returns the signatures.

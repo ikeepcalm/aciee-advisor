@@ -6,7 +6,7 @@ COPY src src
 RUN --mount=type=cache,target=/root/.gradle chmod +x gradlew && ./gradlew --no-daemon bootJar
 
 FROM eclipse-temurin:25-jre
-RUN useradd --system app
+RUN useradd --system app && mkdir /keys && chown app /keys
 USER app
 COPY --from=build /src/build/libs/*.jar /app/app.jar
 EXPOSE 8080
