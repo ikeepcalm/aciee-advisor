@@ -14,6 +14,7 @@ const auth = useAuthStore()
       <Button :label="$t('auth.signOut')" link @click="auth.signOut().catch(() => {})" />
     </p>
     <nav v-if="auth.user">
+      <RouterLink :to="{ name: 'rate' }">{{ $t('nav.rate') }}</RouterLink> ·
       <RouterLink :to="{ name: 'group' }">{{ $t('nav.groups') }}</RouterLink>
       <template v-if="auth.user.roles.includes('admin')">
         · <RouterLink :to="{ name: 'admin-leaders' }">{{ $t('nav.admin') }}</RouterLink>

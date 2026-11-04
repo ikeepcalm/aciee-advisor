@@ -9,8 +9,9 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 import ro.aciee.advisor.domain.token.model.IssuedToken;
 import ro.aciee.advisor.domain.token.model.OfferingKey;
-import ro.aciee.advisor.domain.token.model.PendingToken;
+import ro.aciee.advisor.domain.token.model.RateableOffering;
 import ro.aciee.advisor.domain.token.model.TokenRequest;
+import ro.aciee.advisor.domain.token.model.Vault;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -35,15 +36,16 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class TokenService {
 
-    private static final String PENDING = """
-            SELECT o.offering_id, o.title_snapshot AS title, k.fingerprint
+    private static final String OFFERINGS = """
+            SELECT o.offering_id, o.title_snapshot AS title, g.academic_year, o.semester_no,
+                   o.rating_opens_at AS opens_at, coalesce(o.rating_opens_at <= now(), false) AS open, k.fingerprint,
+                   EXISTS (SELECT 1 FROM ident.token_issuance t WHERE t.user_id = core.app_user_id() AND t.offering_id = o.offering_id) AS issued
             FROM core.offering_v o
-            JOIN anon.offering_key k ON k.offering_id = o.offering_id AND k.active
-            WHERE o.rating_opens_at <= now()
-              AND (EXISTS (SELECT 1 FROM core.group_membership m WHERE m.user_id = core.app_user_id() AND m.group_id = o.group_id)
-                   OR EXISTS (SELECT 1 FROM core.offering_enrolment e WHERE e.user_id = core.app_user_id() AND e.offering_id = o.offering_id))
-              AND NOT EXISTS (SELECT 1 FROM ident.token_issuance t WHERE t.user_id = core.app_user_id() AND t.offering_id = o.offering_id)
-            ORDER BY o.offering_id""";
+            JOIN core.group_v g ON g.id = o.group_id
+            LEFT JOIN anon.offering_key k ON k.offering_id = o.offering_id AND k.active
+            WHERE EXISTS (SELECT 1 FROM core.group_membership m WHERE m.user_id = core.app_user_id() AND m.group_id = o.group_id)
+               OR EXISTS (SELECT 1 FROM core.offering_enrolment e WHERE e.user_id = core.app_user_id() AND e.offering_id = o.offering_id)
+            ORDER BY o.rating_opens_at NULLS LAST, o.semester_no, o.title_snapshot, o.offering_id""";
 
     private final JdbcClient jdbc;
     private final Map<String, RSAPrivateCrtKey> privateKeys = new ConcurrentHashMap<>();
@@ -52,8 +54,8 @@ public class TokenService {
     private Path keysDir;
 
     @Transactional(readOnly = true)
-    public List<PendingToken> pending() {
-        return jdbc.sql(PENDING).query(PendingToken.class).list();
+    public List<RateableOffering> offerings() {
+        return jdbc.sql(OFFERINGS).query(RateableOffering.class).list();
     }
 
     @Transactional
@@ -62,7 +64,7 @@ public class TokenService {
                 (a, b) -> {
                     throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "duplicate_offering");
                 }));
-        var pending = pending();
+        var pending = offerings().stream().filter(RateableOffering::pending).toList();
         if (!pending.stream().allMatch(p -> requested.containsKey(p.getOfferingId()))) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "incomplete_set");
         }
@@ -118,7 +120,25 @@ public class TokenService {
                 .list();
     }
 
-    private void store(PendingToken token, byte[] blindedMsg) {
+    @Transactional(readOnly = true)
+    public Vault vault() {
+        return jdbc.sql("SELECT ciphertext, nonce FROM ident.token_vault WHERE user_id = core.app_user_id()")
+                .query(Vault.class)
+                .optional()
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "vault_not_found"));
+    }
+
+    @Transactional
+    public void saveVault(Vault vault) {
+        jdbc.sql("""
+                        INSERT INTO ident.token_vault (user_id, ciphertext, nonce) VALUES (core.app_user_id(), :ciphertext, :nonce)
+                        ON CONFLICT (user_id) DO UPDATE SET ciphertext = excluded.ciphertext, nonce = excluded.nonce, updated_at = now()""")
+                .param("ciphertext", vault.getCiphertext())
+                .param("nonce", vault.getNonce())
+                .update();
+    }
+
+    private void store(RateableOffering token, byte[] blindedMsg) {
         byte[] blindSig;
         try {
             blindSig = BlindRsa.blindSign(privateKey(token.getFingerprint()), blindedMsg);

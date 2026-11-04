@@ -62,7 +62,8 @@
     "groups": "Grupa mea",
     "admin": "Administrare",
     "home": "Acasă",
-    "forbidden": "Nu ai acces la această pagină."
+    "forbidden": "Nu ai acces la această pagină.",
+    "rate": "Evaluează"
   },
   "group": {
     "title": "Grupa mea",
@@ -198,5 +199,36 @@
     "historyTable": "Tabel (ex. professor)",
     "historyRow": "Id rând",
     "system": "sistem"
+  },
+  "rate": {
+    "title": "Evaluează",
+    "intro": "Cursurile pe care le poți evalua",
+    "loading": "Pregătim tokenurile…",
+    "term": "{year} · Semestrul {semester}",
+    "opensOn": "Se deschide pe {date}",
+    "opensLater": "Se deschide în curând",
+    "ready": "Gata de evaluat",
+    "otherDevice": "Tokenul a fost obținut pe alt dispozitiv. Restaurează codul de recuperare pe acesta.",
+    "noGroup": "Nu faci parte din nicio grupă. Alătură-te grupei tale ca să poți evalua.",
+    "pastYears": "Lipsesc cursuri din anii trecuți? Cere acces la grupa de atunci:",
+    "pastYearsLink": "Grupa mea",
+    "issueFailed": "Nu am putut obține tokenurile. Reîncearcă.",
+    "retry": "Reîncearcă",
+    "unknownKey": "Cheie de semnare necunoscută. Nu trimite evaluarea și anunță administratorul."
+  },
+  "recovery": {
+    "title": "Cod de recuperare",
+    "yourCode": "Codul tău de recuperare",
+    "explain": "Notează-l. Cu el îți poți edita evaluările de pe alt dispozitiv. Nu îl putem recupera: dacă îl pierzi, evaluările rămân, dar nu le mai poți modifica.",
+    "download": "Descarcă (.txt)",
+    "copy": "Copiază",
+    "savedIt": "L-am salvat într-un loc sigur",
+    "continue": "Continuă",
+    "enterCode": "Ai deja un cod? Introdu-l:",
+    "restore": "Restaurează",
+    "badFormat": "Codul are un format greșit.",
+    "wrongCode": "Cod incorect.",
+    "lostTitle": "Am pierdut codul",
+    "lostBody": "Tokenurile nu pot fi emise din nou. Evaluările trimise rămân publicate, dar nu le mai poți modifica, iar tokenurile nefolosite se pierd odată cu codul."
   }
 }

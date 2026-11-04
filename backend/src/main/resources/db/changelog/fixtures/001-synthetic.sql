@@ -178,8 +178,8 @@ FROM core.group_leader_claim c
 JOIN fx_group g ON g.id = c.group_id
 JOIN core.group_membership m ON m.user_id = c.user_id AND m.group_id = c.group_id;
 
-INSERT INTO anon.offering_key (fingerprint, offering_id, public_key)
-SELECT sha256(convert_to('fx-key-' || o.id, 'UTF8')), o.id, sha256(convert_to('fx-public-' || o.id, 'UTF8'))
+INSERT INTO anon.offering_key (fingerprint, offering_id, public_key, active)
+SELECT sha256(convert_to('fx-key-' || o.id, 'UTF8')), o.id, sha256(convert_to('fx-public-' || o.id, 'UTF8')), false
 FROM fx_group g JOIN core.course_offering o ON o.group_id = g.id;
 
 CREATE TEMP TABLE fx_submission ON COMMIT DROP AS

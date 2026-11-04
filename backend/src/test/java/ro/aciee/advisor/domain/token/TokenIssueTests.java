@@ -44,6 +44,7 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -106,9 +107,11 @@ class TokenIssueTests {
         assertThat(created).isGreaterThanOrEqualTo(2);
         send(post("/api/admin/semesters/%d/token-keys".formatted(semesterId)), adminId).andExpect(jsonPath("$").value(0));
 
-        send(get("/api/tokens/pending"), studentId)
-                .andExpect(jsonPath("$[*].offeringId").value(contains(offerings.get(0), offerings.get(1))));
-        send(get("/api/tokens/pending"), outsiderId).andExpect(jsonPath("$.length()").value(0));
+        send(get("/api/tokens/offerings"), studentId)
+                .andExpect(jsonPath("$[*].offeringId").value(contains(offerings.get(0), offerings.get(1))))
+                .andExpect(jsonPath("$[*].open").value(contains(true, true)))
+                .andExpect(jsonPath("$[*].issued").value(contains(false, false)));
+        send(get("/api/tokens/offerings"), outsiderId).andExpect(jsonPath("$.length()").value(0));
 
         var first = Blinded.of(keys(offerings.get(0)));
         var second = Blinded.of(keys(offerings.get(1)));
@@ -120,10 +123,25 @@ class TokenIssueTests {
         assertThat(second.finalizeAndVerify(signature(issued, 1))).isTrue();
 
         assertThat(body(issue(studentId, item(offerings.get(0), first), item(offerings.get(1), second)))).isEqualTo(issued);
-        send(get("/api/tokens/pending"), studentId).andExpect(jsonPath("$.length()").value(0));
+        send(get("/api/tokens/offerings"), studentId).andExpect(jsonPath("$[*].issued").value(contains(true, true)));
         issue(studentId, item(offerings.get(0), Blinded.of(keys(offerings.get(0))))).andExpect(status().isConflict())
                 .andExpect(jsonPath("$.detail").value("already_issued"));
         issue(outsiderId, item(offerings.get(0), first)).andExpect(status().isForbidden());
+    }
+
+    @Test
+    void vaultIsReadAndReplacedByItsOwnerOnly() throws Exception {
+        send(get("/api/vault"), studentId).andExpect(status().isNotFound());
+        saveVault(studentId, "AQID", "AAAAAAAAAAAAAAAA").andExpect(status().isNoContent());
+        saveVault(studentId, "BAUG", "AAAAAAAAAAAAAAAA").andExpect(status().isNoContent());
+        saveVault(studentId, "BAUG", "AAAA").andExpect(status().isBadRequest());
+        send(get("/api/vault"), studentId).andExpect(jsonPath("$.ciphertext").value("BAUG"));
+        send(get("/api/vault"), outsiderId).andExpect(status().isNotFound());
+    }
+
+    private ResultActions saveVault(int userId, String ciphertext, String nonce) throws Exception {
+        return send(put("/api/vault").contentType(MediaType.APPLICATION_JSON)
+                .content("{\"ciphertext\":\"%s\",\"nonce\":\"%s\"}".formatted(ciphertext, nonce)), userId);
     }
 
     private int offering(String code, int groupId) {

@@ -2,15 +2,19 @@ package ro.aciee.advisor.domain.token.controller;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import ro.aciee.advisor.domain.token.model.IssueBody;
 import ro.aciee.advisor.domain.token.model.IssuedToken;
 import ro.aciee.advisor.domain.token.model.OfferingKey;
-import ro.aciee.advisor.domain.token.model.PendingToken;
+import ro.aciee.advisor.domain.token.model.RateableOffering;
+import ro.aciee.advisor.domain.token.model.Vault;
 import ro.aciee.advisor.domain.token.service.TokenService;
 
 import java.io.IOException;
@@ -23,14 +27,25 @@ public class TokenController {
 
     private final TokenService tokenService;
 
-    @GetMapping("/api/tokens/pending")
-    public List<PendingToken> pending() {
-        return tokenService.pending();
+    @GetMapping("/api/tokens/offerings")
+    public List<RateableOffering> offerings() {
+        return tokenService.offerings();
     }
 
     @PostMapping("/api/tokens/issue")
     public List<IssuedToken> issue(@Valid @RequestBody IssueBody body) {
         return tokenService.issue(body.getTokens());
+    }
+
+    @GetMapping("/api/vault")
+    public Vault vault() {
+        return tokenService.vault();
+    }
+
+    @PutMapping("/api/vault")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void saveVault(@Valid @RequestBody Vault vault) {
+        tokenService.saveVault(vault);
     }
 
     @PostMapping("/api/admin/semesters/{semesterId}/token-keys")

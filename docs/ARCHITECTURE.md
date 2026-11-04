@@ -47,7 +47,7 @@ Rows written in one transaction share `xmin`. Rows written in back-to-back trans
 **Keys.** One RSA-2048 key pair per offering.
 - Keys are created in one batch per semester, before its ratings open (DEPLOY.md, "Signing keys"). Issuance never creates a key, so the key list is fixed for the whole term.
 - Private keys live in a keystore on the app host (one PKCS#8 file per key in the `token-keys` volume), never in the database. The public half is in `anon.offering_key`, which the ident role may read and insert.
-- Public keys are published at `/anon/keys.json`, and its hash is committed to the repository after each batch.
+- Public keys are published at `/anon/keys.json`. After each batch the base64 SHA-256 of that file goes into `frontend/src/crypto/pinned-keys.json` (one entry per environment), and the client refuses a `keys.json` whose hash is not listed. Development builds skip the check.
 - The client rejects any key that is not in that list. This prevents per-user tagging keys.
 
 **Flow:**
