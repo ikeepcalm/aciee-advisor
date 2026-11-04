@@ -123,7 +123,7 @@ svg {
 
 .mark {
   fill: var(--p-primary-color, #10b981);
-  stroke: var(--p-surface-0, #fff);
+  stroke: var(--p-content-background);
   stroke-width: 2;
 }
 

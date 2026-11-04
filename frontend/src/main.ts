@@ -20,6 +20,6 @@ app.use(
     datetimeFormats: { 'ro-RO': { short: { day: 'numeric', month: 'short', year: 'numeric' } } },
   }),
 )
-app.use(PrimeVue, { theme: { preset: Aura } })
+app.use(PrimeVue, { theme: { preset: Aura }, license: import.meta.env.VITE_PRIMEUI_LICENSE })
 
 app.mount('#app')

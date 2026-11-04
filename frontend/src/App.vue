@@ -46,7 +46,11 @@ async function signOut() {
 <template>
   <header class="bar">
     <RouterLink to="/" class="brand">{{ t('app.title') }}</RouterLink>
-    <Button :label="t('nav.menu')" text :aria-expanded="open" @click="open = !open" />
+    <span class="right">
+      <span v-if="auth.user" class="who">{{ auth.user.email.split('@')[0] }}</span>
+      <RouterLink v-else :to="{ name: 'signin' }">{{ t('auth.signIn') }}</RouterLink>
+      <Button :label="t('nav.menu')" text :aria-expanded="open" @click="open = !open" />
+    </span>
   </header>
   <nav v-if="open" class="menu">
     <RouterLink v-for="link in links" :key="link.to" :to="link.to">{{ link.label }}</RouterLink>
@@ -66,8 +70,13 @@ async function signOut() {
 body {
   margin: 0;
   font-family: system-ui, sans-serif;
-  background: var(--p-surface-0, #fff);
-  color: var(--p-text-color, #1f2937);
+  background: var(--p-content-background);
+  color: var(--p-text-color);
+  color-scheme: light dark;
+}
+
+a {
+  color: var(--p-primary-color);
 }
 
 main {
@@ -127,7 +136,13 @@ main {
   border-bottom: 1px solid var(--p-content-border-color, #e5e7eb);
 }
 
-.menu .who {
+.right {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.who {
   font-size: 0.875rem;
   color: var(--p-text-muted-color, #6b7280);
 }

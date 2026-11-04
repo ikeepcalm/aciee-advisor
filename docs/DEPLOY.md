@@ -33,6 +33,7 @@ The demo accounts are `demo.admin`, `demo.moderator`, `demo.leader` and `demo.st
    | `LIQUIBASE_CONTEXTS` | `prod` or `fixtures` |
    | `MAIL_HOST`, `MAIL_PORT`, `MAIL_USER`, `MAIL_PASSWORD` | SMTP provider (port 587, STARTTLS) |
    | `MAIL_FROM` | `ACIEE Advisor <no-reply@acieeadvisor.ro>` |
+   | `PRIMEUI_LICENSE` | PrimeVue license key, baked into the frontend build (locally: `frontend/.env.local`, see `.env.example`) |
 
    The role passwords are read only when the `pgdata` volume is created. Changing them later needs `ALTER ROLE … PASSWORD` in the database as well.
 4. Under the `web` service, set the domain (`https://acieeadvisor.ro`). Leave the other services without a domain.
