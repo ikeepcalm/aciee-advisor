@@ -278,3 +278,14 @@ Format: context → decision → consequences. Never rewrite an accepted ADR; su
 
 **Consequences.** The professor-page comments take 37 ms instead of 4.3 s, with the same rows (`docs/explain-plans/09-published-post.txt`). Removing `OFFSET 0` silently brings back the hashed subplan; the changeset says so in a one-line comment.
 
+## ADR-030 — Microsoft sign-in behind a profile, linked by address
+**Context.** ADR-008 planned Entra OIDC as an alternative sign-in. The app registration is ours to create and may need the university's consent, so the code has to ship before the registration exists. Students who already signed up with a password will also use the Microsoft button.
+
+**Decision.**
+- Spring Security `oauth2Login`, enabled only when client registrations exist, which happens only with the `microsoft` profile (`application-microsoft.yml`). `GET /api/auth/providers` tells the SPA whether to show the button.
+- Endpoints stay under `/api/auth/oauth2/…`, so nginx and the Vite proxy need no new routes.
+- The issuer is UGAL's tenant (`445e5699-60fa-4f59-8e7f-778197a4d740`, a public value), so Spring rejects tokens from other tenants. `MicrosoftSignInHandler` checks `tid` and the `@student.ugal.ro` suffix again, then replaces the OIDC principal with the same `userId` session a password sign-in creates. On any refusal it invalidates the session the OAuth2 filter had already saved.
+- Linking by address follows the rule in ARCHITECTURE §2: an unverified account loses its password, and an address linked to another `oid` is refused.
+
+**Consequences.** Nothing changes until the profile and two secrets are set (DEPLOY.md). A student keeps their password after linking and can use either method. A student whose UPN changes gets a new `oid`, which is refused for the old address; an admin has to clear `entra_oid` by hand.
+

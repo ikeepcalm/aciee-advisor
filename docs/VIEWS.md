@@ -73,7 +73,7 @@ Routes for a role the user lacks redirect: a visitor goes to `/signin?next=<rout
 | Control | Calls | Validation |
 |---|---|---|
 | Creează cont | `POST /api/auth/signup` → redirect to `/verify` | Client and server: address ends in `@student.ugal.ro` (also a CHECK on `user_account`); passwords match; password policy (see Open questions). Server normalises (lowercase, strip `+tag`) and relies on the unique index on `email_normalized` (Q15). |
-| Continuă cu Microsoft | `GET /api/auth/microsoft` (Entra OIDC) | Server accepts only the UGAL tenant `tid` and the `@student.ugal.ro` suffix. Post-MVP (ROADMAP); hidden until enabled. |
+| Continuă cu Microsoft | `GET /api/auth/oauth2/microsoft` (Entra OIDC, PKCE), callback `/api/auth/oauth2/code/microsoft` | Shown when `GET /api/auth/providers` answers `microsoft: true`. Server accepts only the UGAL tenant `tid` and the `@student.ugal.ro` suffix, then redirects to `/`; a refusal redirects to `/signin?error=<code>` (`microsoft_tenant`, `microsoft_domain`, `microsoft_conflict`, `microsoft_failed`, `disabled`). |
 
 **States**
 - Wrong domain: "Folosește adresa ta @student.ugal.ro."
@@ -112,7 +112,7 @@ Routes for a role the user lacks redirect: a visitor goes to `/signin?next=<rout
 | Control | Calls | Result |
 |---|---|---|
 | Autentifică-te | `POST /api/auth/signin` | Success → session created (Spring Session JDBC), redirect to `next` or `/`. Account not yet verified → a fresh code is sent and the user goes to `/verify`. |
-| Continuă cu Microsoft | `GET /api/auth/microsoft` | Same as on Sign up. An Entra account has no password; `entra_oid` identifies it. |
+| Continuă cu Microsoft | `GET /api/auth/oauth2/microsoft` | Same as on Sign up. An Entra account has no password; `entra_oid` identifies it. A first Microsoft sign-in with the address of an existing account links the two (ARCHITECTURE §2). |
 
 **States**
 - Wrong email or password, one message for both: "E-mail sau parolă greșită."

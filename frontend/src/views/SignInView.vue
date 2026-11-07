@@ -6,16 +6,18 @@ import InputText from 'primevue/inputtext'
 import Password from 'primevue/password'
 import Button from 'primevue/button'
 import Message from 'primevue/message'
+import MicrosoftSignIn from '@/components/MicrosoftSignIn.vue'
 import { ApiError, describeError, safeNext } from '@/api'
 import { useAuthStore } from '@/stores/auth'
 
-const { t } = useI18n()
+const { t, te } = useI18n()
 const route = useRoute()
 const router = useRouter()
 const auth = useAuthStore()
 const email = ref('')
 const password = ref('')
-const error = ref('')
+const redirectError = typeof route.query.error === 'string' ? `errors.${route.query.error}` : ''
+const error = ref(redirectError && te(redirectError) ? t(redirectError) : '')
 const busy = ref(false)
 
 async function submit() {
@@ -47,6 +49,7 @@ async function submit() {
       <Message v-if="error" severity="error">{{ error }}</Message>
       <Button type="submit" :label="t('auth.signInAction')" :loading="busy" fluid />
     </form>
+    <MicrosoftSignIn />
     <p>
       {{ t('auth.noAccount') }} <RouterLink :to="{ name: 'signup' }">{{ t('auth.signUp') }}</RouterLink>
     </p>

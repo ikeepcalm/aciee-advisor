@@ -33,11 +33,25 @@ The demo accounts are `demo.admin`, `demo.moderator`, `demo.leader` and `demo.st
    | `LIQUIBASE_CONTEXTS` | `prod` or `fixtures` |
    | `MAIL_HOST`, `MAIL_PORT`, `MAIL_USER`, `MAIL_PASSWORD` | SMTP provider (port 587, STARTTLS) |
    | `MAIL_FROM` | `ACIEE Advisor <no-reply@acieeadvisor.ro>` |
+   | `SPRING_PROFILES_ACTIVE`, `ENTRA_CLIENT_ID`, `ENTRA_CLIENT_SECRET` | `microsoft` and the app registration below, to turn on Microsoft sign-in; leave empty to hide it |
    | `PRIMEUI_LICENSE` | PrimeVue license key, baked into the frontend build (locally: `frontend/.env.local`, see `.env.example`) |
 
    The role passwords are read only when the `pgdata` volume is created. Changing them later needs `ALTER ROLE … PASSWORD` in the database as well.
 4. Under the `web` service, set the domain (`https://acieeadvisor.ro`). Leave the other services without a domain.
 5. Deploy. The first start runs every Liquibase changeset. With `fixtures` this takes about a minute.
+
+## Microsoft sign-in
+
+The button "Continuă cu Microsoft" appears only when the app runs with the `microsoft` profile (ADR-030).
+
+1. Register the app in Microsoft Entra (portal.azure.com → App registrations → New registration), signed in with a `@student.ugal.ro` account if the tenant allows students to register apps, otherwise ask the university's IT administrator.
+   - Supported account types: **this organizational directory only** (UGAL, tenant `445e5699-60fa-4f59-8e7f-778197a4d740`).
+   - Redirect URI, platform **Web**: `https://acieeadvisor.ro/api/auth/oauth2/code/microsoft` (add `https://demo.acieeadvisor.ro/…` and `http://localhost:8080/…` for the other environments).
+2. Certificates & secrets → New client secret. Copy the value (shown once) into `ENTRA_CLIENT_SECRET`, the Application (client) ID into `ENTRA_CLIENT_ID`.
+3. API permissions: the app asks only for `openid profile email`; the default `User.Read` can be removed. These are permissions users can normally consent to themselves, but if the UGAL tenant blocks user consent, an administrator has to grant it once (the first sign-in then shows "Need admin approval").
+4. Set `SPRING_PROFILES_ACTIVE=microsoft` and redeploy. `GET /api/auth/providers` should answer `{"microsoft":true}`.
+
+At startup the app fetches the tenant's OpenID configuration from `login.microsoftonline.com`; without network access it fails to start with the profile on. `ENTRA_TENANT_ID` overrides the tenant for testing with another directory.
 
 ## DNS
 

@@ -6,6 +6,7 @@ import InputText from 'primevue/inputtext'
 import Password from 'primevue/password'
 import Button from 'primevue/button'
 import Message from 'primevue/message'
+import MicrosoftSignIn from '@/components/MicrosoftSignIn.vue'
 import { describeError } from '@/api'
 import { useAuthStore } from '@/stores/auth'
 
@@ -58,6 +59,7 @@ async function submit() {
       <Message v-if="error" severity="error">{{ error }}</Message>
       <Button type="submit" :label="t('auth.signUp')" :loading="busy" fluid />
     </form>
+    <MicrosoftSignIn />
     <p>
       {{ t('auth.haveAccount') }} <RouterLink :to="{ name: 'signin' }">{{ t('auth.signInAction') }}</RouterLink>
     </p>

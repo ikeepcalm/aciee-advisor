@@ -15,7 +15,9 @@ import java.security.SecureRandom;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -104,6 +106,41 @@ public class AccountService {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "disabled");
         }
         return account;
+    }
+
+    @Transactional
+    public Account signInWithMicrosoft(UUID oid, String email) {
+        if (email == null || !email.toLowerCase(Locale.ROOT).endsWith("@student.ugal.ro")) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "microsoft_domain");
+        }
+        int userId = jdbc.sql("SELECT id FROM core.user_account WHERE entra_oid = :oid")
+                .param("oid", oid)
+                .query(Integer.class)
+                .optional()
+                .orElseGet(() -> linkMicrosoftAccount(oid, email));
+        jdbc.sql("DELETE FROM core.email_verification WHERE user_id = :id").param("id", userId).update();
+        var account = findById(userId);
+        if (account.isDisabled()) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "disabled");
+        }
+        return account;
+    }
+
+    private int linkMicrosoftAccount(UUID oid, String email) {
+        return jdbc.sql("""
+                        INSERT INTO core.user_account (email, entra_oid) VALUES (:email, :oid)
+                        ON CONFLICT (email_normalized) DO UPDATE
+                            SET entra_oid = EXCLUDED.entra_oid,
+                                password_hash = CASE
+                                    WHEN EXISTS (SELECT 1 FROM core.email_verification v WHERE v.user_id = user_account.id) THEN NULL
+                                    ELSE user_account.password_hash END
+                            WHERE user_account.entra_oid IS NULL
+                        RETURNING id""")
+                .param("email", email)
+                .param("oid", oid)
+                .query(Integer.class)
+                .optional()
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.CONFLICT, "microsoft_conflict"));
     }
 
     public Account findById(int id) {

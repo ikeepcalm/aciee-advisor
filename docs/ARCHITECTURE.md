@@ -24,6 +24,9 @@ The SPA and `/api` are served from the same origin, so there is no CORS.
   - Endpoints: `POST /api/auth/signup`, `/verify`, `/verify/resend`, `/signin`, `/signout`; `GET /api/auth/me`, `/csrf`. Errors are RFC 9457 problem details whose `detail` is a stable code (`unverified`, `code_invalid` with `attemptsLeft`, `code_expired`, …).
   - Passwords: Argon2id (`Argon2PasswordEncoder`).
 - **Microsoft sign-in (Entra OIDC)** as an alternative. Accept only the UGAL tenant `tid` and the `@student.ugal.ro` suffix.
+  - Authorization code flow with PKCE against the UGAL tenant's issuer (`spring-boot-starter-security-oauth2-client`, profile `microsoft`). The ID token's `tid` must equal the tenant and its `email` (or `preferred_username`) must end in `@student.ugal.ro`.
+  - An account is found by `entra_oid`. Otherwise the address is matched by `email_normalized` and the account is linked. If it was still unverified, its password is dropped, so a password someone planted by signing up with another student's address does not survive. An address already linked to another `oid` is refused (`microsoft_conflict`).
+  - Microsoft proves the address, so a pending email code is deleted.
 - **Email normalisation**: lowercase, strip `+tag`, unique index on the normalised value.
 - **Sessions**: server-side, Spring Session JDBC.
   - Cookie: `HttpOnly; Secure; SameSite=Lax`.

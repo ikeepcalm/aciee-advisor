@@ -1,0 +1,14 @@
+spring:
+  security:
+    oauth2:
+      client:
+        registration:
+          microsoft:
+            client-id: ${ENTRA_CLIENT_ID}
+            client-secret: ${ENTRA_CLIENT_SECRET}
+            scope: openid, profile, email
+            redirect-uri: "{baseUrl}/api/auth/oauth2/code/{registrationId}"
+        provider:
+          microsoft:
+            issuer-uri: https://login.microsoftonline.com/${app.entra-tenant-id}/v2.0
+            user-name-attribute: oid

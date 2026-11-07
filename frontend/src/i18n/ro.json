@@ -19,7 +19,9 @@
     "verifySent": "Am trimis un cod de 6 cifre la {email}. Codul expiră în 15 minute.",
     "verifyAction": "Verifică",
     "resend": "Retrimite codul",
-    "resent": "Ți-am trimis un cod nou."
+    "resent": "Ți-am trimis un cod nou.",
+    "or": "sau",
+    "microsoft": "Continuă cu Microsoft"
   },
   "errors": {
     "domain": "Folosește adresa ta {'@'}student.ugal.ro.",
@@ -61,7 +63,11 @@
     "invalid_token": "Tokenul nu este valid.",
     "submission_not_found": "Nu am găsit evaluarea.",
     "already_moderated": "Textul a fost deja moderat.",
-    "timeout": "Cererea a durat prea mult. Restrânge filtrele și încearcă din nou."
+    "timeout": "Cererea a durat prea mult. Restrânge filtrele și încearcă din nou.",
+    "microsoft_tenant": "Folosește contul Microsoft al universității ({'@'}student.ugal.ro).",
+    "microsoft_domain": "Doar conturile {'@'}student.ugal.ro se pot autentifica.",
+    "microsoft_conflict": "Adresa ta este deja legată de alt cont Microsoft.",
+    "microsoft_failed": "Autentificarea cu Microsoft nu a reușit. Încearcă din nou."
   },
   "nav": {
     "groups": "Grupa mea",

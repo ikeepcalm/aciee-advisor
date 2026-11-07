@@ -61,6 +61,8 @@ Also required throughout the semester: consistent git history, `docs/DECISIONS.m
 
 **Stage 4 (Nov 7).** Done: nine `EXPLAIN (ANALYZE, BUFFERS)` cases on the full fixture volumes, the four-step same-token concurrency demo (pgbench) and the same check over HTTP (k6, 200 users), and a k6 load test per pool size (`docs/explain-plans/README.md`). The captures found two request-path problems, fixed in changeset `018` (ADR-029): the published-comments view (4.3 s → 37 ms) and JIT on the app roles.
 
+**W6 (Nov 7).** Done: Microsoft sign-in (ADR-030) with tenant and domain checks, account linking and the button on sign-in and sign-up, off until the `microsoft` profile and the app registration's secrets are set (DEPLOY.md). Still open: registering the app in the UGAL tenant and the real sign-in test with a student account.
+
 ## Checked so far
 
 - **Email delivery:** mail from an outside personal address reaches a `@student.ugal.ro` inbox. Still to test: mail from our own sending domain.
