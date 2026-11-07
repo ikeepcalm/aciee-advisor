@@ -22,6 +22,7 @@ public class DatabaseErrorAdvice {
             case "23505", "23P01" -> ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, "duplicate");
             case "23514" -> ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, "check_failed");
             case "23502" -> ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, "required");
+            case "57014" -> ProblemDetail.forStatusAndDetail(HttpStatus.SERVICE_UNAVAILABLE, "timeout");
             default -> state.startsWith("22") ? ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, "invalid_value") : null;
         };
         if (problem == null) {

@@ -43,3 +43,12 @@ server:
 app:
   mail-from: ${MAIL_FROM:ACIEE Advisor <no-reply@localhost>}
   token-keys-dir: ${TOKEN_KEYS_DIR:token-keys}
+  report-datasource:
+    jdbc-url: ${spring.datasource.url}
+    username: ${DB_REPORT_USER:aciee_report}
+    password: ${DB_REPORT_PASSWORD:aciee_report}
+    pool-name: report
+    maximum-pool-size: 2
+    read-only: true
+    data-source-properties:
+      ApplicationName: aciee-report

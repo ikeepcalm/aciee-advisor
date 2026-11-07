@@ -58,3 +58,10 @@ How AI tools were used in this project, and every AI error caught and corrected.
 | 2026-10-31 | Claude Opus 5.5 | Teaching mapping | Listing slots per subgroup hid a group-wide assignment once subgroups existed, so a second teacher could overlap it | code-review agent | A "Toată grupa" slot is always listed | — |
 | 2026-10-31 | Claude Opus 5.5 | Professor erasure | Archiving anonymised the professor row but the audit log kept the old name | code-review agent | `core.archive_professor` also strips the name and slug from that professor's audit rows | — |
 | 2026-10-31 | Claude Opus 5.5 | Groups | Joining by invite did not refuse current members or ended years, wasting invite uses on requests that could never be approved | code-review agent | `already_member` / `year_ended` before the request | — |
+
+**2026-11-07.** Claude Code (Opus 5.5) implemented Stage 5 reports (ADR-028).
+
+| Date | Tool | Intent | Error | Detected by | Fix | Commit |
+|---|---|---|---|---|---|---|
+| 2026-11-07 | Claude Opus 5.5 | Report test | Asserted that the fixtures contain locked pairs; every fixture pair has n ≥ 300, so the test depended on data, not code | test | The test checks the filter (locked rows ⊇ unlocked rows, unlocked rows have n ≥ k) | — |
+

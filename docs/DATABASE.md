@@ -19,6 +19,7 @@ PostgreSQL 18. This document is the logical and physical design: entities, keys,
 | `core` | Organisation, curriculum, teaching, accounts, groups, sessions, audit |
 | `ident` | Token issuance, token vault |
 | `anon` | Offering keys, submissions, ratings, posts, aggregates |
+| `report` | Views over the aggregates with names attached, for `aciee_report` (changeset `017`) |
 
 All objects are owned by the migrator (ARCHITECTURE §4). Domains (§3.1) live in `ref`; the `ro_ro` ICU collation in `core`.
 
@@ -32,7 +33,8 @@ All objects are owned by the migrator (ARCHITECTURE §4). Domains (§3.1) live i
 | `ident.*` | SELECT, DML | — | — |
 | `anon` base tables | — | SELECT, DML | — |
 | `anon` views: `published_post`, `moderation_queue` | — | SELECT | — |
-| Materialised views | — | SELECT; EXECUTE on `anon.refresh_aggregates()` | SELECT |
+| Materialised views | — | SELECT; EXECUTE on `anon.refresh_aggregates()` | — |
+| `report` views: `prof_subject`, `course_survival` | — | — | SELECT |
 
 - `anon` references `core` only through the public tables, never `user_account`. No FK path leads from `anon` to an account, and the anonymous role cannot read one.
 - Moderation runs on the `anon` pool through `anon.moderation_queue`, a view that omits `key_hash`. The application checks the moderator role before running it, because no user identity reaches the `anon` pool.
@@ -301,12 +303,13 @@ PostgreSQL does not index foreign keys automatically. Each FK below is either in
 
 ## 9. Connections
 
-- **Three DataSources, two at runtime.**
+- **Four DataSources, three at runtime.**
 
 | DataSource | Role | Used by | Transaction manager |
 |---|---|---|---|
 | ident | `aciee_ident` | accounts, groups, issuance, sessions, admin CRUD | `identTx` (primary) |
 | anon | `aciee_anon` | redeem, ratings, posts, moderation, public pages | `anonTx` |
+| report | `aciee_report` | report queries (`/api/reports`), read-only, 2 connections | none (single autocommit reads) |
 | migrator | bootstrap user (`aciee`) | Liquibase at startup only | none |
 
 - Every `@Transactional` names its manager. `set_config('app.user_id', ?, true)` runs on the ident connection inside `identTx`; the anon pool never receives a user id.

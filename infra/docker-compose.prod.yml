@@ -25,6 +25,7 @@ services:
     environment:
       DB_URL: jdbc:postgresql://db:5432/aciee
       DB_IDENT_PASSWORD: ${ACIEE_IDENT_PASSWORD:?}
+      DB_REPORT_PASSWORD: ${ACIEE_REPORT_PASSWORD:?}
       DB_MIGRATOR_PASSWORD: ${POSTGRES_PASSWORD:?}
       LIQUIBASE_CONTEXTS: ${LIQUIBASE_CONTEXTS:-prod}
       MAIL_HOST: ${MAIL_HOST:?}

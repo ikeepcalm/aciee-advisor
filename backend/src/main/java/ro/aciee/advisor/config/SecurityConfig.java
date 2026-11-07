@@ -27,7 +27,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/signup", "/api/auth/signin", "/api/auth/verify", "/api/auth/verify/resend", "/api/auth/csrf").permitAll()
                         .requestMatchers("/api/catalog/**").permitAll()
-                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                        .requestMatchers("/api/admin/**", "/api/reports/**").hasRole("ADMIN")
                         .requestMatchers("/api/moderation/**").hasAnyRole("MODERATOR", "ADMIN")
                         .requestMatchers("/api/**").authenticated()
                         .anyRequest().permitAll())

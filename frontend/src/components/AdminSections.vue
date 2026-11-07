@@ -20,6 +20,7 @@ const sections = [
   'professor',
   'teaching_assignment',
   'history',
+  'reports',
 ]
 
 const { t } = useI18n()
@@ -29,7 +30,7 @@ const current = computed(() => (route.name === 'admin-table' ? route.params.tabl
 const options = computed(() => sections.map((value) => ({ value, label: t(`admin.sections.${value}`) })))
 
 function go(section: string) {
-  if (section === 'leaders' || section === 'history') {
+  if (['leaders', 'history', 'reports'].includes(section)) {
     router.push({ name: `admin-${section}` })
   } else {
     router.push({ name: 'admin-table', params: { table: section } })

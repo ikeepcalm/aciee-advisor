@@ -9,6 +9,7 @@
 | Frontend | Vue 3, Vite, TypeScript, Pinia, PrimeVue, vue-i18n (`ro-RO`), Chart.js via vue-chartjs |
 | Crypto | RFC 9474 blind RSA: Bouncy Castle `bcprov-jdk18on` ≥ 1.85.2 (server), `@cloudflare/blindrsa-ts` (browser), WebCrypto HKDF + AES-GCM |
 | Infra | Docker Compose on one VPS under the deploy tool: postgres, app, nginx (SPA + `/api` proxy), backup; the deploy tool's proxy terminates HTTPS (DEPLOY.md) |
+| Reports | OpenPDF (PDF), fastexcel (.xlsx), plain CSV |
 | Load test | k6 |
 | CI | GitHub Actions + Testcontainers |
 

@@ -256,3 +256,15 @@ Format: context → decision → consequences. Never rewrite an accepted ADR; su
 - Aggregates refresh hourly (`AggregateRefreshTask`), not nightly.
 
 **Consequences.** Someone with the app's database login can now read anonymous data, and issuance and redemption can sit next to each other in time, so the ordering risk in ARCHITECTURE §3 is larger. To restore the separation: a second `DataSource` as `aciee_anon` for `/anon/**` and the anon reads, then revoke the `016` grants and bring back `AccessTests.identPoolCannotReadAnonymousData`.
+
+## ADR-028 — Reports through a `report` schema and their own pool
+**Context.** Stage 5 needs PDF, CSV and Excel exports from database queries. ARCHITECTURE §4 says `aciee_report` reads only report views, but it was granted the bare materialised views, which hold ids and no names, so a useful report needed `core` access the role must not have.
+
+**Decision.**
+- Changeset `017` adds schema `report` with `prof_subject` and `course_survival`: the two aggregates with professor, department and subject names and each root subject's specialisations. The views run with their owner's rights, so `aciee_report` gets SELECT on them and loses its grants on `anon`.
+- A third pool (`app.report-datasource`, 2 connections, read-only) logs in as `aciee_report`, so the 60 s `statement_timeout` and the grants apply to every report query. It is a non-default bean, so the auto-configured ident pool stays primary.
+- Formats: CSV with a BOM, `.xlsx` through fastexcel (small, no Apache POI), PDF through OpenPDF with the Liberation fonts embedded for ș and ț. One `ReportTable` (columns, rows, pillar sections) feeds all three writers.
+- Reports are admin-only. A cancelled statement (`57014`) maps to `503 timeout`.
+
+**Consequences.** A SQL injection in a report query could read only aggregates that are already public above k. A new report is one view, one `ReportType` entry and its grant.
+

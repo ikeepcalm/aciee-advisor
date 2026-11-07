@@ -898,7 +898,7 @@ Sections: **Curriculum**, **Calendar**, **Grupe**, **Profesori**, **Repartizări
 | Stan M.    | Rețele       | blocat   |
 | ...                                  |
 |                                      |
-| [ Descarcă CSV ]  [ Descarcă PDF ]   |
+| [CSV] [Excel] [PDF]                  |
 |                                      |
 | Date din actualizarea de noapte,     |
 | 28 oct. 2026.                        |
@@ -906,15 +906,17 @@ Sections: **Curriculum**, **Calendar**, **Grupe**, **Profesori**, **Repartizări
 ```
 
 **Data read**
-- `anon.prof_subject_radar` (Q4) joined to public `core` names for professor and subject; `anon.course_survival`.
-- Filters on specialisation and department go through the public curriculum tables.
+- `report.prof_subject` and `report.course_survival`: views over `anon.prof_subject_radar` (Q4) and `anon.course_survival` that add professor, department and subject names and each subject's specialisations. They are the only objects `aciee_report` can read.
+- The filter lists (specialisations, departments) come from the ident pool, as for the other admin screens.
 
 **Actions**
 
 | Control | Calls | Note |
 |---|---|---|
-| Descarcă CSV | `GET /api/reports/:type.csv?filters` | UTF-8 with BOM so Excel shows Romanian diacritics. |
-| Descarcă PDF | `GET /api/reports/:type.pdf?filters` | Same rows, one table per pillar. |
+| Filters, preview | `GET /api/reports/filters`, `GET /api/reports/:type?filters` | `:type` is `radar` or `survival`; filters are `specialization`, `department` (radar only) and `locked`. |
+| Descarcă CSV | `GET /api/reports/:type/csv?filters` | UTF-8 with BOM so Excel shows Romanian diacritics. |
+| Descarcă Excel | `GET /api/reports/:type/xlsx?filters` | Real `.xlsx`, numbers as numbers, header row frozen. |
+| Descarcă PDF | `GET /api/reports/:type/pdf?filters` | Same rows; the radar report has one table per pillar. Liberation Sans is embedded for ș, ț, ă. |
 
 **States**
 - Locked pairs: averages are `NULL` in the view, exported as empty cells and shown as "blocat"; `n` is exported (ADR-022).
@@ -939,4 +941,4 @@ Sections: **Curriculum**, **Calendar**, **Grupe**, **Profesori**, **Repartizări
 14. **Archived professors.** Should `/professors/:slug` for an archived professor return 404, or show the anonymised name with aggregates?
 15. **Assigning the moderator role.** No view grants `user_role`. Seed by changeset, or add a section to Admin?
 16. **Comparator radar.** A radar is per professor × subject; this spec makes the user pick a professor per elective. Is a subject-level radar wanted (it would need a new materialised view)?
-17. **Report formats.** ROADMAP Stage 5 says PDF/CSV/Excel; SPECIFICATION says PDF/CSV. Is CSV with BOM enough for "Excel"?
+17. *Decided: CSV, Excel (.xlsx) and PDF.* **Report formats.** ROADMAP Stage 5 says PDF/CSV/Excel; SPECIFICATION says PDF/CSV. Is CSV with BOM enough for "Excel"?

@@ -57,6 +57,8 @@ Also required throughout the semester: consistent git history, `docs/DECISIONS.m
 
 **W3 (Nov 4), in progress.** Done: blind RSA on both sides, checked against the RFC 9474 A.4 test vector (`BlindRsa` on the server, `src/crypto/blindRsa.ts` over `@cloudflare/blindrsa-ts` in the browser). Per-semester key batch, `/anon/keys.json`, and issuance (`/api/tokens/pending`, `/api/tokens/issue`) with complete-set, retry and eligibility checks. Client: master secret and recovery code (`/me/recovery`: create, show, restore), `keys.json` pinned by hash, issuance with stored blinding factors, the AES-GCM vault (`/api/vault`, merged before each upload), and the `/rate` list. Fixture keys are inactive so the demo issues with real ones. Then the rest of the student-facing app (ADR-027 shortcuts): redemption and the rating form, My submissions (edit, delete), the catalogue at `/`, course and professor pages with the 14-axis radar, tips and comments, the Report button, the moderation queue and reports, and a shared menu. Still open: Stage 5 reports. The elective comparator is dropped: ACIEE has only one elective per year, so there is little to compare.
 
+**Stage 5 (Nov 7).** Done: reports at `/admin/reports` (ADR-028). Professor × subject and survival per subject, filtered by specialisation, department and locked pairs, previewed on screen and downloaded as CSV, Excel or PDF. Queries run as `aciee_report` on its own pool and read only the `report` views.
+
 ## Checked so far
 
 - **Email delivery:** mail from an outside personal address reaches a `@student.ugal.ro` inbox. Still to test: mail from our own sending domain.

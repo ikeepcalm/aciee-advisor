@@ -92,6 +92,12 @@ const router = createRouter({
       meta: { role: 'admin' },
     },
     {
+      path: '/admin/reports',
+      name: 'admin-reports',
+      component: () => import('../views/AdminReportsView.vue'),
+      meta: { role: 'admin' },
+    },
+    {
       path: '/admin/:table',
       name: 'admin-table',
       component: () => import('../views/AdminTableView.vue'),

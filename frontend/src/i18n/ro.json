@@ -60,7 +60,8 @@
     "already_submitted": "Acest curs a fost deja evaluat de pe acest cont.",
     "invalid_token": "Tokenul nu este valid.",
     "submission_not_found": "Nu am găsit evaluarea.",
-    "already_moderated": "Textul a fost deja moderat."
+    "already_moderated": "Textul a fost deja moderat.",
+    "timeout": "Cererea a durat prea mult. Restrânge filtrele și încearcă din nou."
   },
   "nav": {
     "groups": "Grupa mea",
@@ -152,7 +153,8 @@
       "course_offering": "Cursuri ale grupelor",
       "professor": "Profesori",
       "teaching_assignment": "Repartizări",
-      "history": "Istoric"
+      "history": "Istoric",
+      "reports": "Rapoarte"
     },
     "columns": {
       "code": "Cod",
@@ -346,5 +348,22 @@
     "reason": "Motiv",
     "send": "Trimite",
     "thanks": "Mulțumim. Un moderator va verifica."
+  },
+  "reports": {
+    "types": {
+      "radar": "Profesor × disciplină",
+      "survival": "Supraviețuire pe disciplină"
+    },
+    "specialization": "Specializare",
+    "department": "Departament",
+    "all": "Toate",
+    "includeLocked": "Include perechile blocate (n < {k})",
+    "preview": "Previzualizare ({n} rânduri)",
+    "empty": "Nu există date pentru filtrele alese.",
+    "locked": "blocat",
+    "csv": "Descarcă CSV",
+    "xlsx": "Descarcă Excel",
+    "pdf": "Descarcă PDF",
+    "note": "Datele vin din agregatele actualizate periodic. Sub k evaluări mediile nu sunt afișate."
   }
 }
