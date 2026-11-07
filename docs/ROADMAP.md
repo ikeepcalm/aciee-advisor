@@ -59,6 +59,8 @@ Also required throughout the semester: consistent git history, `docs/DECISIONS.m
 
 **Stage 5 (Nov 7).** Done: reports at `/admin/reports` (ADR-028). Professor × subject and survival per subject, filtered by specialisation, department and locked pairs, previewed on screen and downloaded as CSV, Excel or PDF. Queries run as `aciee_report` on its own pool and read only the `report` views.
 
+**Stage 4 (Nov 7).** Done: nine `EXPLAIN (ANALYZE, BUFFERS)` cases on the full fixture volumes, the four-step same-token concurrency demo (pgbench) and the same check over HTTP (k6, 200 users), and a k6 load test per pool size (`docs/explain-plans/README.md`). The captures found two request-path problems, fixed in changeset `018` (ADR-029): the published-comments view (4.3 s → 37 ms) and JIT on the app roles.
+
 ## Checked so far
 
 - **Email delivery:** mail from an outside personal address reaches a `@student.ugal.ro` inbox. Still to test: mail from our own sending domain.

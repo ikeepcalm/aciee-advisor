@@ -1,0 +1,88 @@
+=== 5a. Radar from the materialised view (Q4): one unique-index lookup
+                                                                  QUERY PLAN                                                                   
+-----------------------------------------------------------------------------------------------------------------------------------------------
+ Index Scan using prof_subject_radar_key on prof_subject_radar  (cost=0.28..8.30 rows=1 width=95) (actual time=0.010..0.010 rows=1.00 loops=1)
+   Index Cond: ((professor_id = 78) AND (subject_id = 1211))
+   Index Searches: 1
+   Buffers: shared hit=1 read=2
+ Planning:
+   Buffers: shared hit=44 read=1
+ Planning Time: 0.052 ms
+ Execution Time: 0.018 ms
+(8 rows)
+
+=== 5b. The same radar computed live from anon.rating_v
+                                                                                                 QUERY PLAN                                                                                                 
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ Aggregate  (cost=65824.66..65824.71 rows=1 width=456) (actual time=91.829..92.469 rows=1.00 loops=1)
+   Buffers: shared hit=15442 read=40724
+   ->  Sort  (cost=65824.47..65824.48 rows=4 width=61) (actual time=91.557..92.231 rows=1305.00 loops=1)
+         Sort Key: r.key_hash
+         Sort Method: quicksort  Memory: 155kB
+         Buffers: shared hit=15442 read=40724
+         ->  Nested Loop  (cost=5969.09..65824.43 rows=4 width=61) (actual time=24.205..91.846 rows=1305.00 loops=1)
+               Join Filter: (o.curriculum_item_id = ci.id)
+               Rows Removed by Join Filter: 3832
+               Buffers: shared hit=15439 read=40724
+               ->  Nested Loop  (cost=4944.87..6475.64 rows=1 width=4) (actual time=0.427..0.666 rows=1.00 loops=1)
+                     Buffers: shared hit=15 read=12
+                     ->  CTE Scan on chain  (cost=4944.59..6467.32 rows=1 width=8) (actual time=0.419..0.656 rows=1.00 loops=1)
+                           Filter: ((next_id IS NULL) AND (NOT is_cycle) AND (current_id = 1211))
+                           Rows Removed by Filter: 1326
+                           Storage: Memory  Maximum Storage: 131kB
+                           Buffers: shared hit=12 read=12
+                           CTE chain
+                             ->  Recursive Union  (cost=0.00..4944.59 rows=67677 width=45) (actual time=0.071..0.493 rows=1327.00 loops=1)
+                                   Storage: Memory  Maximum Storage: 147kB
+                                   Buffers: shared hit=12 read=12
+                                   ->  Seq Scan on subject  (cost=0.00..25.27 rows=1327 width=45) (actual time=0.070..0.197 rows=1327.00 loops=1)
+                                         Buffers: shared read=12
+                                   ->  Hash Join  (cost=41.86..424.26 rows=6635 width=45) (actual time=0.199..0.199 rows=0.00 loops=1)
+                                         Hash Cond: (c.next_id = s.id)
+                                         Buffers: shared hit=12
+                                         ->  WorkTable Scan on chain c  (cost=0.00..265.40 rows=6635 width=40) (actual time=0.001..0.044 rows=1327.00 loops=1)
+                                               Filter: (NOT is_cycle)
+                                         ->  Hash  (cost=25.27..25.27 rows=1327 width=8) (actual time=0.124..0.124 rows=1327.00 loops=1)
+                                               Buckets: 2048  Batches: 1  Memory Usage: 63kB
+                                               Buffers: shared hit=12
+                                               ->  Seq Scan on subject s  (cost=0.00..25.27 rows=1327 width=8) (actual time=0.005..0.059 rows=1327.00 loops=1)
+                                                     Buffers: shared hit=12
+                     ->  Index Scan using curriculum_item_subject_idx on curriculum_item ci  (cost=0.28..8.29 rows=1 width=8) (actual time=0.006..0.008 rows=1.00 loops=1)
+                           Index Cond: (subject_id = chain.subject_id)
+                           Index Searches: 1
+                           Buffers: shared hit=3
+               ->  Gather  (cost=1024.22..59289.95 rows=4707 width=65) (actual time=22.994..90.856 rows=5137.00 loops=1)
+                     Workers Planned: 2
+                     Workers Launched: 2
+                     Buffers: shared hit=15424 read=40712
+                     ->  Nested Loop  (cost=24.22..57819.25 rows=1961 width=65) (actual time=22.071..70.412 rows=1712.33 loops=3)
+                           Buffers: shared hit=15424 read=40712
+                           ->  Hash Join  (cost=23.93..57209.42 rows=1961 width=65) (actual time=22.013..68.914 rows=1712.33 loops=3)
+                                 Hash Cond: (r.teaching_assignment_id = ta.id)
+                                 Buffers: shared hit=19 read=40704
+                                 ->  Parallel Seq Scan on rating r  (cost=0.00..53758.40 rows=1305540 width=69) (actual time=0.080..37.276 rows=1044468.33 loops=3)
+                                       Buffers: shared read=40703
+                                 ->  Hash  (cost=18.66..18.66 rows=421 width=4) (actual time=0.059..0.059 rows=360.00 loops=3)
+                                       Buckets: 1024  Batches: 1  Memory Usage: 21kB
+                                       Buffers: shared hit=19 read=1
+                                       ->  Index Scan using teaching_assignment_professor_idx on teaching_assignment ta  (cost=0.30..18.66 rows=421 width=4) (actual time=0.017..0.040 rows=360.00 loops=3)
+                                             Index Cond: (professor_id = 78)
+                                             Index Searches: 3
+                                             Buffers: shared hit=19 read=1
+                           ->  Index Scan using course_offering_pkey on course_offering o  (cost=0.29..0.31 rows=1 width=8) (actual time=0.001..0.001 rows=1.00 loops=5137)
+                                 Index Cond: (id = r.offering_id)
+                                 Index Searches: 5137
+                                 Buffers: shared hit=15405 read=8
+ Planning:
+   Buffers: shared hit=553 read=5
+ Planning Time: 0.735 ms
+ Execution Time: 92.545 ms
+(63 rows)
+
+=== 5c. Cost of one concurrent refresh of both views
+ refresh_aggregates 
+--------------------
+ 
+(1 row)
+
+Time: 4940.769 ms (00:04.941)

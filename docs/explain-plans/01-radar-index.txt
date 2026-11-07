@@ -1,0 +1,66 @@
+=== 1a. No index on rating(teaching_assignment_id)
+                                                             QUERY PLAN                                                              
+-------------------------------------------------------------------------------------------------------------------------------------
+ Finalize Aggregate  (cost=58023.38..58023.42 rows=1 width=456) (actual time=38.189..39.258 rows=1.00 loops=1)
+   Buffers: shared hit=282 read=40421
+   ->  Gather  (cost=58023.06..58023.27 rows=2 width=456) (actual time=38.098..39.235 rows=3.00 loops=1)
+         Workers Planned: 2
+         Workers Launched: 2
+         Buffers: shared hit=282 read=40421
+         ->  Partial Aggregate  (cost=57023.06..57023.07 rows=1 width=456) (actual time=37.075..37.075 rows=1.00 loops=3)
+               Buffers: shared hit=282 read=40421
+               ->  Parallel Seq Scan on rating  (cost=0.00..57022.76 rows=8 width=28) (actual time=29.318..37.068 rows=9.33 loops=3)
+                     Filter: (teaching_assignment_id = 4347)
+                     Rows Removed by Filter: 1044459
+                     Buffers: shared hit=282 read=40421
+ Planning:
+   Buffers: shared hit=53 read=1 dirtied=2
+ Planning Time: 0.215 ms
+ Execution Time: 39.300 ms
+(16 rows)
+
+=== 1b. B-tree on rating(teaching_assignment_id)
+                                                                QUERY PLAN                                                                
+------------------------------------------------------------------------------------------------------------------------------------------
+ Aggregate  (cost=84.29..84.33 rows=1 width=456) (actual time=0.132..0.132 rows=1.00 loops=1)
+   Buffers: shared read=4
+   ->  Bitmap Heap Scan on rating  (cost=4.58..83.50 rows=20 width=28) (actual time=0.101..0.102 rows=28.00 loops=1)
+         Recheck Cond: (teaching_assignment_id = 4347)
+         Heap Blocks: exact=1
+         Buffers: shared read=4
+         ->  Bitmap Index Scan on rating_assignment_demo  (cost=0.00..4.58 rows=20 width=0) (actual time=0.018..0.018 rows=28.00 loops=1)
+               Index Cond: (teaching_assignment_id = 4347)
+               Index Searches: 1
+               Buffers: shared read=3
+ Planning:
+   Buffers: shared hit=17 read=1
+ Planning Time: 0.134 ms
+ Execution Time: 0.154 ms
+(14 rows)
+
+ plain_index_size 
+------------------
+ 26 MB
+(1 row)
+
+=== 1c. Covering index INCLUDE (a01..a14) after VACUUM: index-only scan
+                                                                      QUERY PLAN                                                                      
+------------------------------------------------------------------------------------------------------------------------------------------------------
+ Aggregate  (cost=5.62..5.66 rows=1 width=456) (actual time=0.038..0.039 rows=1.00 loops=1)
+   Buffers: shared hit=1 read=3
+   ->  Index Only Scan using rating_assignment_cover_demo on rating  (cost=0.43..4.80 rows=21 width=28) (actual time=0.022..0.025 rows=28.00 loops=1)
+         Index Cond: (teaching_assignment_id = 4347)
+         Heap Fetches: 0
+         Index Searches: 1
+         Buffers: shared hit=1 read=3
+ Planning:
+   Buffers: shared hit=72
+ Planning Time: 0.141 ms
+ Execution Time: 0.057 ms
+(11 rows)
+
+ covering_index_size 
+---------------------
+ 167 MB
+(1 row)
+

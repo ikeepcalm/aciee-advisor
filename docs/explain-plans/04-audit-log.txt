@@ -1,0 +1,217 @@
+=== 4a. History of one row (Q13): local (table_name, row_id) index on each partition
+                                                                                         QUERY PLAN                                                                                          
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ Sort  (cost=83.15..83.19 rows=16 width=28) (actual time=0.479..0.480 rows=1.00 loops=1)
+   Sort Key: audit_log.id DESC
+   Sort Method: quicksort  Memory: 25kB
+   Buffers: shared hit=3 read=40
+   ->  Append  (cost=0.42..82.83 rows=16 width=28) (actual time=0.465..0.471 rows=1.00 loops=1)
+         Buffers: shared read=40
+         ->  Index Scan Backward using audit_log_2025_11_table_name_id_idx on audit_log_2025_11 audit_log_1  (cost=0.42..6.19 rows=1 width=23) (actual time=0.055..0.055 rows=0.00 loops=1)
+               Index Cond: (table_name = 'subject'::text)
+               Filter: (row_id = 188)
+               Index Searches: 1
+               Buffers: shared read=3
+         ->  Index Scan Backward using audit_log_2025_12_table_name_id_idx on audit_log_2025_12 audit_log_2  (cost=0.42..6.19 rows=1 width=23) (actual time=0.030..0.030 rows=0.00 loops=1)
+               Index Cond: (table_name = 'subject'::text)
+               Filter: (row_id = 188)
+               Index Searches: 1
+               Buffers: shared read=3
+         ->  Index Scan Backward using audit_log_2026_01_table_name_id_idx on audit_log_2026_01 audit_log_3  (cost=0.42..6.19 rows=1 width=23) (actual time=0.027..0.027 rows=0.00 loops=1)
+               Index Cond: (table_name = 'subject'::text)
+               Filter: (row_id = 188)
+               Index Searches: 1
+               Buffers: shared read=3
+         ->  Index Scan Backward using audit_log_2026_02_table_name_id_idx on audit_log_2026_02 audit_log_4  (cost=0.42..6.19 rows=1 width=23) (actual time=0.037..0.037 rows=0.00 loops=1)
+               Index Cond: (table_name = 'subject'::text)
+               Filter: (row_id = 188)
+               Index Searches: 1
+               Buffers: shared read=3
+         ->  Index Scan Backward using audit_log_2026_03_table_name_id_idx on audit_log_2026_03 audit_log_5  (cost=0.42..6.19 rows=1 width=23) (actual time=0.036..0.036 rows=0.00 loops=1)
+               Index Cond: (table_name = 'subject'::text)
+               Filter: (row_id = 188)
+               Index Searches: 1
+               Buffers: shared read=3
+         ->  Index Scan Backward using audit_log_2026_04_table_name_id_idx on audit_log_2026_04 audit_log_6  (cost=0.42..6.19 rows=1 width=23) (actual time=0.030..0.030 rows=0.00 loops=1)
+               Index Cond: (table_name = 'subject'::text)
+               Filter: (row_id = 188)
+               Index Searches: 1
+               Buffers: shared read=3
+         ->  Index Scan Backward using audit_log_2026_05_table_name_id_idx on audit_log_2026_05 audit_log_7  (cost=0.42..6.19 rows=1 width=23) (actual time=0.031..0.031 rows=0.00 loops=1)
+               Index Cond: (table_name = 'subject'::text)
+               Filter: (row_id = 188)
+               Index Searches: 1
+               Buffers: shared read=3
+         ->  Index Scan Backward using audit_log_2026_06_table_name_id_idx on audit_log_2026_06 audit_log_8  (cost=0.42..6.19 rows=1 width=23) (actual time=0.027..0.027 rows=0.00 loops=1)
+               Index Cond: (table_name = 'subject'::text)
+               Filter: (row_id = 188)
+               Index Searches: 1
+               Buffers: shared read=3
+         ->  Index Scan Backward using audit_log_2026_07_table_name_id_idx on audit_log_2026_07 audit_log_9  (cost=0.42..6.19 rows=1 width=23) (actual time=0.040..0.040 rows=0.00 loops=1)
+               Index Cond: (table_name = 'subject'::text)
+               Filter: (row_id = 188)
+               Index Searches: 1
+               Buffers: shared read=3
+         ->  Index Scan Backward using audit_log_2026_08_table_name_id_idx on audit_log_2026_08 audit_log_10  (cost=0.42..6.19 rows=1 width=23) (actual time=0.043..0.043 rows=0.00 loops=1)
+               Index Cond: (table_name = 'subject'::text)
+               Filter: (row_id = 188)
+               Index Searches: 1
+               Buffers: shared read=3
+         ->  Index Scan Backward using audit_log_2026_09_table_name_id_idx on audit_log_2026_09 audit_log_11  (cost=0.42..6.19 rows=1 width=23) (actual time=0.035..0.035 rows=0.00 loops=1)
+               Index Cond: (table_name = 'subject'::text)
+               Filter: (row_id = 188)
+               Index Searches: 1
+               Buffers: shared read=3
+         ->  Index Scan Backward using audit_log_2026_10_table_name_id_idx on audit_log_2026_10 audit_log_12  (cost=0.42..6.19 rows=1 width=23) (actual time=0.032..0.032 rows=0.00 loops=1)
+               Index Cond: (table_name = 'subject'::text)
+               Filter: (row_id = 188)
+               Index Searches: 1
+               Buffers: shared read=3
+         ->  Index Scan using audit_log_2026_11_table_name_row_id_idx on audit_log_2026_11 audit_log_13  (cost=0.42..8.45 rows=1 width=23) (actual time=0.041..0.042 rows=1.00 loops=1)
+               Index Cond: ((table_name = 'subject'::text) AND (row_id = 188))
+               Index Searches: 1
+               Buffers: shared read=4
+         ->  Seq Scan on audit_log_2026_12 audit_log_14  (cost=0.00..0.00 rows=1 width=48) (actual time=0.002..0.002 rows=0.00 loops=1)
+               Filter: ((table_name = 'subject'::text) AND (row_id = 188))
+         ->  Seq Scan on audit_log_2027_01 audit_log_15  (cost=0.00..0.00 rows=1 width=48) (actual time=0.001..0.001 rows=0.00 loops=1)
+               Filter: ((table_name = 'subject'::text) AND (row_id = 188))
+         ->  Seq Scan on audit_log_2027_02 audit_log_16  (cost=0.00..0.00 rows=1 width=48) (actual time=0.001..0.001 rows=0.00 loops=1)
+               Filter: ((table_name = 'subject'::text) AND (row_id = 188))
+ Planning:
+   Buffers: shared hit=74
+ Planning Time: 0.381 ms
+ Execution Time: 0.503 ms
+(80 rows)
+
+=== 4b. One month, paged (Q14), literal range: plan-time pruning + BRIN
+                                                                                         QUERY PLAN                                                                                          
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ Limit  (cost=0.85..7.16 rows=50 width=45) (actual time=0.023..0.031 rows=50.00 loops=1)
+   Buffers: shared hit=11 read=1
+   ->  Merge Append  (cost=0.85..70373.93 rows=557326 width=45) (actual time=0.023..0.029 rows=50.00 loops=1)
+         Sort Key: audit_log.id DESC
+         Buffers: shared hit=11 read=1
+         Subplans Removed: 3
+         ->  Index Scan Backward using audit_log_2026_11_pkey on audit_log_2026_11 audit_log_1  (cost=0.43..61989.55 rows=557323 width=45) (actual time=0.023..0.026 rows=50.00 loops=1)
+               Index Cond: ((created_at >= '2026-11-01 00:00:00+00'::timestamp with time zone) AND (created_at < ('2026-11-01 00:00:00+00'::timestamp with time zone + '7 days'::interval)))
+               Index Searches: 1
+               Buffers: shared hit=11 read=1
+ Planning:
+   Buffers: shared hit=24 read=4
+ Planning Time: 0.157 ms
+ Execution Time: 0.040 ms
+(14 rows)
+
+=== 4c. Same query as a generic prepared plan: run-time pruning (Subplans Removed)
+                                                                                      QUERY PLAN                                                                                       
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ Limit  (cost=6.19..339.67 rows=50 width=46) (actual time=0.006..0.013 rows=50.00 loops=1)
+   Buffers: shared hit=6
+   ->  Merge Append  (cost=6.19..166770.81 rows=25003 width=46) (actual time=0.006..0.012 rows=50.00 loops=1)
+         Sort Key: audit_log.id DESC
+         Buffers: shared hit=6
+         Subplans Removed: 15
+         ->  Index Scan Backward using audit_log_2026_11_pkey on audit_log_2026_11 audit_log_1  (cost=0.42..19077.33 rows=2787 width=45) (actual time=0.006..0.010 rows=50.00 loops=1)
+               Index Cond: ((created_at >= $1) AND (created_at < $2))
+               Index Searches: 1
+               Buffers: shared hit=6
+ Planning:
+   Buffers: shared hit=13 read=12
+ Planning Time: 0.404 ms
+ Execution Time: 0.024 ms
+(14 rows)
+
+=== 4d. BRIN vs B-tree on created_at, summed over all partitions
+ brin_size 
+-----------
+ 384 kB
+(1 row)
+
+ btree_size 
+------------
+ 100 MB
+(1 row)
+
+=== 4e0. The same 10k-row update with no audit trigger (baseline)
+                                                                                             QUERY PLAN                                                                                             
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ Update on teaching_assignment  (cost=488.25..5923.46 rows=0 width=0) (actual rows=0.00 loops=1)
+   Buffers: shared hit=174283 read=2392 dirtied=406 written=90
+   ->  Hash Semi Join  (cost=488.25..5923.46 rows=10000 width=48) (actual rows=10000.00 loops=1)
+         Hash Cond: (teaching_assignment.id = "ANY_subquery".id)
+         Buffers: shared hit=20675 read=2156 dirtied=54
+         ->  Seq Scan on teaching_assignment  (cost=0.00..4666.94 rows=250294 width=24) (actual rows=230400.00 loops=1)
+               Buffers: shared hit=258 read=1906
+         ->  Hash  (cost=363.25..363.25 rows=10000 width=32) (actual rows=10000.00 loops=1)
+               Buckets: 16384  Batches: 1  Memory Usage: 753kB
+               Buffers: shared hit=20417 read=250 dirtied=54
+               ->  Subquery Scan on "ANY_subquery"  (cost=0.42..363.25 rows=10000 width=32) (actual rows=10000.00 loops=1)
+                     Buffers: shared hit=20417 read=250 dirtied=54
+                     ->  Limit  (cost=0.42..263.25 rows=10000 width=4) (actual rows=10000.00 loops=1)
+                           Buffers: shared hit=20417 read=250 dirtied=54
+                           ->  Index Only Scan using teaching_assignment_pkey on teaching_assignment teaching_assignment_1  (cost=0.42..6578.83 rows=250294 width=4) (actual rows=10000.00 loops=1)
+                                 Heap Fetches: 20609
+                                 Index Searches: 1
+                                 Buffers: shared hit=20417 read=250 dirtied=54
+ Planning:
+   Buffers: shared hit=82 read=14
+ Planning Time: 0.374 ms
+ Execution Time: 67.416 ms
+(22 rows)
+
+=== 4e. Statement-level audit trigger (in the schema) on a 10k-row update
+                                                                                             QUERY PLAN                                                                                             
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ Update on teaching_assignment  (cost=487.19..6136.45 rows=0 width=0) (actual rows=0.00 loops=1)
+   Buffers: shared hit=178616 dirtied=93 written=92
+   ->  Hash Semi Join  (cost=487.19..6136.45 rows=10000 width=48) (actual rows=10000.00 loops=1)
+         Hash Cond: (teaching_assignment.id = "ANY_subquery".id)
+         Buffers: shared hit=23223
+         ->  Seq Scan on teaching_assignment  (cost=0.00..4854.57 rows=260357 width=24) (actual rows=230400.00 loops=1)
+               Buffers: shared hit=2251
+         ->  Hash  (cost=362.19..362.19 rows=10000 width=32) (actual rows=10000.00 loops=1)
+               Buckets: 16384  Batches: 1  Memory Usage: 753kB
+               Buffers: shared hit=20972
+               ->  Subquery Scan on "ANY_subquery"  (cost=0.42..362.19 rows=10000 width=32) (actual rows=10000.00 loops=1)
+                     Buffers: shared hit=20972
+                     ->  Limit  (cost=0.42..262.19 rows=10000 width=4) (actual rows=10000.00 loops=1)
+                           Buffers: shared hit=20972
+                           ->  Index Only Scan using teaching_assignment_pkey on teaching_assignment teaching_assignment_1  (cost=0.42..6815.77 rows=260357 width=4) (actual rows=10000.00 loops=1)
+                                 Heap Fetches: 20914
+                                 Index Searches: 1
+                                 Buffers: shared hit=20972
+ Planning:
+   Buffers: shared hit=18
+ Planning Time: 0.093 ms
+ Trigger audit_update: calls=1
+ Execution Time: 182.944 ms
+(23 rows)
+
+=== 4f. Same update with a per-row audit trigger instead
+                                                                                             QUERY PLAN                                                                                             
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ Update on teaching_assignment  (cost=486.70..6347.54 rows=0 width=0) (actual rows=0.00 loops=1)
+   Buffers: shared hit=180768 read=4 dirtied=104 written=99
+   ->  Hash Semi Join  (cost=486.70..6347.54 rows=10000 width=48) (actual rows=10000.00 loops=1)
+         Hash Cond: (teaching_assignment.id = "ANY_subquery".id)
+         Buffers: shared hit=24077
+         ->  Seq Scan on teaching_assignment  (cost=0.00..5040.04 rows=270304 width=24) (actual rows=230400.00 loops=1)
+               Buffers: shared hit=2337
+         ->  Hash  (cost=361.70..361.70 rows=10000 width=32) (actual rows=10000.00 loops=1)
+               Buckets: 16384  Batches: 1  Memory Usage: 753kB
+               Buffers: shared hit=21740
+               ->  Subquery Scan on "ANY_subquery"  (cost=0.42..361.70 rows=10000 width=32) (actual rows=10000.00 loops=1)
+                     Buffers: shared hit=21740
+                     ->  Limit  (cost=0.42..261.70 rows=10000 width=4) (actual rows=10000.00 loops=1)
+                           Buffers: shared hit=21740
+                           ->  Index Only Scan using teaching_assignment_pkey on teaching_assignment teaching_assignment_1  (cost=0.42..7062.98 rows=270304 width=4) (actual rows=10000.00 loops=1)
+                                 Heap Fetches: 21679
+                                 Index Searches: 1
+                                 Buffers: shared hit=21740
+ Planning:
+   Buffers: shared hit=18
+ Planning Time: 0.109 ms
+ Trigger audit_update_row_demo: calls=10000
+ Execution Time: 203.316 ms
+(23 rows)
+

@@ -1,0 +1,301 @@
+=== 8a. Professor page, taught subjects CTE inlined into both branches
+                                                                                                                  QUERY PLAN                                                                                                                   
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ Append  (cost=7228.45..21203.66 rows=2 width=40) (actual time=11.545..22.653 rows=2.00 loops=1)
+   Buffers: shared hit=8831
+   ->  Aggregate  (cost=7228.45..7228.46 rows=1 width=40) (actual time=11.545..11.547 rows=1.00 loops=1)
+         Buffers: shared hit=4381
+         ->  Merge Join  (cost=7223.69..7228.45 rows=1 width=0) (actual time=11.520..11.545 rows=9.00 loops=1)
+               Merge Cond: (r.subject_id = chain.current_id)
+               Buffers: shared hit=4381
+               ->  Index Only Scan using prof_subject_radar_key on prof_subject_radar r  (cost=0.28..4.44 rows=9 width=4) (actual time=0.009..0.010 rows=9.00 loops=1)
+                     Index Cond: (professor_id = 7)
+                     Heap Fetches: 0
+                     Index Searches: 1
+                     Buffers: shared hit=3
+               ->  Unique  (cost=7223.41..7223.79 rows=75 width=4) (actual time=11.509..11.532 rows=9.00 loops=1)
+                     Buffers: shared hit=4378
+                     ->  Sort  (cost=7223.41..7223.60 rows=75 width=4) (actual time=11.509..11.520 rows=481.00 loops=1)
+                           Sort Key: chain.current_id
+                           Sort Method: quicksort  Memory: 25kB
+                           Buffers: shared hit=4378
+                           ->  Hash Join  (cost=5023.50..7221.08 rows=75 width=4) (actual time=1.298..11.493 rows=540.00 loops=1)
+                                 Hash Cond: (o.id = ta.offering_id)
+                                 Buffers: shared hit=4378
+                                 ->  Nested Loop  (cost=4992.48..7134.28 rows=8803 width=8) (actual time=0.407..9.444 rows=69120.00 loops=1)
+                                       Buffers: shared hit=4369
+                                       ->  Hash Join  (cost=4992.19..6350.48 rows=201 width=8) (actual time=0.136..0.935 rows=1582.00 loops=1)
+                                             Hash Cond: (chain.subject_id = ci.subject_id)
+                                             Buffers: shared hit=36
+                                             ->  CTE Scan on chain  (cost=4944.59..6298.13 rows=169 width=8) (actual time=0.007..0.666 rows=1327.00 loops=1)
+                                                   Filter: ((next_id IS NULL) AND (NOT is_cycle))
+                                                   Storage: Memory  Maximum Storage: 131kB
+                                                   Buffers: shared hit=24
+                                                   CTE chain
+                                                     ->  Recursive Union  (cost=0.00..4944.59 rows=67677 width=45) (actual time=0.006..0.454 rows=1327.00 loops=1)
+                                                           Storage: Memory  Maximum Storage: 147kB
+                                                           Buffers: shared hit=24
+                                                           ->  Seq Scan on subject  (cost=0.00..25.27 rows=1327 width=45) (actual time=0.005..0.169 rows=1327.00 loops=1)
+                                                                 Buffers: shared hit=12
+                                                           ->  Hash Join  (cost=41.86..424.26 rows=6635 width=45) (actual time=0.172..0.173 rows=0.00 loops=1)
+                                                                 Hash Cond: (c.next_id = s.id)
+                                                                 Buffers: shared hit=12
+                                                                 ->  WorkTable Scan on chain c  (cost=0.00..265.40 rows=6635 width=40) (actual time=0.001..0.038 rows=1327.00 loops=1)
+                                                                       Filter: (NOT is_cycle)
+                                                                 ->  Hash  (cost=25.27..25.27 rows=1327 width=8) (actual time=0.106..0.106 rows=1327.00 loops=1)
+                                                                       Buckets: 2048  Batches: 1  Memory Usage: 63kB
+                                                                       Buffers: shared hit=12
+                                                                       ->  Seq Scan on subject s  (cost=0.00..25.27 rows=1327 width=8) (actual time=0.002..0.046 rows=1327.00 loops=1)
+                                                                             Buffers: shared hit=12
+                                             ->  Hash  (cost=27.82..27.82 rows=1582 width=8) (actual time=0.126..0.126 rows=1582.00 loops=1)
+                                                   Buckets: 2048  Batches: 1  Memory Usage: 78kB
+                                                   Buffers: shared hit=12
+                                                   ->  Seq Scan on curriculum_item ci  (cost=0.00..27.82 rows=1582 width=8) (actual time=0.003..0.061 rows=1582.00 loops=1)
+                                                         Buffers: shared hit=12
+                                       ->  Index Scan using course_offering_curriculum_item_id_group_id_key on course_offering o  (cost=0.29..3.30 rows=60 width=8) (actual time=0.001..0.003 rows=43.69 loops=1582)
+                                             Index Cond: (curriculum_item_id = ci.id)
+                                             Index Searches: 1582
+                                             Buffers: shared hit=4333
+                                 ->  Hash  (cost=23.64..23.64 rows=591 width=4) (actual time=0.062..0.063 rows=540.00 loops=1)
+                                       Buckets: 1024  Batches: 1  Memory Usage: 27kB
+                                       Buffers: shared hit=9
+                                       ->  Index Scan using teaching_assignment_professor_idx on teaching_assignment ta  (cost=0.29..23.64 rows=591 width=4) (actual time=0.006..0.040 rows=540.00 loops=1)
+                                             Index Cond: (professor_id = 7)
+                                             Index Searches: 1
+                                             Buffers: shared hit=9
+   ->  Aggregate  (cost=13975.18..13975.19 rows=1 width=40) (actual time=11.103..11.105 rows=1.00 loops=1)
+         Buffers: shared hit=4450
+         ->  Hash Join  (cost=12248.23..13975.10 rows=33 width=0) (actual time=10.485..11.092 rows=540.00 loops=1)
+               Hash Cond: (o_1.id = ta_1.offering_id)
+               Buffers: shared hit=4450
+               ->  Nested Loop  (cost=12217.20..13919.32 rows=3907 width=4) (actual time=10.422..10.984 rows=540.00 loops=1)
+                     Buffers: shared hit=4441
+                     ->  Hash Join  (cost=12216.91..13572.26 rows=89 width=4) (actual time=10.417..10.920 rows=9.00 loops=1)
+                           Hash Cond: (chain_1.subject_id = ci_1.subject_id)
+                           Buffers: shared hit=4414
+                           ->  Hash Join  (cost=12169.32..13523.31 rows=75 width=4) (actual time=10.280..10.781 rows=9.00 loops=1)
+                                 Hash Cond: (chain_1.current_id = chain_2.current_id)
+                                 Buffers: shared hit=4402
+                                 ->  CTE Scan on chain chain_1  (cost=4944.59..6298.13 rows=169 width=8) (actual time=0.003..0.551 rows=1327.00 loops=1)
+                                       Filter: ((next_id IS NULL) AND (NOT is_cycle))
+                                       Storage: Memory  Maximum Storage: 131kB
+                                       Buffers: shared hit=24
+                                       CTE chain
+                                         ->  Recursive Union  (cost=0.00..4944.59 rows=67677 width=45) (actual time=0.003..0.370 rows=1327.00 loops=1)
+                                               Storage: Memory  Maximum Storage: 147kB
+                                               Buffers: shared hit=24
+                                               ->  Seq Scan on subject subject_1  (cost=0.00..25.27 rows=1327 width=45) (actual time=0.002..0.107 rows=1327.00 loops=1)
+                                                     Buffers: shared hit=12
+                                               ->  Hash Join  (cost=41.86..424.26 rows=6635 width=45) (actual time=0.169..0.169 rows=0.00 loops=1)
+                                                     Hash Cond: (c_1.next_id = s_1.id)
+                                                     Buffers: shared hit=12
+                                                     ->  WorkTable Scan on chain c_1  (cost=0.00..265.40 rows=6635 width=40) (actual time=0.000..0.038 rows=1327.00 loops=1)
+                                                           Filter: (NOT is_cycle)
+                                                     ->  Hash  (cost=25.27..25.27 rows=1327 width=8) (actual time=0.102..0.102 rows=1327.00 loops=1)
+                                                           Buckets: 2048  Batches: 1  Memory Usage: 63kB
+                                                           Buffers: shared hit=12
+                                                           ->  Seq Scan on subject s_1  (cost=0.00..25.27 rows=1327 width=8) (actual time=0.001..0.044 rows=1327.00 loops=1)
+                                                                 Buffers: shared hit=12
+                                 ->  Hash  (cost=7223.79..7223.79 rows=75 width=4) (actual time=10.192..10.193 rows=9.00 loops=1)
+                                       Buckets: 1024  Batches: 1  Memory Usage: 9kB
+                                       Buffers: shared hit=4378
+                                       ->  Unique  (cost=7223.41..7223.79 rows=75 width=4) (actual time=10.166..10.191 rows=9.00 loops=1)
+                                             Buffers: shared hit=4378
+                                             ->  Sort  (cost=7223.41..7223.60 rows=75 width=4) (actual time=10.166..10.178 rows=540.00 loops=1)
+                                                   Sort Key: chain_2.current_id
+                                                   Sort Method: quicksort  Memory: 25kB
+                                                   Buffers: shared hit=4378
+                                                   ->  Hash Join  (cost=5023.50..7221.08 rows=75 width=4) (actual time=1.115..10.150 rows=540.00 loops=1)
+                                                         Hash Cond: (o_2.id = ta_2.offering_id)
+                                                         Buffers: shared hit=4378
+                                                         ->  Nested Loop  (cost=4992.48..7134.28 rows=8803 width=8) (actual time=0.372..8.132 rows=69120.00 loops=1)
+                                                               Buffers: shared hit=4369
+                                                               ->  Hash Join  (cost=4992.19..6350.48 rows=201 width=8) (actual time=0.124..0.883 rows=1582.00 loops=1)
+                                                                     Hash Cond: (chain_2.subject_id = ci_2.subject_id)
+                                                                     Buffers: shared hit=36
+                                                                     ->  CTE Scan on chain chain_2  (cost=4944.59..6298.13 rows=169 width=8) (actual time=0.002..0.623 rows=1327.00 loops=1)
+                                                                           Filter: ((next_id IS NULL) AND (NOT is_cycle))
+                                                                           Storage: Memory  Maximum Storage: 131kB
+                                                                           Buffers: shared hit=24
+                                                                           CTE chain
+                                                                             ->  Recursive Union  (cost=0.00..4944.59 rows=67677 width=45) (actual time=0.001..0.418 rows=1327.00 loops=1)
+                                                                                   Storage: Memory  Maximum Storage: 147kB
+                                                                                   Buffers: shared hit=24
+                                                                                   ->  Seq Scan on subject subject_2  (cost=0.00..25.27 rows=1327 width=45) (actual time=0.001..0.135 rows=1327.00 loops=1)
+                                                                                         Buffers: shared hit=12
+                                                                                   ->  Hash Join  (cost=41.86..424.26 rows=6635 width=45) (actual time=0.168..0.168 rows=0.00 loops=1)
+                                                                                         Hash Cond: (c_2.next_id = s_2.id)
+                                                                                         Buffers: shared hit=12
+                                                                                         ->  WorkTable Scan on chain c_2  (cost=0.00..265.40 rows=6635 width=40) (actual time=0.001..0.038 rows=1327.00 loops=1)
+                                                                                               Filter: (NOT is_cycle)
+                                                                                         ->  Hash  (cost=25.27..25.27 rows=1327 width=8) (actual time=0.101..0.101 rows=1327.00 loops=1)
+                                                                                               Buckets: 2048  Batches: 1  Memory Usage: 63kB
+                                                                                               Buffers: shared hit=12
+                                                                                               ->  Seq Scan on subject s_2  (cost=0.00..25.27 rows=1327 width=8) (actual time=0.001..0.044 rows=1327.00 loops=1)
+                                                                                                     Buffers: shared hit=12
+                                                                     ->  Hash  (cost=27.82..27.82 rows=1582 width=8) (actual time=0.119..0.119 rows=1582.00 loops=1)
+                                                                           Buckets: 2048  Batches: 1  Memory Usage: 78kB
+                                                                           Buffers: shared hit=12
+                                                                           ->  Seq Scan on curriculum_item ci_2  (cost=0.00..27.82 rows=1582 width=8) (actual time=0.001..0.050 rows=1582.00 loops=1)
+                                                                                 Buffers: shared hit=12
+                                                               ->  Index Scan using course_offering_curriculum_item_id_group_id_key on course_offering o_2  (cost=0.29..3.30 rows=60 width=8) (actual time=0.001..0.003 rows=43.69 loops=1582)
+                                                                     Index Cond: (curriculum_item_id = ci_2.id)
+                                                                     Index Searches: 1582
+                                                                     Buffers: shared hit=4333
+                                                         ->  Hash  (cost=23.64..23.64 rows=591 width=4) (actual time=0.054..0.054 rows=540.00 loops=1)
+                                                               Buckets: 1024  Batches: 1  Memory Usage: 27kB
+                                                               Buffers: shared hit=9
+                                                               ->  Index Scan using teaching_assignment_professor_idx on teaching_assignment ta_2  (cost=0.29..23.64 rows=591 width=4) (actual time=0.003..0.033 rows=540.00 loops=1)
+                                                                     Index Cond: (professor_id = 7)
+                                                                     Index Searches: 1
+                                                                     Buffers: shared hit=9
+                           ->  Hash  (cost=27.82..27.82 rows=1582 width=8) (actual time=0.135..0.135 rows=1582.00 loops=1)
+                                 Buckets: 2048  Batches: 1  Memory Usage: 78kB
+                                 Buffers: shared hit=12
+                                 ->  Seq Scan on curriculum_item ci_1  (cost=0.00..27.82 rows=1582 width=8) (actual time=0.004..0.072 rows=1582.00 loops=1)
+                                       Buffers: shared hit=12
+                     ->  Index Scan using course_offering_curriculum_item_id_group_id_key on course_offering o_1  (cost=0.29..3.30 rows=60 width=8) (actual time=0.001..0.004 rows=60.00 loops=9)
+                           Index Cond: (curriculum_item_id = ci_1.id)
+                           Index Searches: 9
+                           Buffers: shared hit=27
+               ->  Hash  (cost=23.64..23.64 rows=591 width=4) (actual time=0.059..0.059 rows=540.00 loops=1)
+                     Buckets: 1024  Batches: 1  Memory Usage: 27kB
+                     Buffers: shared hit=9
+                     ->  Index Scan using teaching_assignment_professor_idx on teaching_assignment ta_1  (cost=0.29..23.64 rows=591 width=4) (actual time=0.007..0.037 rows=540.00 loops=1)
+                           Index Cond: (professor_id = 7)
+                           Index Searches: 1
+                           Buffers: shared hit=9
+ Planning:
+   Buffers: shared hit=330 read=29
+ Planning Time: 1.311 ms
+ Execution Time: 22.831 ms
+(168 rows)
+
+=== 8b. Same query, CTE MATERIALIZED: computed once, read twice
+                                                                                                 QUERY PLAN                                                                                                  
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ Append  (cost=7229.95..13983.69 rows=2 width=40) (actual time=10.317..11.175 rows=2.00 loops=1)
+   Buffers: shared hit=4453
+   CTE taught
+     ->  Unique  (cost=7223.41..7223.79 rows=75 width=4) (actual time=10.289..10.312 rows=9.00 loops=1)
+           Buffers: shared hit=4378
+           ->  Sort  (cost=7223.41..7223.60 rows=75 width=4) (actual time=10.288..10.300 rows=540.00 loops=1)
+                 Sort Key: chain_1.current_id
+                 Sort Method: quicksort  Memory: 25kB
+                 Buffers: shared hit=4378
+                 ->  Hash Join  (cost=5023.50..7221.08 rows=75 width=4) (actual time=1.146..10.276 rows=540.00 loops=1)
+                       Hash Cond: (o_1.id = ta_1.offering_id)
+                       Buffers: shared hit=4378
+                       ->  Nested Loop  (cost=4992.48..7134.28 rows=8803 width=8) (actual time=0.386..8.278 rows=69120.00 loops=1)
+                             Buffers: shared hit=4369
+                             ->  Hash Join  (cost=4992.19..6350.48 rows=201 width=8) (actual time=0.144..0.893 rows=1582.00 loops=1)
+                                   Hash Cond: (chain_1.subject_id = ci_1.subject_id)
+                                   Buffers: shared hit=36
+                                   ->  CTE Scan on chain chain_1  (cost=4944.59..6298.13 rows=169 width=8) (actual time=0.002..0.614 rows=1327.00 loops=1)
+                                         Filter: ((next_id IS NULL) AND (NOT is_cycle))
+                                         Storage: Memory  Maximum Storage: 131kB
+                                         Buffers: shared hit=24
+                                         CTE chain
+                                           ->  Recursive Union  (cost=0.00..4944.59 rows=67677 width=45) (actual time=0.002..0.414 rows=1327.00 loops=1)
+                                                 Storage: Memory  Maximum Storage: 147kB
+                                                 Buffers: shared hit=24
+                                                 ->  Seq Scan on subject  (cost=0.00..25.27 rows=1327 width=45) (actual time=0.002..0.138 rows=1327.00 loops=1)
+                                                       Buffers: shared hit=12
+                                                 ->  Hash Join  (cost=41.86..424.26 rows=6635 width=45) (actual time=0.165..0.165 rows=0.00 loops=1)
+                                                       Hash Cond: (c.next_id = s.id)
+                                                       Buffers: shared hit=12
+                                                       ->  WorkTable Scan on chain c  (cost=0.00..265.40 rows=6635 width=40) (actual time=0.000..0.039 rows=1327.00 loops=1)
+                                                             Filter: (NOT is_cycle)
+                                                       ->  Hash  (cost=25.27..25.27 rows=1327 width=8) (actual time=0.100..0.100 rows=1327.00 loops=1)
+                                                             Buckets: 2048  Batches: 1  Memory Usage: 63kB
+                                                             Buffers: shared hit=12
+                                                             ->  Seq Scan on subject s  (cost=0.00..25.27 rows=1327 width=8) (actual time=0.001..0.047 rows=1327.00 loops=1)
+                                                                   Buffers: shared hit=12
+                                   ->  Hash  (cost=27.82..27.82 rows=1582 width=8) (actual time=0.140..0.140 rows=1582.00 loops=1)
+                                         Buckets: 2048  Batches: 1  Memory Usage: 78kB
+                                         Buffers: shared hit=12
+                                         ->  Seq Scan on curriculum_item ci_1  (cost=0.00..27.82 rows=1582 width=8) (actual time=0.001..0.061 rows=1582.00 loops=1)
+                                               Buffers: shared hit=12
+                             ->  Index Scan using course_offering_curriculum_item_id_group_id_key on course_offering o_1  (cost=0.29..3.30 rows=60 width=8) (actual time=0.001..0.003 rows=43.69 loops=1582)
+                                   Index Cond: (curriculum_item_id = ci_1.id)
+                                   Index Searches: 1582
+                                   Buffers: shared hit=4333
+                       ->  Hash  (cost=23.64..23.64 rows=591 width=4) (actual time=0.056..0.056 rows=540.00 loops=1)
+                             Buckets: 1024  Batches: 1  Memory Usage: 27kB
+                             Buffers: shared hit=9
+                             ->  Index Scan using teaching_assignment_professor_idx on teaching_assignment ta_1  (cost=0.29..23.64 rows=591 width=4) (actual time=0.002..0.035 rows=540.00 loops=1)
+                                   Index Cond: (professor_id = 7)
+                                   Index Searches: 1
+                                   Buffers: shared hit=9
+   ->  Aggregate  (cost=6.16..6.17 rows=1 width=40) (actual time=10.316..10.317 rows=1.00 loops=1)
+         Buffers: shared hit=4381
+         ->  Merge Semi Join  (cost=0.28..6.16 rows=1 width=0) (actual time=10.293..10.316 rows=9.00 loops=1)
+               Merge Cond: (r.subject_id = taught.root_id)
+               Buffers: shared hit=4381
+               ->  Index Only Scan using prof_subject_radar_key on prof_subject_radar r  (cost=0.28..4.44 rows=9 width=4) (actual time=0.003..0.004 rows=9.00 loops=1)
+                     Index Cond: (professor_id = 7)
+                     Heap Fetches: 0
+                     Index Searches: 1
+                     Buffers: shared hit=3
+               ->  CTE Scan on taught  (cost=0.00..1.50 rows=75 width=4) (actual time=10.289..10.310 rows=9.00 loops=1)
+                     Storage: Memory  Maximum Storage: 17kB
+                     Buffers: shared hit=4378
+   ->  Aggregate  (cost=6753.71..6753.72 rows=1 width=40) (actual time=0.856..0.857 rows=1.00 loops=1)
+         Buffers: shared hit=72
+         ->  Hash Join  (cost=5025.94..6753.63 rows=33 width=0) (actual time=0.255..0.844 rows=540.00 loops=1)
+               Hash Cond: (o.id = ta.offering_id)
+               Buffers: shared hit=72
+               ->  Nested Loop  (cost=4994.91..6697.86 rows=3907 width=4) (actual time=0.204..0.754 rows=540.00 loops=1)
+                     Buffers: shared hit=63
+                     ->  Hash Join  (cost=4994.62..6350.80 rows=89 width=4) (actual time=0.201..0.693 rows=9.00 loops=1)
+                           Hash Cond: (chain.subject_id = ci.subject_id)
+                           Buffers: shared hit=36
+                           ->  Hash Semi Join  (cost=4947.03..6301.85 rows=75 width=4) (actual time=0.086..0.577 rows=9.00 loops=1)
+                                 Hash Cond: (chain.current_id = taught_1.root_id)
+                                 Buffers: shared hit=24
+                                 ->  CTE Scan on chain  (cost=4944.59..6298.13 rows=169 width=8) (actual time=0.002..0.540 rows=1327.00 loops=1)
+                                       Filter: ((next_id IS NULL) AND (NOT is_cycle))
+                                       Storage: Memory  Maximum Storage: 131kB
+                                       Buffers: shared hit=24
+                                       CTE chain
+                                         ->  Recursive Union  (cost=0.00..4944.59 rows=67677 width=45) (actual time=0.001..0.368 rows=1327.00 loops=1)
+                                               Storage: Memory  Maximum Storage: 147kB
+                                               Buffers: shared hit=24
+                                               ->  Seq Scan on subject subject_1  (cost=0.00..25.27 rows=1327 width=45) (actual time=0.001..0.120 rows=1327.00 loops=1)
+                                                     Buffers: shared hit=12
+                                               ->  Hash Join  (cost=41.86..424.26 rows=6635 width=45) (actual time=0.162..0.162 rows=0.00 loops=1)
+                                                     Hash Cond: (c_1.next_id = s_1.id)
+                                                     Buffers: shared hit=12
+                                                     ->  WorkTable Scan on chain c_1  (cost=0.00..265.40 rows=6635 width=40) (actual time=0.000..0.041 rows=1327.00 loops=1)
+                                                           Filter: (NOT is_cycle)
+                                                     ->  Hash  (cost=25.27..25.27 rows=1327 width=8) (actual time=0.095..0.096 rows=1327.00 loops=1)
+                                                           Buckets: 2048  Batches: 1  Memory Usage: 63kB
+                                                           Buffers: shared hit=12
+                                                           ->  Seq Scan on subject s_1  (cost=0.00..25.27 rows=1327 width=8) (actual time=0.001..0.043 rows=1327.00 loops=1)
+                                                                 Buffers: shared hit=12
+                                 ->  Hash  (cost=1.50..1.50 rows=75 width=4) (actual time=0.003..0.004 rows=9.00 loops=1)
+                                       Buckets: 1024  Batches: 1  Memory Usage: 9kB
+                                       ->  CTE Scan on taught taught_1  (cost=0.00..1.50 rows=75 width=4) (actual time=0.000..0.003 rows=9.00 loops=1)
+                                             Storage: Memory  Maximum Storage: 17kB
+                           ->  Hash  (cost=27.82..27.82 rows=1582 width=8) (actual time=0.115..0.115 rows=1582.00 loops=1)
+                                 Buckets: 2048  Batches: 1  Memory Usage: 78kB
+                                 Buffers: shared hit=12
+                                 ->  Seq Scan on curriculum_item ci  (cost=0.00..27.82 rows=1582 width=8) (actual time=0.001..0.051 rows=1582.00 loops=1)
+                                       Buffers: shared hit=12
+                     ->  Index Scan using course_offering_curriculum_item_id_group_id_key on course_offering o  (cost=0.29..3.30 rows=60 width=8) (actual time=0.001..0.004 rows=60.00 loops=9)
+                           Index Cond: (curriculum_item_id = ci.id)
+                           Index Searches: 9
+                           Buffers: shared hit=27
+               ->  Hash  (cost=23.64..23.64 rows=591 width=4) (actual time=0.051..0.051 rows=540.00 loops=1)
+                     Buckets: 1024  Batches: 1  Memory Usage: 27kB
+                     Buffers: shared hit=9
+                     ->  Index Scan using teaching_assignment_professor_idx on teaching_assignment ta  (cost=0.29..23.64 rows=591 width=4) (actual time=0.002..0.030 rows=540.00 loops=1)
+                           Index Cond: (professor_id = 7)
+                           Index Searches: 1
+                           Buffers: shared hit=9
+ Planning:
+   Buffers: shared hit=46
+ Planning Time: 0.409 ms
+ Execution Time: 11.215 ms
+(123 rows)
+

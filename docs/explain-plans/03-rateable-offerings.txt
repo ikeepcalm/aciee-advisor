@@ -1,0 +1,238 @@
+ set_config 
+------------
+ 44127
+(1 row)
+
+=== 3a. The /rate list as the app runs it (TokenService.OFFERINGS): memberships through the temporal key
+                                                                                                    QUERY PLAN                                                                                                     
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ Sort  (cost=734501.10..734630.66 rows=51822 width=103) (actual time=27.030..27.033 rows=48.00 loops=1)
+   Sort Key: s.rating_opens_at, ci.semester_no, o.title_snapshot, o.id
+   Sort Method: quicksort  Memory: 28kB
+   Buffers: shared hit=35311
+   ->  Nested Loop Left Join  (cost=2.14..727608.11 rows=51822 width=103) (actual time=23.482..26.978 rows=48.00 loops=1)
+         Join Filter: (k.offering_id = o.id)
+         Buffers: shared hit=35302
+         ->  Merge Join  (cost=2.02..642097.66 rows=51822 width=50) (actual time=23.454..26.931 rows=48.00 loops=1)
+               Merge Cond: (g_1.id = g.id)
+               Buffers: shared hit=35294
+               ->  Nested Loop  (cost=0.72..636.69 rows=5760 width=18) (actual time=0.017..2.267 rows=4965.00 loops=1)
+                     Buffers: shared hit=128
+                     ->  Nested Loop  (cost=0.58..501.93 rows=5760 width=8) (actual time=0.014..1.629 rows=4965.00 loops=1)
+                           Buffers: shared hit=116
+                           ->  Nested Loop  (cost=0.43..349.90 rows=5760 width=12) (actual time=0.009..1.004 rows=4965.00 loops=1)
+                                 Buffers: shared hit=94
+                                 ->  Index Scan using study_group_pkey on study_group g_1  (cost=0.28..204.68 rows=5760 width=12) (actual time=0.004..0.276 rows=4965.00 loops=1)
+                                       Index Searches: 1
+                                       Buffers: shared hit=52
+                                 ->  Memoize  (cost=0.15..0.17 rows=1 width=8) (actual time=0.000..0.000 rows=1.00 loops=4965)
+                                       Cache Key: g_1.plan_id
+                                       Cache Mode: logical
+                                       Hits: 4944  Misses: 21  Evictions: 0  Overflows: 0  Memory Usage: 3kB
+                                       Buffers: shared hit=42
+                                       ->  Index Scan using study_plan_pkey on study_plan p  (cost=0.14..0.16 rows=1 width=8) (actual time=0.001..0.001 rows=1.00 loops=21)
+                                             Index Cond: (id = g_1.plan_id)
+                                             Index Searches: 21
+                                             Buffers: shared hit=42
+                           ->  Memoize  (cost=0.15..0.43 rows=1 width=4) (actual time=0.000..0.000 rows=1.00 loops=4965)
+                                 Cache Key: p.specialization_id
+                                 Cache Mode: logical
+                                 Hits: 4944  Misses: 21  Evictions: 0  Overflows: 0  Memory Usage: 3kB
+                                 Buffers: shared hit=22
+                                 ->  Index Only Scan using specialization_pkey on specialization sp  (cost=0.14..0.42 rows=1 width=4) (actual time=0.000..0.000 rows=1.00 loops=21)
+                                       Index Cond: (id = p.specialization_id)
+                                       Heap Fetches: 0
+                                       Index Searches: 21
+                                       Buffers: shared hit=22
+                     ->  Memoize  (cost=0.14..0.16 rows=1 width=18) (actual time=0.000..0.000 rows=1.00 loops=4965)
+                           Cache Key: g_1.academic_year_id
+                           Cache Mode: logical
+                           Hits: 4959  Misses: 6  Evictions: 0  Overflows: 0  Memory Usage: 1kB
+                           Buffers: shared hit=12
+                           ->  Index Scan using academic_year_pkey on academic_year ay  (cost=0.13..0.15 rows=1 width=18) (actual time=0.001..0.001 rows=1.00 loops=6)
+                                 Index Cond: (id = g_1.academic_year_id)
+                                 Index Searches: 6
+                                 Buffers: shared hit=12
+               ->  Materialize  (cost=1.30..640798.79 rows=51822 width=44) (actual time=21.091..24.553 rows=48.00 loops=1)
+                     Storage: Memory  Maximum Storage: 17kB
+                     Buffers: shared hit=35166
+                     ->  Nested Loop Left Join  (cost=1.30..640669.24 rows=51822 width=44) (actual time=21.088..24.544 rows=48.00 loops=1)
+                           Buffers: shared hit=35166
+                           ->  Nested Loop  (cost=1.15..639426.42 rows=51822 width=40) (actual time=21.084..24.526 rows=48.00 loops=1)
+                                 Buffers: shared hit=35150
+                                 ->  Nested Loop  (cost=0.86..637719.60 rows=51822 width=44) (actual time=21.076..24.482 rows=48.00 loops=1)
+                                       Buffers: shared hit=35053
+                                       ->  Merge Join  (cost=0.57..636082.74 rows=51822 width=42) (actual time=21.067..24.429 rows=48.00 loops=1)
+                                             Merge Cond: (o.group_id = g.id)
+                                             Buffers: shared hit=34909
+                                             ->  Index Scan using course_offering_group_id_id_key on course_offering o  (cost=0.29..635215.84 rows=51840 width=34) (actual time=20.680..24.037 rows=48.00 loops=1)
+                                                   Filter: ((ANY (group_id = (hashed SubPlan 4).col1)) OR EXISTS(SubPlan 5))
+                                                   Rows Removed by Filter: 69072
+                                                   Index Searches: 1
+                                                   Buffers: shared hit=34857
+                                                   SubPlan 4
+                                                     ->  Bitmap Heap Scan on group_membership m  (cost=4.31..16.00 rows=3 width=4) (actual time=0.007..0.007 rows=4.00 loops=1)
+                                                           Recheck Cond: (user_id = (NULLIF(current_setting('app.user_id'::text, true), ''::text))::integer)
+                                                           Heap Blocks: exact=1
+                                                           Buffers: shared hit=4
+                                                           ->  Bitmap Index Scan on group_membership_user_id_valid_during_key  (cost=0.00..4.31 rows=3 width=0) (actual time=0.005..0.005 rows=4.00 loops=1)
+                                                                 Index Cond: (user_id = (NULLIF(current_setting('app.user_id'::text, true), ''::text))::integer)
+                                                                 Index Searches: 1
+                                                                 Buffers: shared hit=3
+                                                   SubPlan 5
+                                                     ->  Seq Scan on offering_enrolment e  (cost=0.00..0.00 rows=1 width=0) (actual time=0.000..0.000 rows=0.00 loops=69072)
+                                                           Filter: ((offering_id = o.id) AND (user_id = (NULLIF(current_setting('app.user_id'::text, true), ''::text))::integer))
+                                             ->  Index Scan using study_group_pkey on study_group g  (cost=0.28..204.68 rows=5760 width=8) (actual time=0.008..0.267 rows=4964.00 loops=1)
+                                                   Index Searches: 1
+                                                   Buffers: shared hit=52
+                                       ->  Memoize  (cost=0.29..0.31 rows=1 width=10) (actual time=0.001..0.001 rows=1.00 loops=48)
+                                             Cache Key: o.curriculum_item_id
+                                             Cache Mode: logical
+                                             Hits: 0  Misses: 48  Evictions: 0  Overflows: 0  Memory Usage: 6kB
+                                             Buffers: shared hit=144
+                                             ->  Index Scan using curriculum_item_pkey on curriculum_item ci  (cost=0.28..0.30 rows=1 width=10) (actual time=0.001..0.001 rows=1.00 loops=48)
+                                                   Index Cond: (id = o.curriculum_item_id)
+                                                   Index Searches: 48
+                                                   Buffers: shared hit=144
+                                 ->  Memoize  (cost=0.29..0.32 rows=1 width=4) (actual time=0.001..0.001 rows=1.00 loops=48)
+                                       Cache Key: ci.subject_id
+                                       Cache Mode: logical
+                                       Hits: 0  Misses: 48  Evictions: 0  Overflows: 0  Memory Usage: 5kB
+                                       Buffers: shared hit=97
+                                       ->  Index Only Scan using subject_pkey on subject sub  (cost=0.28..0.31 rows=1 width=4) (actual time=0.001..0.001 rows=1.00 loops=48)
+                                             Index Cond: (id = ci.subject_id)
+                                             Heap Fetches: 0
+                                             Index Searches: 48
+                                             Buffers: shared hit=97
+                           ->  Memoize  (cost=0.15..0.17 rows=1 width=14) (actual time=0.000..0.000 rows=1.00 loops=48)
+                                 Cache Key: g.academic_year_id, ci.semester_no
+                                 Cache Mode: logical
+                                 Hits: 40  Misses: 8  Evictions: 0  Overflows: 0  Memory Usage: 1kB
+                                 Buffers: shared hit=16
+                                 ->  Index Scan using semester_academic_year_id_no_key on semester s  (cost=0.14..0.16 rows=1 width=14) (actual time=0.001..0.001 rows=1.00 loops=8)
+                                       Index Cond: ((academic_year_id = g.academic_year_id) AND (no = ci.semester_no))
+                                       Index Searches: 8
+                                       Buffers: shared hit=16
+         ->  Materialize  (cost=0.12..4.16 rows=1 width=37) (actual time=0.000..0.000 rows=0.00 loops=48)
+               Storage: Memory  Maximum Storage: 17kB
+               Buffers: shared hit=1
+               ->  Index Scan using offering_key_one_active_idx on offering_key k  (cost=0.12..4.15 rows=1 width=37) (actual time=0.002..0.002 rows=0.00 loops=1)
+                     Index Searches: 1
+                     Buffers: shared hit=1
+         SubPlan 2
+           ->  Seq Scan on token_issuance t  (cost=0.00..1.54 rows=24 width=4) (actual time=0.003..0.006 rows=24.00 loops=1)
+                 Filter: (user_id = (NULLIF(current_setting('app.user_id'::text, true), ''::text))::integer)
+                 Buffers: shared hit=1
+ Planning:
+   Buffers: shared hit=694
+ Planning Time: 1.029 ms
+ Execution Time: 27.106 ms
+(121 rows)
+
+=== 3b. Not yet issued: NOT EXISTS (anti join)
+                                                                               QUERY PLAN                                                                                
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ Hash Anti Join  (cost=6.20..31.88 rows=36 width=4) (actual time=0.015..0.024 rows=24.00 loops=1)
+   Hash Cond: (o.id = t.offering_id)
+   Buffers: shared hit=14
+   ->  Nested Loop  (cost=4.60..29.83 rows=36 width=4) (actual time=0.010..0.016 rows=48.00 loops=1)
+         Buffers: shared hit=13
+         ->  Bitmap Heap Scan on group_membership m  (cost=4.30..15.96 rows=3 width=4) (actual time=0.008..0.008 rows=4.00 loops=1)
+               Recheck Cond: (user_id = 44127)
+               Heap Blocks: exact=1
+               Buffers: shared hit=4
+               ->  Bitmap Index Scan on group_membership_user_id_valid_during_key  (cost=0.00..4.30 rows=3 width=0) (actual time=0.006..0.006 rows=4.00 loops=1)
+                     Index Cond: (user_id = 44127)
+                     Index Searches: 1
+                     Buffers: shared hit=3
+         ->  Index Only Scan using course_offering_group_id_id_key on course_offering o  (cost=0.29..4.50 rows=12 width=8) (actual time=0.001..0.001 rows=12.00 loops=4)
+               Index Cond: (group_id = m.group_id)
+               Heap Fetches: 0
+               Index Searches: 4
+               Buffers: shared hit=9
+   ->  Hash  (cost=1.30..1.30 rows=24 width=4) (actual time=0.004..0.004 rows=24.00 loops=1)
+         Buckets: 1024  Batches: 1  Memory Usage: 9kB
+         Buffers: shared hit=1
+         ->  Seq Scan on token_issuance t  (cost=0.00..1.30 rows=24 width=4) (actual time=0.001..0.003 rows=24.00 loops=1)
+               Filter: (user_id = 44127)
+               Buffers: shared hit=1
+ Planning:
+   Buffers: shared hit=15
+ Planning Time: 0.099 ms
+ Execution Time: 0.033 ms
+(28 rows)
+
+=== 3c. Not yet issued: NOT IN (hashed subplan, no anti join)
+                                                                           QUERY PLAN                                                                            
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------
+ Nested Loop  (cost=5.96..33.82 rows=18 width=4) (actual time=0.017..0.027 rows=24.00 loops=1)
+   Buffers: shared hit=14
+   ->  Bitmap Heap Scan on group_membership m  (cost=4.30..15.96 rows=3 width=4) (actual time=0.008..0.009 rows=4.00 loops=1)
+         Recheck Cond: (user_id = 44127)
+         Heap Blocks: exact=1
+         Buffers: shared hit=4
+         ->  Bitmap Index Scan on group_membership_user_id_valid_during_key  (cost=0.00..4.30 rows=3 width=0) (actual time=0.007..0.007 rows=4.00 loops=1)
+               Index Cond: (user_id = 44127)
+               Index Searches: 1
+               Buffers: shared hit=3
+   ->  Index Only Scan using course_offering_group_id_id_key on course_offering o  (cost=1.65..5.89 rows=6 width=8) (actual time=0.003..0.004 rows=6.00 loops=4)
+         Index Cond: (group_id = m.group_id)
+         Filter: (NOT (ANY (id = (hashed SubPlan 1).col1)))
+         Rows Removed by Filter: 6
+         Heap Fetches: 0
+         Index Searches: 4
+         Buffers: shared hit=10
+         SubPlan 1
+           ->  Seq Scan on token_issuance t  (cost=0.00..1.30 rows=24 width=4) (actual time=0.001..0.003 rows=24.00 loops=1)
+                 Filter: (user_id = 44127)
+                 Buffers: shared hit=1
+ Planning:
+   Buffers: shared hit=12
+ Planning Time: 0.071 ms
+ Execution Time: 0.035 ms
+(25 rows)
+
+=== 3d. Not yet issued: LEFT JOIN ... IS NULL (same anti join as NOT EXISTS)
+                                                                               QUERY PLAN                                                                                
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ Hash Anti Join  (cost=6.20..31.88 rows=36 width=4) (actual time=0.011..0.020 rows=24.00 loops=1)
+   Hash Cond: (o.id = t.offering_id)
+   Buffers: shared hit=14
+   ->  Nested Loop  (cost=4.60..29.83 rows=36 width=4) (actual time=0.007..0.013 rows=48.00 loops=1)
+         Buffers: shared hit=13
+         ->  Bitmap Heap Scan on group_membership m  (cost=4.30..15.96 rows=3 width=4) (actual time=0.006..0.006 rows=4.00 loops=1)
+               Recheck Cond: (user_id = 44127)
+               Heap Blocks: exact=1
+               Buffers: shared hit=4
+               ->  Bitmap Index Scan on group_membership_user_id_valid_during_key  (cost=0.00..4.30 rows=3 width=0) (actual time=0.005..0.005 rows=4.00 loops=1)
+                     Index Cond: (user_id = 44127)
+                     Index Searches: 1
+                     Buffers: shared hit=3
+         ->  Index Only Scan using course_offering_group_id_id_key on course_offering o  (cost=0.29..4.50 rows=12 width=8) (actual time=0.001..0.001 rows=12.00 loops=4)
+               Index Cond: (group_id = m.group_id)
+               Heap Fetches: 0
+               Index Searches: 4
+               Buffers: shared hit=9
+   ->  Hash  (cost=1.30..1.30 rows=24 width=4) (actual time=0.003..0.004 rows=24.00 loops=1)
+         Buckets: 1024  Batches: 1  Memory Usage: 9kB
+         Buffers: shared hit=1
+         ->  Seq Scan on token_issuance t  (cost=0.00..1.30 rows=24 width=4) (actual time=0.001..0.002 rows=24.00 loops=1)
+               Filter: (user_id = 44127)
+               Buffers: shared hit=1
+ Planning:
+   Buffers: shared hit=12
+ Planning Time: 0.066 ms
+ Execution Time: 0.026 ms
+(28 rows)
+
+=== 3e. Why never NOT IN: one NULL in the subquery empties the result
+ not_in_with_null 
+------------------
+                0
+(1 row)
+
+ not_exists_with_null 
+----------------------
+                    2
+(1 row)
+

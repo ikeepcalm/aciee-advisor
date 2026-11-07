@@ -1,0 +1,28 @@
+=== 1-naive.sql: 64 clients redeem the same token at once
+number of transactions actually processed: 64/64
+number of failed transactions: 0 (0.000%)
+number of transactions retried: 0 (0.000%)
+total number of retries: 0
+latency average = 23.055 ms
+rows stored for the token: 64
+=== 2-for-update.sql: 64 clients redeem the same token at once
+number of transactions actually processed: 64/64
+number of failed transactions: 0 (0.000%)
+number of transactions retried: 0 (0.000%)
+total number of retries: 0
+latency average = 110.566 ms
+rows stored for the token: 1
+=== 3-serializable.sql: 64 clients redeem the same token at once
+number of transactions actually processed: 64/64
+number of failed transactions: 0 (0.000%)
+number of transactions retried: 63 (98.438%)
+total number of retries: 63
+latency average = 26.447 ms
+rows stored for the token: 1
+=== 4-primary-key.sql: 64 clients redeem the same token at once
+number of transactions actually processed: 64/64
+number of failed transactions: 0 (0.000%)
+number of transactions retried: 0 (0.000%)
+total number of retries: 0
+latency average = 10.655 ms
+rows stored for the token: 1

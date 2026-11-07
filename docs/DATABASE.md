@@ -325,6 +325,7 @@ PostgreSQL does not index foreign keys automatically. Each FK below is either in
 | migrator | none | not set yet (it is the bootstrap superuser locally) | none |
 | `refresh_aggregates()` | 10 min (`SET` on the function) | | |
 
+- `jit = off` on `aciee_ident` and `aciee_anon` (changeset `018`, ADR-029). Request queries run in milliseconds, and JIT compiled for 200–290 ms whenever the planner's cost estimate was high. `aciee_report` keeps JIT.
 - `lock_timeout` on the migrator makes a migration fail fast instead of queueing behind a long query and blocking every session on that table.
 - **Driver.** pgjdbc server-side prepared statements (default `prepareThreshold=5`). Each `ApplicationName` names its pool in `pg_stat_activity`.
 - **No PgBouncer.** One app instance with two small pools stays far below `max_connections`. Revisit only if the app scales horizontally.

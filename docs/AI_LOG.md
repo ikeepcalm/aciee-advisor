@@ -64,4 +64,7 @@ How AI tools were used in this project, and every AI error caught and corrected.
 | Date | Tool | Intent | Error | Detected by | Fix | Commit |
 |---|---|---|---|---|---|---|
 | 2026-11-07 | Claude Opus 5.5 | Report test | Asserted that the fixtures contain locked pairs; every fixture pair has n ≥ 300, so the test depended on data, not code | test | The test checks the filter (locked rows ⊇ unlocked rows, unlocked rows have n ≥ k) | — |
+| 2026-11-07 | Claude Opus 5.5 | View design | `anon.published_post` (written in W3) used `DISTINCT ON`, so the professor page took 4.3 s on full data, near the 5 s timeout | `EXPLAIN ANALYZE` on fixtures-large (Stage 4) | `LATERAL … LIMIT 1` + `OFFSET 0` in the k check, changeset 018 (ADR-029) | — |
+| 2026-11-07 | Claude Opus 5.5 | Stage 4 script | The first CTE demo joined `published_post`, whose cost (2.2 s) hid the CTE difference being shown | reading the capture | Second branch reads assignments instead; 22.8 vs 11.2 ms | — |
+| 2026-11-07 | Claude Opus 5.5 | Stage 4 script | The audit-trigger demo targeted `core.user_account`, which has no audit trigger | script error | Uses `core.teaching_assignment`, plus a no-trigger baseline | — |
 

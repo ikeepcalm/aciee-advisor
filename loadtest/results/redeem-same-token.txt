@@ -1,0 +1,21 @@
+  █ THRESHOLDS 
+    redeem_created
+    ✓ 'count==1' count=1
+    redeem_other
+    ✓ 'count==0' count=0
+  █ TOTAL RESULTS 
+    CUSTOM
+    redeem_conflict................: 199    2391.217077/s
+    redeem_created.................: 1      12.016166/s
+    redeem_other...................: 0      0/s
+    HTTP
+    http_req_duration..............: avg=46.52ms min=18.23ms med=46.88ms max=75.68ms p(90)=55.35ms p(95)=63.45ms
+      { expected_response:true }...: avg=28.49ms min=28.49ms med=28.49ms max=28.49ms p(90)=28.49ms p(95)=28.49ms
+    http_req_failed................: 99.50% 199 out of 200
+    http_reqs......................: 200    2403.233243/s
+    EXECUTION
+    iteration_duration.............: avg=55.48ms min=30.07ms med=55.79ms max=80.99ms p(90)=69.51ms p(95)=74.02ms
+    iterations.....................: 200    2403.233243/s
+    NETWORK
+    data_received..................: 93 kB  1.1 MB/s
+    data_sent......................: 133 kB 1.6 MB/s

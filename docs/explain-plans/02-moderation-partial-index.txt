@@ -1,0 +1,96 @@
+ pending | versions 
+---------+----------
+   30683 |   365269
+(1 row)
+
+=== 2a. Partial index post_version_queue_idx (in the schema)
+                                                                         QUERY PLAN                                                                         
+------------------------------------------------------------------------------------------------------------------------------------------------------------
+ Limit  (cost=0.29..1.10 rows=20 width=22) (actual time=0.005..0.007 rows=20.00 loops=1)
+   Buffers: shared hit=3
+   ->  Index Only Scan using post_version_queue_idx on post_version  (cost=0.29..1219.58 rows=30086 width=22) (actual time=0.004..0.005 rows=20.00 loops=1)
+         Heap Fetches: 0
+         Index Searches: 1
+         Buffers: shared hit=3
+ Planning:
+   Buffers: shared hit=43 read=2
+ Planning Time: 0.102 ms
+ Execution Time: 0.010 ms
+(10 rows)
+
+=== 2b. Without it
+                                                                   QUERY PLAN                                                                   
+------------------------------------------------------------------------------------------------------------------------------------------------
+ Limit  (cost=8242.04..8244.37 rows=20 width=22) (actual time=7.346..9.503 rows=20.00 loops=1)
+   Buffers: shared hit=5118
+   ->  Gather Merge  (cost=8242.04..11746.06 rows=30086 width=22) (actual time=7.345..9.502 rows=20.00 loops=1)
+         Workers Planned: 2
+         Workers Launched: 2
+         Buffers: shared hit=5118
+         ->  Sort  (cost=7242.02..7273.36 rows=12536 width=22) (actual time=6.431..6.431 rows=16.33 loops=3)
+               Sort Key: submitted_week, post_id, version_no
+               Sort Method: top-N heapsort  Memory: 27kB
+               Buffers: shared hit=5118
+               Worker 0:  Sort Method: top-N heapsort  Memory: 27kB
+               Worker 1:  Sort Method: top-N heapsort  Memory: 27kB
+               ->  Parallel Seq Scan on post_version  (cost=0.00..6908.44 rows=12536 width=22) (actual time=0.005..5.883 rows=10227.67 loops=3)
+                     Filter: (status = 'pending'::text)
+                     Rows Removed by Filter: 111529
+                     Buffers: shared hit=5006
+ Planning:
+   Buffers: shared hit=3
+ Planning Time: 0.026 ms
+ Execution Time: 9.520 ms
+(20 rows)
+
+=== 2c. Full index (status, submitted_week, post_id, version_no)
+                                                                          QUERY PLAN                                                                          
+--------------------------------------------------------------------------------------------------------------------------------------------------------------
+ Limit  (cost=0.42..1.34 rows=20 width=22) (actual time=0.019..0.021 rows=20.00 loops=1)
+   Buffers: shared hit=1 read=3
+   ->  Index Only Scan using post_version_status_demo on post_version  (cost=0.42..1382.93 rows=30086 width=22) (actual time=0.019..0.020 rows=20.00 loops=1)
+         Index Cond: (status = 'pending'::text)
+         Heap Fetches: 0
+         Index Searches: 1
+         Buffers: shared hit=1 read=3
+ Planning:
+   Buffers: shared hit=12 read=1
+ Planning Time: 0.129 ms
+ Execution Time: 0.029 ms
+(11 rows)
+
+ full_index_size 
+-----------------
+ 20 MB
+(1 row)
+
+ partial_index_size 
+--------------------
+ 1536 kB
+(1 row)
+
+=== 2d. Status as a bind parameter with a generic plan: the partial index cannot be used
+                                                                   QUERY PLAN                                                                   
+------------------------------------------------------------------------------------------------------------------------------------------------
+ Limit  (cost=9258.43..9260.76 rows=20 width=22) (actual time=7.887..10.013 rows=20.00 loops=1)
+   Buffers: shared hit=5118
+   ->  Gather Merge  (cost=9258.43..23439.04 rows=121757 width=22) (actual time=7.886..10.012 rows=20.00 loops=1)
+         Workers Planned: 2
+         Workers Launched: 2
+         Buffers: shared hit=5118
+         ->  Sort  (cost=8258.40..8385.23 rows=50732 width=22) (actual time=6.809..6.809 rows=16.67 loops=3)
+               Sort Key: submitted_week, post_id, version_no
+               Sort Method: top-N heapsort  Memory: 27kB
+               Buffers: shared hit=5118
+               Worker 0:  Sort Method: top-N heapsort  Memory: 27kB
+               Worker 1:  Sort Method: top-N heapsort  Memory: 27kB
+               ->  Parallel Seq Scan on post_version  (cost=0.00..6908.44 rows=50732 width=22) (actual time=0.006..6.257 rows=10227.67 loops=3)
+                     Filter: (status = $1)
+                     Rows Removed by Filter: 111529
+                     Buffers: shared hit=5006
+ Planning:
+   Buffers: shared hit=6
+ Planning Time: 0.053 ms
+ Execution Time: 10.022 ms
+(20 rows)
+

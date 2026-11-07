@@ -1,0 +1,45 @@
+=== 6a. Without CREATE STATISTICS: the planner multiplies both selectivities
+                                                          QUERY PLAN                                                          
+------------------------------------------------------------------------------------------------------------------------------
+ Aggregate  (cost=61286.88..61286.89 rows=1 width=8) (actual time=40.075..41.127 rows=1.00 loops=1)
+   Buffers: shared hit=914 read=39789
+   ->  Gather  (cost=1000.00..61286.88 rows=1 width=0) (actual time=40.021..41.122 rows=28.00 loops=1)
+         Workers Planned: 2
+         Workers Launched: 2
+         Buffers: shared hit=914 read=39789
+         ->  Parallel Seq Scan on rating  (cost=0.00..60286.78 rows=1 width=0) (actual time=30.766..38.891 rows=9.33 loops=3)
+               Filter: ((teaching_assignment_id = 4347) AND (offering_id = 13797))
+               Rows Removed by Filter: 1044459
+               Buffers: shared hit=914 read=39789
+ Planning:
+   Buffers: shared hit=24
+ Planning Time: 0.067 ms
+ Execution Time: 41.138 ms
+(14 rows)
+
+=== 6b. With rating_assignment_offering (dependencies): assignment determines offering
+                                                             QUERY PLAN                                                             
+------------------------------------------------------------------------------------------------------------------------------------
+ Finalize Aggregate  (cost=61286.53..61286.54 rows=1 width=8) (actual time=42.983..44.378 rows=1.00 loops=1)
+   Buffers: shared hit=1452 read=39251
+   ->  Gather  (cost=61286.32..61286.53 rows=2 width=8) (actual time=42.929..44.375 rows=3.00 loops=1)
+         Workers Planned: 2
+         Workers Launched: 2
+         Buffers: shared hit=1452 read=39251
+         ->  Partial Aggregate  (cost=60286.32..60286.33 rows=1 width=8) (actual time=41.761..41.761 rows=1.00 loops=3)
+               Buffers: shared hit=1452 read=39251
+               ->  Parallel Seq Scan on rating  (cost=0.00..60286.30 rows=8 width=0) (actual time=33.508..41.759 rows=9.33 loops=3)
+                     Filter: ((teaching_assignment_id = 4347) AND (offering_id = 13797))
+                     Rows Removed by Filter: 1044459
+                     Buffers: shared hit=1452 read=39251
+ Planning:
+   Buffers: shared hit=27
+ Planning Time: 0.073 ms
+ Execution Time: 44.391 ms
+(16 rows)
+
+      statistics_name       |               dependencies               
+----------------------------+------------------------------------------
+ rating_assignment_offering | {"2 => 3": 1.000000, "3 => 2": 0.686700}
+(1 row)
+

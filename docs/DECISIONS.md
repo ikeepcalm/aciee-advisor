@@ -268,3 +268,13 @@ Format: context → decision → consequences. Never rewrite an accepted ADR; su
 
 **Consequences.** A SQL injection in a report query could read only aggregates that are already public above k. A new report is one view, one `ReportType` entry and its grant.
 
+## ADR-029 — Request-path fixes found by the Stage 4 captures
+**Context.** Run on the full fixture volumes, the professor page's comment query took 4.3 s and the course page's 2.9 s, close to the 5 s `statement_timeout`. `anon.published_post` used `DISTINCT ON (p.id)`, which the planner cannot push a filter through, so every call built all 268k published versions first. Its `kind = 'tip' OR EXISTS (k check)` was turned into a hashed subplan over every assignment. On top of that, high cost estimates switched on JIT, which spent 200–290 ms compiling queries that run in 30 ms.
+
+**Decision.**
+- `anon.published_post` (changeset `018`) takes each post's latest approved version with `LATERAL (… ORDER BY version_no DESC LIMIT 1)`, the backward PK scan DATABASE §6 Q9 always described. `OFFSET 0` in the k-check `EXISTS` keeps it a per-row subplan.
+- `jit = off` for `aciee_ident` and `aciee_anon`. `aciee_report` keeps it.
+- The `/rate` list keeps its `EXISTS … OR EXISTS` form: without JIT it runs in 27 ms, the same as a `UNION` rewrite.
+
+**Consequences.** The professor-page comments take 37 ms instead of 4.3 s, with the same rows (`docs/explain-plans/09-published-post.txt`). Removing `OFFSET 0` silently brings back the hashed subplan; the changeset says so in a one-line comment.
+

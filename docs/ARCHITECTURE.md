@@ -175,6 +175,8 @@ The app uses two DataSources, so a SQL injection on one side cannot read the oth
 7. Pagination: `OFFSET` vs. keyset on the moderation queue.
 8. Professor page: the shared CTE inlined vs. `MATERIALIZED`.
 
+Captures, numbers and how to rerun them: [explain-plans/README.md](explain-plans/README.md). Case 9 (`anon.published_post`) and JIT on request roles were added after the captures found them (ADR-029).
+
 **Concurrency demo.** 200 virtual users redeem the **same token**, and exactly one succeeds. The demo progresses in four steps:
 1. Naive check-then-insert, which lets duplicates through.
 2. `FOR UPDATE`.
