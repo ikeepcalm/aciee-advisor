@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { ArrowLeftRight, ChevronDown } from 'lucide-vue-next'
@@ -193,18 +193,18 @@ const slots = computed(() => {
     .map(([start, end]) => ({ start, end }))
 })
 
-const PX_PER_MINUTE = 1.1
-
 const span = computed(() => {
-  const all = program.value?.lessons ?? []
-  return {
-    from: Math.floor(Math.min(480, ...all.map((l) => minutes(l.start))) / 60) * 60,
-    to: Math.ceil(Math.max(1200, ...all.map((l) => minutes(l.end))) / 60) * 60,
+  const list = byDay.value[day.value]!
+  let from = Math.min(...list.map((e) => minutes(e.lesson.start)))
+  const to = Math.max(...list.map((e) => minutes(e.lesson.end)))
+  if (isToday(day.value) && nowMinutes.value >= 7 * 60 && nowMinutes.value < to) {
+    from = Math.min(from, nowMinutes.value)
   }
+  return { from: Math.floor(from / 60) * 60, to: Math.ceil(to / 60) * 60 }
 })
 
 function y(time: number) {
-  return (time - span.value.from) * PX_PER_MINUTE
+  return ((time - span.value.from) / (span.value.to - span.value.from)) * 100
 }
 
 function clockLabel(time: number) {
@@ -226,7 +226,7 @@ const blocks = computed(() => {
     return {
       ...e,
       top: y(start),
-      height: (minutes(e.lesson.end) - start) * PX_PER_MINUTE,
+      height: y(minutes(e.lesson.end)) - y(start),
       col: same.indexOf(e),
       cols: same.length,
     }
@@ -250,7 +250,6 @@ const nowTop = computed(() =>
     ? y(nowMinutes.value)
     : null,
 )
-const nowLine = ref<HTMLElement | null>(null)
 
 function formatted(iso: string | null) {
   return iso
@@ -283,8 +282,6 @@ onMounted(async () => {
     [route.query.g, readJson<string>('timetable.group')]
       .map((g) => (typeof g === 'string' ? g.toUpperCase() : g))
       .find(known) ?? null
-  await nextTick()
-  nowLine.value?.scrollIntoView({ block: 'center' })
 })
 
 onUnmounted(() => clearInterval(timer))
@@ -298,7 +295,7 @@ watch(group, (g) => {
 </script>
 
 <template>
-  <main class="page-wide">
+  <main class="page-wide tt-page">
     <AppNotice v-if="error" kind="error">{{ error }}</AppNotice>
     <AppNotice v-else-if="timetable && !programs.length">{{ t('timetable.loading') }}</AppNotice>
 
@@ -408,8 +405,8 @@ watch(group, (g) => {
         </nav>
 
         <p v-if="!blocks.length" class="empty">{{ t('timetable.free') }}</p>
-        <div v-else class="axis" :style="{ height: `${y(span.to)}px` }">
-          <span v-for="h in hours" :key="h" class="tick" :style="{ top: `${y(h)}px` }">
+        <div v-else class="axis" :style="{ minHeight: `${((span.to - span.from) / 60) * 2.4}rem` }">
+          <span v-for="h in hours" :key="h" class="tick" :style="{ top: `${y(h)}%` }">
             <span>{{ clockLabel(h) }}</span>
           </span>
           <span
@@ -417,8 +414,8 @@ watch(group, (g) => {
             :key="g.from"
             class="gap"
             :style="{
-              top: `${y(minutes(g.from))}px`,
-              height: `${y(minutes(g.to)) - y(minutes(g.from))}px`,
+              top: `${y(minutes(g.from))}%`,
+              height: `${y(minutes(g.to)) - y(minutes(g.from))}%`,
             }"
           >
             {{ t('timetable.freeGap', { from: g.from, to: g.to }) }}
@@ -429,8 +426,8 @@ watch(group, (g) => {
             class="block"
             :class="`k-${b.lesson.kind ?? 'X'}`"
             :style="{
-              top: `${b.top}px`,
-              height: `${b.height}px`,
+              top: `${b.top}%`,
+              height: `${b.height}%`,
               '--col': b.col,
               '--cols': b.cols,
             }"
@@ -450,12 +447,7 @@ watch(group, (g) => {
               class="big"
             />
           </div>
-          <div
-            v-if="nowTop !== null"
-            ref="nowLine"
-            class="now-line"
-            :style="{ top: `${nowTop}px` }"
-          >
+          <div v-if="nowTop !== null" class="now-line" :style="{ top: `${nowTop}%` }">
             <span>{{ clockLabel(nowMinutes) }}</span>
           </div>
         </div>
@@ -860,9 +852,15 @@ watch(group, (g) => {
   background: var(--on-mask);
 }
 
+.tt-page {
+  display: flex;
+  flex-direction: column;
+}
+
 .axis {
   position: relative;
-  margin: 1.25rem 0 0.5rem;
+  flex: 1 1 auto;
+  margin: 1.25rem 0 0.75rem;
 }
 
 .axis::before {
@@ -1016,6 +1014,10 @@ watch(group, (g) => {
 }
 
 @media (min-width: 52rem) {
+  .tt-page {
+    display: block;
+  }
+
   .controls {
     position: static;
     padding-bottom: 0;

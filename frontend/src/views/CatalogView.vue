@@ -131,7 +131,7 @@ watch([spec, planId, year], async ([s, p, y]) => {
 </script>
 
 <template>
-  <main class="page">
+  <main class="page-wide">
     <header>
       <span class="eyebrow">{{ t('nav.courses') }}</span>
       <h1 class="h1">{{ t('catalog.title') }}</h1>
@@ -164,28 +164,30 @@ watch([spec, planId, year], async ([s, p, y]) => {
       {{ t('catalog.noItems') }}
     </p>
 
-    <section v-for="[title, group] in sections" :key="title" class="mt-8">
-      <h2 class="eyebrow mb-3">{{ title }}</h2>
-      <ul class="m-0 grid list-none gap-2 p-0">
-        <li v-for="item in group" :key="item.id">
-          <RouterLink :to="`/courses/${item.id}`" class="row-link">
-            <span class="min-w-0 flex-1">
-              <strong class="block font-semibold text-balance">{{ item.subjectName }}</strong>
-              <span class="mt-1.5 flex flex-wrap gap-x-3 gap-y-1">
-                <span
-                  v-for="[k, h, label] in hours(item)"
-                  :key="k"
-                  class="kind-tag"
-                  :class="`k-${k}`"
-                >
-                  {{ label }} {{ h }}h
+    <div class="mt-8 grid gap-8 lg:grid-cols-2 lg:items-start lg:gap-x-10">
+      <section v-for="[title, group] in sections" :key="title">
+        <h2 class="eyebrow mb-3">{{ title }}</h2>
+        <ul class="m-0 grid list-none gap-2 p-0">
+          <li v-for="item in group" :key="item.id">
+            <RouterLink :to="`/courses/${item.id}`" class="row-link">
+              <span class="min-w-0 flex-1">
+                <strong class="block font-semibold text-balance">{{ item.subjectName }}</strong>
+                <span class="mt-1.5 flex flex-wrap gap-x-3 gap-y-1">
+                  <span
+                    v-for="[k, h, label] in hours(item)"
+                    :key="k"
+                    class="kind-tag"
+                    :class="`k-${k}`"
+                  >
+                    {{ label }} {{ h }}h
+                  </span>
                 </span>
               </span>
-            </span>
-            <ChevronRight class="size-4 shrink-0 text-muted" aria-hidden="true" />
-          </RouterLink>
-        </li>
-      </ul>
-    </section>
+              <ChevronRight class="size-4 shrink-0 text-muted" aria-hidden="true" />
+            </RouterLink>
+          </li>
+        </ul>
+      </section>
+    </div>
   </main>
 </template>
