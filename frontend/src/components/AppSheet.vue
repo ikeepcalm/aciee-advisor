@@ -37,7 +37,9 @@ const placement = {
             <X class="size-5" />
           </DialogClose>
         </header>
-        <div class="overflow-y-auto p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))]">
+        <div
+          class="min-h-0 flex-1 overflow-y-auto overscroll-contain p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))]"
+        >
           <slot />
         </div>
       </DialogContent>

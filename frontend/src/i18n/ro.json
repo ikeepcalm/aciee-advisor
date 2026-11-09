@@ -441,6 +441,8 @@
     "officialPdf": "PDF-ul oficial",
     "updatedAt": "modificat de facultate {at}",
     "checkedAt": "verificat {at}",
-    "parityNote": "O oră împărțită în PDF: jumătatea de sus e săptămâna impară, cea de jos săptămâna pară."
+    "parityNote": "O oră împărțită în PDF: jumătatea de sus e săptămâna impară, cea de jos săptămâna pară.",
+    "prevWeek": "Săptămâna anterioară",
+    "nextWeek": "Săptămâna următoare"
   }
 }

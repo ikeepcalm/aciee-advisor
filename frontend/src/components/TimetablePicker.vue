@@ -126,9 +126,9 @@ function chooseProgram(p: TimetableProgram) {
 
 .program {
   display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  gap: 1rem;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.25rem;
   padding: 0.85rem 1rem;
   text-align: left;
   border: 1px solid var(--line);
@@ -143,7 +143,7 @@ function chooseProgram(p: TimetableProgram) {
   font-size: 0.6875rem;
   font-weight: 400;
   color: var(--muted);
-  white-space: nowrap;
+  overflow-wrap: anywhere;
 }
 
 .program.on,

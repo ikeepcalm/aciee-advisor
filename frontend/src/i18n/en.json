@@ -441,6 +441,8 @@
     "officialPdf": "Official PDF",
     "updatedAt": "changed by the faculty {at}",
     "checkedAt": "checked {at}",
-    "parityNote": "A split slot in the PDF: the top half is the odd week, the bottom half the even week."
+    "parityNote": "A split slot in the PDF: the top half is the odd week, the bottom half the even week.",
+    "prevWeek": "Previous week",
+    "nextWeek": "Next week"
   }
 }

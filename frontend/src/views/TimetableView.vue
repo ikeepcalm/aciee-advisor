@@ -2,7 +2,7 @@
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
-import { ArrowLeftRight, ChevronDown } from 'lucide-vue-next'
+import { ArrowLeftRight, ChevronDown, ChevronLeft, ChevronRight } from 'lucide-vue-next'
 import { api, describeError, type Lesson, type Timetable } from '@/api'
 import LessonCard from '@/components/LessonCard.vue'
 import AppNotice from '@/components/AppNotice.vue'
@@ -111,17 +111,21 @@ function range(monday: Date) {
   return dayMonth.value.formatRange(monday, addDays(monday, 4))
 }
 
-const weeks = computed(() =>
-  Array.from({ length: WINDOW * 2 + 1 }, (_, i) => {
-    const monday = addDays(thisMonday.value, (i - WINDOW) * 7)
+const weeks = computed(() => {
+  const offset = Math.round(
+    (selectedMonday.value.getTime() - thisMonday.value.getTime()) / (7 * 864e5),
+  )
+  const anchor = Math.abs(offset) <= WINDOW ? thisMonday.value : selectedMonday.value
+  return Array.from({ length: WINDOW * 2 + 1 }, (_, i) => {
+    const monday = addDays(anchor, (i - WINDOW) * 7)
     return {
       monday,
       parity: parityOf(monday),
-      current: i === WINDOW,
+      current: sameDay(monday, thisMonday.value),
       selected: sameDay(monday, selectedMonday.value),
     }
-  }),
-)
+  })
+})
 
 const selectedIndex = computed(() => weeks.value.findIndex((w) => w.selected))
 
@@ -262,6 +266,10 @@ function chooseGroup(g: string) {
   pickerOpen.value = false
 }
 
+function stepWeek(by: number) {
+  selectWeek(addDays(selectedMonday.value, by * 7))
+}
+
 function selectWeek(monday: Date) {
   selectedMonday.value = monday
   day.value = sameDay(monday, thisMonday.value) && !isWeekend(now.value) ? now.value.getDay() : 1
@@ -317,15 +325,23 @@ watch(group, (g) => {
               >
               <ChevronDown class="icon" aria-hidden="true" />
             </button>
-            <button
-              class="wk"
-              :aria-expanded="weekOpen"
-              :aria-label="t('timetable.weekPicker')"
-              @click="weekOpen = !weekOpen"
-            >
-              <span class="range">{{ range(selectedMonday) }}</span>
-              <ChevronDown class="icon chev" :class="{ open: weekOpen }" aria-hidden="true" />
-            </button>
+            <div class="wk">
+              <button class="step" :aria-label="t('timetable.prevWeek')" @click="stepWeek(-1)">
+                <ChevronLeft class="icon" aria-hidden="true" />
+              </button>
+              <button
+                class="pick"
+                :aria-expanded="weekOpen"
+                :aria-label="t('timetable.weekPicker')"
+                @click="weekOpen = !weekOpen"
+              >
+                <span class="range">{{ range(selectedMonday) }}</span>
+                <ChevronDown class="icon chev" :class="{ open: weekOpen }" aria-hidden="true" />
+              </button>
+              <button class="step" :aria-label="t('timetable.nextWeek')" @click="stepWeek(1)">
+                <ChevronRight class="icon" aria-hidden="true" />
+              </button>
+            </div>
             <button
               class="par"
               :class="selectedParity ?? 'unknown'"
@@ -607,8 +623,37 @@ watch(group, (g) => {
 .wk {
   flex: 1 1 auto;
   min-width: 0;
-  justify-content: space-between;
+  padding: 0;
+  gap: 0;
   font-size: 0.9375rem;
+}
+
+.wk button {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.75rem;
+  border: 0;
+  background: none;
+  color: inherit;
+}
+
+.wk .step {
+  flex: none;
+  justify-content: center;
+  width: 2rem;
+  color: var(--muted);
+}
+
+.wk .step:hover {
+  color: var(--mask);
+}
+
+.wk .pick {
+  flex: 1 1 auto;
+  min-width: 0;
+  justify-content: center;
+  gap: 0.3rem;
+  padding: 0;
 }
 
 .wk .range {
@@ -1024,10 +1069,24 @@ watch(group, (g) => {
 }
 
 .source {
-  margin-top: 1.75rem;
-  font-size: 0.8125rem;
-  line-height: 1.6;
+  position: sticky;
+  bottom: calc(3.5rem + 1px + env(safe-area-inset-bottom));
+  z-index: 10;
+  margin: auto -1rem 0;
+  padding: 0.45rem 1rem;
+  border-top: 1px solid var(--line);
+  background: color-mix(in srgb, var(--board) 88%, transparent);
+  backdrop-filter: blur(8px);
+  text-align: center;
+  font-size: 0.75rem;
+  line-height: 1.5;
   color: var(--muted);
+}
+
+@media (min-width: 48rem) {
+  .source {
+    bottom: 0;
+  }
 }
 
 .source a {
@@ -1035,10 +1094,6 @@ watch(group, (g) => {
 }
 
 @media (min-width: 52rem) {
-  .tt-page {
-    display: block;
-  }
-
   .controls {
     position: static;
     margin-bottom: 1.5rem;
@@ -1126,6 +1181,18 @@ watch(group, (g) => {
 @media (prefers-reduced-motion: reduce) {
   .pad.live {
     animation: none;
+  }
+}
+
+@media (max-width: 47.99rem) {
+  main.tt-page {
+    padding-bottom: calc(3.5rem + 1px + env(safe-area-inset-bottom));
+  }
+}
+
+@media (max-width: 51.99rem) {
+  .wk .pick .chev {
+    display: none;
   }
 }
 </style>
