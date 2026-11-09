@@ -22,19 +22,19 @@ class TimetableParserTests {
 
         assertThat(program.getTitle()).isEqualTo("ANUL II - CALCULATOARE ȘI TEHNOLOGIA INFORMAȚIEI");
         assertThat(program.getSemester()).contains("Semestrul I");
-        assertThat(program.getGroups()).containsExactly("22C21a", "22C21b", "22C22a");
+        assertThat(program.getGroups()).containsExactly("22C21A", "22C21B", "22C22A");
         assertThat(program.getLessons()).hasSize(38);
         assertThat(program.getLessons())
                 .filteredOn(l -> l.getDay() == 1 && l.getStart().equals("12:00"))
                 .extracting(Lesson::getWeeks, Lesson::getGroups, Lesson::getKind, Lesson::getTitle)
                 .containsExactly(
-                        tuple(WeekParity.ALL, List.of("22C21a"), "L", "SO G308"),
-                        tuple(WeekParity.ALL, List.of("22C21b"), "L", "POO Y505"),
-                        tuple(WeekParity.ODD, List.of("22C22a"), "L", "TS Y402"),
-                        tuple(WeekParity.EVEN, List.of("22C22a"), null, "Ed. fizică II Stadionul Portu Roșu"));
+                        tuple(WeekParity.ALL, List.of("22C21A"), "L", "SO G308"),
+                        tuple(WeekParity.ALL, List.of("22C21B"), "L", "POO Y505"),
+                        tuple(WeekParity.ODD, List.of("22C22A"), "L", "TS Y402"),
+                        tuple(WeekParity.EVEN, List.of("22C22A"), null, "Ed. fizică II Stadionul Portu Roșu"));
         assertThat(program.getLessons())
                 .filteredOn(l -> l.getDay() == 2 && l.getStart().equals("08:00") && l.getWeeks() == WeekParity.ODD)
                 .extracting(Lesson::getGroups)
-                .contains(List.of("22C21a", "22C21b"));
+                .contains(List.of("22C21A", "22C21B"));
     }
 }

@@ -143,7 +143,7 @@ public class TimetableParser {
         var subgroup = header.stream()
                 .filter(w -> w.centerX() > x0 && w.centerX() < x1 && SUBGROUP.matcher(w.getText()).matches())
                 .max(Comparator.comparing(Word::getTop)).map(Word::getText).orElse("");
-        return new Column(x0, x1, group + subgroup);
+        return new Column(x0, x1, group + subgroup.toUpperCase());
     }
 
     private void mergeCells() {
