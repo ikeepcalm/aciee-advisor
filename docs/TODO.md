@@ -68,7 +68,7 @@ From VIEWS.md "Open questions" (items 1–4 and 17 are decided):
 - [ ] 15. Granting the moderator role: changeset or Admin section.
 - [ ] 16. Comparator radar (comparator is dropped; close the question).
 
-Timetable (`/orar`, synced hourly from aciee.ugal.ro/studenti/orare-licenta):
+Timetable (`/timetable`, `/orar` redirects, synced hourly from aciee.ugal.ro/studenti/orare-licenta):
 
 - [ ] Confirm with the secretariat or a group leader that the top half of a split slot in the PDF is the odd week. The page assumes so and says so in a footnote.
 - [ ] `an_4_IETTI_EA.pdf` (linked from the semester II table) is an empty file on the faculty site; it is skipped with a warning until they replace it.

@@ -1,25 +1,16 @@
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'
-import { createI18n } from 'vue-i18n'
-import PrimeVue from 'primevue/config'
-import Aura from '@primeuix/themes/aura'
+import '@fontsource/chakra-petch/600.css'
+import '@fontsource/ibm-plex-sans/400.css'
+import '@fontsource/ibm-plex-sans/500.css'
+import '@fontsource/ibm-plex-sans/600.css'
+import '@fontsource/martian-mono/400.css'
+import '@fontsource/martian-mono/500.css'
+import './app.css'
+import './theme'
 
 import App from './App.vue'
 import router from './router'
-import ro from './i18n/ro.json'
+import { i18n } from './i18n'
 
-const app = createApp(App)
-
-app.use(createPinia())
-app.use(router)
-app.use(
-  createI18n({
-    legacy: false,
-    locale: 'ro-RO',
-    messages: { 'ro-RO': ro },
-    datetimeFormats: { 'ro-RO': { short: { day: 'numeric', month: 'short', year: 'numeric' } } },
-  }),
-)
-app.use(PrimeVue, { theme: { preset: Aura }, license: import.meta.env.VITE_PRIMEUI_LICENSE })
-
-app.mount('#app')
+createApp(App).use(createPinia()).use(router).use(i18n).mount('#app')

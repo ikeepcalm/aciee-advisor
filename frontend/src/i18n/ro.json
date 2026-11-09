@@ -21,7 +21,9 @@
     "resend": "Retrimite codul",
     "resent": "Ți-am trimis un cod nou.",
     "or": "sau",
-    "microsoft": "Continuă cu Microsoft"
+    "microsoft": "Continuă cu Microsoft",
+    "verifyCode": "Codul din 6 cifre",
+    "signInLede": "Ghidurile și evaluările sunt vizibile doar studenților autentificați."
   },
   "errors": {
     "domain": "Folosește adresa ta {'@'}student.ugal.ro.",
@@ -79,7 +81,15 @@
     "submissions": "Contribuțiile mele",
     "moderation": "Moderare",
     "menu": "Meniu",
-    "timetable": "Orar"
+    "timetable": "Orar",
+    "account": "Cont"
+  },
+  "prefs": {
+    "language": "Limbă",
+    "theme": "Temă",
+    "system": "Sistem",
+    "light": "Luminos",
+    "dark": "Întunecat"
   },
   "group": {
     "title": "Grupa mea",
@@ -253,7 +263,11 @@
   },
   "common": {
     "back": "Înapoi",
-    "cancel": "Anulează"
+    "cancel": "Anulează",
+    "close": "Închide",
+    "noResults": "Niciun rezultat",
+    "showPassword": "Arată parola",
+    "hidePassword": "Ascunde parola"
   },
   "catalog": {
     "title": "Ghidul cursurilor ACIEE",

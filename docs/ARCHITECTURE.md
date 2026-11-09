@@ -6,7 +6,7 @@
 |---|---|
 | Backend | Java 25, Spring Boot 4.1, Gradle, Spring Security, Spring Session JDBC, Liquibase (formatted SQL changelogs) |
 | Database | PostgreSQL 18 (single DBMS) |
-| Frontend | Vue 3, Vite, TypeScript, Pinia, PrimeVue, vue-i18n (`ro-RO`), Chart.js via vue-chartjs |
+| Frontend | Vue 3, Vite, TypeScript, Pinia, Tailwind CSS 4, reka-ui, vue-i18n (`ro` and `en`) |
 | Crypto | RFC 9474 blind RSA: Bouncy Castle `bcprov-jdk18on` ≥ 1.85.2 (server), `@cloudflare/blindrsa-ts` (browser), WebCrypto HKDF + AES-GCM |
 | Infra | Docker Compose on one VPS under the deploy tool: postgres, app, nginx (SPA + `/api` proxy), backup; the deploy tool's proxy terminates HTTPS (DEPLOY.md) |
 | Reports | OpenPDF (PDF), fastexcel (.xlsx), plain CSV |

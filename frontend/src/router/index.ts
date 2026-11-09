@@ -18,8 +18,9 @@ const router = createRouter({
       component: () => import('../views/ProfessorView.vue'),
       meta: { signedIn: true },
     },
+    { path: '/orar', redirect: '/timetable' },
     {
-      path: '/orar',
+      path: '/timetable',
       name: 'timetable',
       component: () => import('../views/TimetableView.vue'),
     },

@@ -2,156 +2,229 @@
 import { computed, ref, watch } from 'vue'
 import { RouterLink, RouterView, useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
-import Button from 'primevue/button'
+import {
+  BookOpen,
+  CalendarDays,
+  CircleUser,
+  FileText,
+  KeyRound,
+  Moon,
+  Settings,
+  ShieldCheck,
+  Star,
+  Sun,
+  Users,
+} from 'lucide-vue-next'
 import { useAuthStore } from '@/stores/auth'
+import { setLocale, type Locale } from '@/i18n'
+import { isDark, setTheme, theme, type Theme } from '@/theme'
+import BrandMark from '@/components/BrandMark.vue'
+import SegmentedChips from '@/components/SegmentedChips.vue'
+import AppSheet from '@/components/AppSheet.vue'
 
-const { t } = useI18n()
+const { t, locale } = useI18n()
 const auth = useAuthStore()
 const route = useRoute()
 const router = useRouter()
-const open = ref(false)
+const accountOpen = ref(false)
 
 watch(
   () => route.fullPath,
-  () => (open.value = false),
+  () => (accountOpen.value = false),
 )
 
-const links = computed(() => {
-  const user = auth.user
+const tabs = computed(() => {
   const items = [
-    { to: '/', label: t('nav.courses') },
-    { to: '/orar', label: t('nav.timetable') },
+    { to: '/', label: t('nav.courses'), icon: BookOpen },
+    { to: '/timetable', label: t('nav.timetable'), icon: CalendarDays },
   ]
-  if (!user) {
-    return items
-  }
-  items.push(
-    { to: '/rate', label: t('nav.rate') },
-    { to: '/me/submissions', label: t('nav.submissions') },
-    { to: '/group', label: t('nav.groups') },
-    { to: '/me/recovery', label: t('recovery.title') },
-  )
-  if (user.roles.includes('moderator') || user.roles.includes('admin')) {
-    items.push({ to: '/moderation', label: t('nav.moderation') })
-  }
-  if (user.roles.includes('admin')) {
-    items.push({ to: '/admin', label: t('nav.admin') })
+  if (auth.user) {
+    items.push(
+      { to: '/rate', label: t('nav.rate'), icon: Star },
+      { to: '/group', label: t('nav.groups'), icon: Users },
+    )
   }
   return items
 })
 
+const more = computed(() => {
+  const user = auth.user
+  if (!user) {
+    return []
+  }
+  const items = [
+    { to: '/me/submissions', label: t('nav.submissions'), icon: FileText },
+    { to: '/me/recovery', label: t('recovery.title'), icon: KeyRound },
+  ]
+  if (user.roles.includes('moderator') || user.roles.includes('admin')) {
+    items.push({ to: '/moderation', label: t('nav.moderation'), icon: ShieldCheck })
+  }
+  if (user.roles.includes('admin')) {
+    items.push({ to: '/admin', label: t('nav.admin'), icon: Settings })
+  }
+  return items
+})
+
+const locales = computed(() => [
+  { value: 'ro', label: 'Română' },
+  { value: 'en', label: 'English' },
+])
+const themes = computed(() =>
+  (['system', 'light', 'dark'] as Theme[]).map((value) => ({ value, label: t(`prefs.${value}`) })),
+)
+const themeModel = computed({ get: () => theme.value, set: (v) => setTheme(v as Theme) })
+const localeModel = computed({ get: () => locale.value, set: (v) => setLocale(v as Locale) })
+
+function active(to: string) {
+  return to === '/' ? route.path === '/' : route.path.startsWith(to)
+}
+
 async function signOut() {
   await auth.signOut().catch(() => {})
+  accountOpen.value = false
   await router.push('/')
 }
 </script>
 
 <template>
-  <header class="bar">
-    <RouterLink to="/" class="brand">{{ t('app.title') }}</RouterLink>
-    <span class="right">
-      <span v-if="auth.user" class="who">{{ auth.user.email.split('@')[0] }}</span>
-      <RouterLink v-else :to="{ name: 'signin' }">{{ t('auth.signIn') }}</RouterLink>
-      <Button :label="t('nav.menu')" text :aria-expanded="open" @click="open = !open" />
-    </span>
-  </header>
-  <nav v-if="open" class="menu">
-    <RouterLink v-for="link in links" :key="link.to" :to="link.to">{{ link.label }}</RouterLink>
-    <template v-if="auth.user">
-      <span class="who">{{ t('auth.signedInAs', { email: auth.user.email }) }}</span>
-      <Button :label="t('auth.signOut')" text @click="signOut" />
-    </template>
-    <template v-else>
-      <RouterLink :to="{ name: 'signin' }">{{ t('auth.signIn') }}</RouterLink>
-      <RouterLink :to="{ name: 'signup' }">{{ t('auth.signUp') }}</RouterLink>
-    </template>
-  </nav>
-  <RouterView />
+  <div class="flex min-h-dvh flex-col">
+    <header
+      class="sticky top-0 z-30 border-b border-line bg-board/85 backdrop-blur supports-backdrop-filter:bg-board/70"
+    >
+      <div class="mx-auto flex h-14 max-w-6xl items-center gap-2 px-4 md:px-6">
+        <RouterLink to="/" class="flex items-center gap-2 text-ink no-underline">
+          <BrandMark class="size-7" />
+          <span class="display text-lg leading-none"
+            >ACIEE <span class="text-mask">Advisor</span></span
+          >
+        </RouterLink>
+
+        <nav class="ml-6 hidden items-center gap-1 md:flex" :aria-label="t('nav.menu')">
+          <RouterLink
+            v-for="tab in tabs"
+            :key="tab.to"
+            :to="tab.to"
+            class="relative flex min-h-11 items-center px-3 text-sm font-medium text-ink no-underline hover:text-mask"
+            :class="{
+              'text-mask after:absolute after:inset-x-3 after:bottom-1 after:h-0.5 after:bg-copper':
+                active(tab.to),
+            }"
+            :aria-current="active(tab.to) ? 'page' : undefined"
+          >
+            {{ tab.label }}
+          </RouterLink>
+        </nav>
+
+        <div class="ml-auto flex items-center gap-1">
+          <div
+            class="mono flex rounded-full border border-line bg-panel text-[0.6875rem] font-medium"
+            role="group"
+            :aria-label="t('prefs.language')"
+          >
+            <button
+              v-for="l in locales"
+              :key="l.value"
+              class="min-h-11 min-w-11 rounded-full px-2 uppercase"
+              :class="locale === l.value ? 'bg-mask text-on-mask' : 'text-muted hover:text-ink'"
+              :aria-pressed="locale === l.value"
+              :lang="l.value"
+              :aria-label="l.label"
+              @click="setLocale(l.value as Locale)"
+            >
+              {{ l.value }}
+            </button>
+          </div>
+          <button
+            class="btn btn-ghost btn-icon text-ink"
+            :aria-label="t('prefs.theme') + ': ' + t(isDark ? 'prefs.light' : 'prefs.dark')"
+            @click="setTheme(isDark ? 'light' : 'dark')"
+          >
+            <Sun v-if="isDark" class="size-5" />
+            <Moon v-else class="size-5" />
+          </button>
+          <button
+            class="btn btn-ghost hidden text-ink md:inline-flex"
+            :aria-expanded="accountOpen"
+            @click="accountOpen = true"
+          >
+            <CircleUser class="size-5" />
+            <span class="max-w-40 truncate">{{
+              auth.user ? auth.user.email.split('@')[0] : t('auth.signIn')
+            }}</span>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <RouterView class="flex-1 pb-20 md:pb-0" />
+
+    <nav
+      class="fixed inset-x-0 bottom-0 z-30 grid border-t border-line bg-panel pb-[env(safe-area-inset-bottom)] md:hidden"
+      :style="{ gridTemplateColumns: `repeat(${tabs.length + 1}, minmax(0, 1fr))` }"
+      :aria-label="t('nav.menu')"
+    >
+      <RouterLink
+        v-for="tab in tabs"
+        :key="tab.to"
+        :to="tab.to"
+        class="relative flex min-h-14 flex-col items-center justify-center gap-1 text-[0.6875rem] font-medium text-muted no-underline"
+        :class="{
+          'text-mask before:absolute before:inset-x-5 before:top-0 before:h-0.5 before:bg-copper':
+            active(tab.to),
+        }"
+        :aria-current="active(tab.to) ? 'page' : undefined"
+      >
+        <component :is="tab.icon" class="size-5" />
+        {{ tab.label }}
+      </RouterLink>
+      <button
+        class="flex min-h-14 flex-col items-center justify-center gap-1 text-[0.6875rem] font-medium text-muted"
+        :aria-expanded="accountOpen"
+        @click="accountOpen = true"
+      >
+        <CircleUser class="size-5" />
+        {{ auth.user ? t('nav.account') : t('auth.signIn') }}
+      </button>
+    </nav>
+
+    <AppSheet v-model="accountOpen" :title="t('nav.account')">
+      <template v-if="auth.user">
+        <p class="mono text-xs break-all text-muted">
+          {{ t('auth.signedInAs', { email: auth.user.email }) }}
+        </p>
+        <nav class="mt-3 grid gap-1">
+          <RouterLink
+            v-for="item in more"
+            :key="item.to"
+            :to="item.to"
+            class="flex min-h-11 items-center gap-3 rounded-md px-2 text-sm font-medium text-ink no-underline hover:bg-board"
+          >
+            <component :is="item.icon" class="size-5 text-copper" />
+            {{ item.label }}
+          </RouterLink>
+        </nav>
+        <button class="btn btn-outline mt-3 w-full" @click="signOut">
+          {{ t('auth.signOut') }}
+        </button>
+      </template>
+      <template v-else>
+        <p class="text-sm text-muted">{{ t('auth.signInLede') }}</p>
+        <RouterLink :to="{ name: 'signin' }" class="btn btn-primary mt-4 w-full">{{
+          t('auth.signInAction')
+        }}</RouterLink>
+        <RouterLink :to="{ name: 'signup' }" class="btn btn-outline mt-2 w-full">{{
+          t('auth.signUp')
+        }}</RouterLink>
+      </template>
+      <hr class="my-5 border-line" />
+      <div class="field">
+        {{ t('prefs.language') }}
+        <SegmentedChips v-model="localeModel" :options="locales" />
+      </div>
+      <div class="field mt-4">
+        {{ t('prefs.theme') }}
+        <SegmentedChips v-model="themeModel" :options="themes" />
+      </div>
+    </AppSheet>
+  </div>
 </template>
-
-<style>
-body {
-  margin: 0;
-  font-family: system-ui, sans-serif;
-  background: var(--p-content-background);
-  color: var(--p-text-color);
-  color-scheme: light dark;
-}
-
-a {
-  color: var(--p-primary-color);
-}
-
-main {
-  max-width: 40rem;
-  margin: 0 auto;
-  padding: 1rem;
-}
-
-.auth form {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-}
-
-.card {
-  padding: 0.75rem 1rem;
-  margin-bottom: 0.75rem;
-  border: 1px solid var(--p-content-border-color, #e5e7eb);
-  border-radius: 0.75rem;
-}
-
-.muted {
-  color: var(--p-text-muted-color, #6b7280);
-  font-size: 0.875rem;
-}
-
-.locked {
-  color: var(--p-text-muted-color, #6b7280);
-  font-style: italic;
-}
-</style>
-
-<style scoped>
-.bar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  max-width: 40rem;
-  margin: 0 auto;
-  padding: 0.5rem 1rem;
-  border-bottom: 1px solid var(--p-content-border-color, #e5e7eb);
-}
-
-.brand {
-  font-weight: 700;
-  text-decoration: none;
-  color: inherit;
-}
-
-.menu {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  max-width: 40rem;
-  margin: 0 auto;
-  padding: 0.75rem 1rem;
-  border-bottom: 1px solid var(--p-content-border-color, #e5e7eb);
-}
-
-.right {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.who {
-  font-size: 0.875rem;
-  color: var(--p-text-muted-color, #6b7280);
-}
-
-.menu .p-button {
-  align-self: flex-start;
-  padding-left: 0;
-}
-</style>
