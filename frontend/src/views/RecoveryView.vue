@@ -2,10 +2,8 @@
 import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
-import Button from 'primevue/button'
-import Checkbox from 'primevue/checkbox'
-import InputText from 'primevue/inputtext'
-import Message from 'primevue/message'
+import { Copy, Download, Loader2 } from 'lucide-vue-next'
+import AppNotice from '@/components/AppNotice.vue'
 import { describeError } from '@/api'
 import { useAuthStore } from '@/stores/auth'
 import { createMaster, localMaster, restoreMaster, vaultExists } from '@/crypto/tokens'
@@ -86,63 +84,57 @@ const restore = () =>
 </script>
 
 <template>
-  <main>
-    <h1>{{ t('recovery.title') }}</h1>
-    <Message v-if="error" severity="error">{{ error }}</Message>
+  <main class="page max-w-md">
+    <span class="eyebrow">{{ t('rate.title') }}</span>
+    <h1 class="h1">{{ t('recovery.title') }}</h1>
+    <AppNotice v-if="error" kind="error">{{ error }}</AppNotice>
     <template v-if="mode === 'show' || mode === 'create'">
-      <p>{{ t('recovery.yourCode') }}</p>
-      <p class="code">{{ code }}</p>
-      <p>{{ t('recovery.explain') }}</p>
-      <p>
-        <Button :label="t('recovery.download')" severity="secondary" @click="download" />
-        <Button :label="t('recovery.copy')" severity="secondary" link @click="copy" />
+      <p class="lede text-sm">{{ t('recovery.yourCode') }}</p>
+      <p
+        class="mono mt-4 rounded-lg border border-dashed border-copper bg-panel p-4 text-center text-lg leading-relaxed font-medium break-all select-all"
+      >
+        {{ code }}
       </p>
-      <template v-if="mode === 'create'">
-        <p>
-          <Checkbox v-model="saved" input-id="saved" binary />
-          <label for="saved"> {{ t('recovery.savedIt') }}</label>
-        </p>
-        <Button
-          :label="t('recovery.continue')"
-          :disabled="!saved"
-          :loading="busy"
-          fluid
-          @click="confirmCreate"
-        />
-      </template>
+      <div class="mt-3 flex flex-wrap gap-2">
+        <button class="btn btn-outline" @click="download">
+          <Download class="size-4" aria-hidden="true" /> {{ t('recovery.download') }}
+        </button>
+        <button class="btn btn-ghost" @click="copy">
+          <Copy class="size-4" aria-hidden="true" /> {{ t('recovery.copy') }}
+        </button>
+      </div>
+      <p class="mt-5 text-sm text-muted">{{ t('recovery.explain') }}</p>
+      <div v-if="mode === 'create'" class="card mt-6 grid gap-4">
+        <label class="inline-flex items-center gap-3 text-sm font-medium">
+          <input v-model="saved" type="checkbox" class="check" />
+          {{ t('recovery.savedIt') }}
+        </label>
+        <button class="btn btn-primary w-full" :disabled="!saved || busy" @click="confirmCreate">
+          <Loader2 v-if="busy" class="size-4 animate-spin" aria-hidden="true" />
+          {{ t('recovery.continue') }}
+        </button>
+      </div>
     </template>
-    <form v-if="mode === 'restore'" @submit.prevent="restore">
-      <p>{{ t('recovery.enterCode') }}</p>
-      <InputText
-        v-model="input"
-        placeholder="____-____-____-____-____-____-__"
-        autocomplete="off"
-        fluid
-      />
-      <Button type="submit" :label="t('recovery.restore')" :loading="busy" fluid />
-      <details>
-        <summary>{{ t('recovery.lostTitle') }}</summary>
-        <p>{{ t('recovery.lostBody') }}</p>
+    <form v-if="mode === 'restore'" class="card mt-6 grid gap-4" @submit.prevent="restore">
+      <label class="field">
+        {{ t('recovery.enterCode') }}
+        <input
+          v-model="input"
+          class="input mono text-sm"
+          placeholder="____-____-____-____-____-____-__"
+          autocomplete="off"
+        />
+      </label>
+      <button type="submit" class="btn btn-primary w-full" :disabled="busy">
+        <Loader2 v-if="busy" class="size-4 animate-spin" aria-hidden="true" />
+        {{ t('recovery.restore') }}
+      </button>
+      <details class="text-sm">
+        <summary class="cursor-pointer font-medium text-mask">
+          {{ t('recovery.lostTitle') }}
+        </summary>
+        <p class="mt-2 text-muted">{{ t('recovery.lostBody') }}</p>
       </details>
     </form>
   </main>
 </template>
-
-<style scoped>
-.code {
-  font-family: ui-monospace, monospace;
-  font-size: 1.25rem;
-  letter-spacing: 0.05em;
-  padding: 0.75rem;
-  border: 1px solid currentColor;
-  border-radius: 0.5rem;
-  text-align: center;
-  word-break: break-all;
-}
-
-form {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-}
-</style>

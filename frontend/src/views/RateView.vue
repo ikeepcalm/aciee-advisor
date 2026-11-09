@@ -2,8 +2,7 @@
 import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
-import Button from 'primevue/button'
-import Message from 'primevue/message'
+import AppNotice from '@/components/AppNotice.vue'
 import { useAuthStore } from '@/stores/auth'
 import {
   issueTokens,
@@ -72,59 +71,55 @@ onMounted(async () => {
 </script>
 
 <template>
-  <main>
-    <h1>{{ t('rate.title') }}</h1>
-    <Message v-if="error" severity="error">
+  <main class="page">
+    <span class="eyebrow">{{ t('rateForm.anonymous') }}</span>
+    <h1 class="h1">{{ t('rate.title') }}</h1>
+    <AppNotice v-if="error" kind="error">
       {{ error }}
-      <Button v-if="retryable" :label="t('rate.retry')" link :loading="busy" @click="load" />
-    </Message>
-    <p v-if="busy && !offerings">{{ t('rate.loading') }}</p>
+      <button v-if="retryable" class="btn btn-ghost btn-sm ml-2" :disabled="busy" @click="load">
+        {{ t('rate.retry') }}
+      </button>
+    </AppNotice>
+    <p v-if="busy && !offerings" class="lede">{{ t('rate.loading') }}</p>
     <template v-if="offerings">
-      <p v-if="!offerings.length">
+      <p v-if="!offerings.length" class="lede">
         {{ t('rate.noGroup') }}
         <RouterLink :to="{ name: 'group' }">{{ t('nav.groups') }}</RouterLink>
       </p>
-      <p v-else>{{ t('rate.intro') }}</p>
-      <section v-for="[term, items] in terms" :key="term">
-        <h2>{{ term }}</h2>
-        <article v-for="offering in items" :key="offering.offeringId">
-          <strong>{{ offering.title }}</strong>
-          <br />{{ status(offering) }}
-          <Button
+      <p v-else class="lede">{{ t('rate.intro') }}</p>
+      <section v-for="[term, items] in terms" :key="term" class="mt-8">
+        <h2 class="eyebrow mb-3">{{ term }}</h2>
+        <article
+          v-for="offering in items"
+          :key="offering.offeringId"
+          class="card mt-2 flex flex-wrap items-center justify-between gap-3"
+        >
+          <div class="min-w-0 flex-1">
+            <strong class="block font-semibold">{{ offering.title }}</strong>
+            <span
+              class="mt-1 block text-sm"
+              :class="tokens.get(offering.offeringId) ? 'text-mask' : 'text-muted'"
+            >
+              {{ status(offering) }}
+            </span>
+          </div>
+          <RouterLink
             v-if="tokens.has(offering.offeringId)"
-            as="router-link"
             :to="`/rate/${offering.offeringId}`"
-            :label="tokens.get(offering.offeringId) ? t('rateForm.edit') : t('rate.action')"
-            size="small"
-            class="go"
-          />
+            class="btn"
+            :class="tokens.get(offering.offeringId) ? 'btn-outline' : 'btn-primary'"
+          >
+            {{ tokens.get(offering.offeringId) ? t('rateForm.edit') : t('rate.action') }}
+          </RouterLink>
         </article>
       </section>
-      <p>
+      <p class="mt-8 text-sm text-muted">
         {{ t('rate.pastYears') }}
         <RouterLink :to="{ name: 'group' }">{{ t('rate.pastYearsLink') }}</RouterLink>
       </p>
-      <RouterLink :to="{ name: 'recovery' }">{{ t('recovery.title') }}</RouterLink>
+      <p class="mt-2 text-sm">
+        <RouterLink :to="{ name: 'recovery' }">{{ t('recovery.title') }}</RouterLink>
+      </p>
     </template>
   </main>
 </template>
-
-<style scoped>
-h2 {
-  font-size: 1rem;
-  margin: 1.25rem 0 0.5rem;
-}
-
-.go {
-  margin-top: 0.5rem;
-  display: flex;
-  width: fit-content;
-}
-
-article {
-  padding: 0.75rem;
-  margin-bottom: 0.5rem;
-  border: 1px solid #ccc;
-  border-radius: 0.5rem;
-}
-</style>

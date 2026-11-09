@@ -36,10 +36,10 @@ const { t } = useI18n()
   flex-direction: column;
   gap: 0.15rem;
   padding: 0.55rem 0.7rem;
-  border: 1px solid var(--tt-line);
+  border: 1px solid var(--line);
   border-left: 4px solid var(--kind);
   border-radius: 0.55rem;
-  background: var(--tt-panel);
+  background: var(--panel);
   font-size: 0.8125rem;
   line-height: 1.35;
   overflow-wrap: anywhere;
@@ -49,7 +49,7 @@ const { t } = useI18n()
   display: flex;
   flex-wrap: wrap;
   gap: 0.45rem;
-  font-family: 'Martian Mono', ui-monospace, monospace;
+  font-family: var(--font-mono);
   font-size: 0.5625rem;
   text-transform: uppercase;
   letter-spacing: 0.08em;
@@ -61,17 +61,17 @@ const { t } = useI18n()
 }
 
 .now {
-  color: var(--tt-copper);
+  color: var(--copper);
   font-weight: 500;
 }
 
 .soon {
-  color: var(--tt-mask);
+  color: var(--mask);
   font-weight: 500;
 }
 
 .dim {
-  color: var(--tt-muted);
+  color: var(--muted);
 }
 
 .bar {
@@ -79,7 +79,7 @@ const { t } = useI18n()
   height: 3px;
   margin-top: 0.4rem;
   border-radius: 2px;
-  background: var(--tt-line);
+  background: var(--line);
   overflow: hidden;
 }
 

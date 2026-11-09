@@ -1,9 +1,8 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
-import Button from 'primevue/button'
-import Message from 'primevue/message'
 import AdminSections from '@/components/AdminSections.vue'
+import AppNotice from '@/components/AppNotice.vue'
 import { api, describeError } from '@/api'
 
 interface Claim {
@@ -45,36 +44,58 @@ onMounted(() => load().catch((e) => (error.value = describeError(t, e))))
 </script>
 
 <template>
-  <main>
-    <h1>{{ t('admin.leadersTitle') }}</h1>
+  <main class="page">
+    <span class="eyebrow">{{ t('nav.admin') }}</span>
+    <h1 class="h1">{{ t('admin.leadersTitle') }}</h1>
     <AdminSections />
-    <Message v-if="error" severity="error">{{ error }}</Message>
+    <AppNotice v-if="error" kind="error">{{ error }}</AppNotice>
 
-    <h2>{{ t('admin.pendingClaims') }}</h2>
-    <p v-if="!claims.length">{{ t('admin.noClaims') }}</p>
-    <div v-for="c in claims" :key="c.id" class="card">
-      <div>{{ c.email }}</div>
-      <div>{{ c.groupCode }} · {{ c.academicYear }}</div>
-      <div>
-        {{ c.memberSince ? t('admin.memberSince', { since: d(new Date(c.memberSince), 'short') }) : t('admin.notMemberYet') }}
+    <h2 class="eyebrow mt-8 mb-3">{{ t('admin.pendingClaims') }}</h2>
+    <p v-if="!claims.length" class="text-sm text-muted">{{ t('admin.noClaims') }}</p>
+    <div
+      v-for="c in claims"
+      :key="c.id"
+      class="card mb-2 flex flex-wrap items-center gap-3 text-sm"
+    >
+      <div class="min-w-0 flex-1">
+        <div class="font-semibold break-all">{{ c.email }}</div>
+        <div class="text-muted">
+          <strong class="text-ink">{{ c.groupCode }}</strong> ·
+          <span class="mono text-xs">{{ c.academicYear }}</span> ·
+          {{
+            c.memberSince
+              ? t('admin.memberSince', { since: d(new Date(c.memberSince), 'short') })
+              : t('admin.notMemberYet')
+          }}
+        </div>
       </div>
-      <Button :label="t('group.approve')" size="small" @click="act('POST', `/api/admin/leaders/claims/${c.id}/approve`)" />
-      <Button :label="t('group.reject')" size="small" severity="secondary" text @click="act('POST', `/api/admin/leaders/claims/${c.id}/reject`)" />
+      <button
+        class="btn btn-primary btn-sm"
+        @click="act('POST', `/api/admin/leaders/claims/${c.id}/approve`)"
+      >
+        {{ t('group.approve') }}
+      </button>
+      <button
+        class="btn btn-ghost btn-sm text-muted"
+        @click="act('POST', `/api/admin/leaders/claims/${c.id}/reject`)"
+      >
+        {{ t('group.reject') }}
+      </button>
     </div>
 
-    <h2>{{ t('admin.activeLeaders') }}</h2>
-    <p v-for="l in leaders" :key="l.membershipId">
-      {{ l.groupCode }} · {{ l.email }}
-      <Button :label="t('admin.revoke')" size="small" severity="danger" text @click="act('DELETE', `/api/admin/leaders/${l.membershipId}`)" />
+    <h2 class="eyebrow mt-8 mb-3">{{ t('admin.activeLeaders') }}</h2>
+    <p
+      v-for="l in leaders"
+      :key="l.membershipId"
+      class="flex flex-wrap items-center gap-2 border-t border-line py-1.5 text-sm"
+    >
+      <strong>{{ l.groupCode }}</strong> <span class="break-all">{{ l.email }}</span>
+      <button
+        class="btn btn-danger btn-sm ml-auto border-transparent"
+        @click="act('DELETE', `/api/admin/leaders/${l.membershipId}`)"
+      >
+        {{ t('admin.revoke') }}
+      </button>
     </p>
   </main>
 </template>
-
-<style scoped>
-.card {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  margin-bottom: 1rem;
-}
-</style>

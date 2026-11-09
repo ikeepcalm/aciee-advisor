@@ -1,10 +1,9 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
-import Button from 'primevue/button'
-import Message from 'primevue/message'
-import Select from 'primevue/select'
+import { ArrowLeft } from 'lucide-vue-next'
+import AppNotice from '@/components/AppNotice.vue'
 import RadarChart from '@/components/RadarChart.vue'
 import ReportButton from '@/components/ReportButton.vue'
 import { api, describeError, lookups, type Lookups } from '@/api'
@@ -88,6 +87,18 @@ function score(value: number | null) {
   return value === null ? '—' : `${value.toFixed(1)} / 10`
 }
 
+const stats = computed(() => {
+  const s = page.value!.survival!
+  return [
+    [t('rateForm.examDifficulty'), score(s.examDifficulty)],
+    [t('rateForm.labsHelp'), score(s.labsHelp)],
+    [t('rateForm.attendanceStrictness'), score(s.attendanceStrictness)],
+    [t('rateForm.weeklyHours'), s.weeklyHours?.toFixed(1) ?? '—'],
+    [t('rateForm.attendanceUseful'), s.attendanceUseful ?? '—'],
+    [t('rateForm.examFormat'), s.examFormat ?? '—'],
+  ]
+})
+
 onMounted(async () => {
   await load()
   labels.value = await lookups()
@@ -101,107 +112,124 @@ onMounted(async () => {
 </script>
 
 <template>
-  <main>
-    <RouterLink to="/">← {{ t('common.back') }}</RouterLink>
-    <Message v-if="error" severity="error">{{ error }}</Message>
+  <main class="page">
+    <RouterLink
+      to="/"
+      class="inline-flex min-h-11 items-center gap-1 text-sm no-underline hover:underline"
+    >
+      <ArrowLeft class="size-4" aria-hidden="true" /> {{ t('common.back') }}
+    </RouterLink>
+    <AppNotice v-if="error" kind="error">{{ error }}</AppNotice>
     <template v-if="page">
-      <h1>{{ page.subjectName }}</h1>
-      <p class="muted">
-        {{
-          t('course.subtitle', {
-            specialization: page.specialization,
-            year: page.studyYear,
-            semester: page.semesterNo,
-          })
-        }}
-      </p>
+      <header class="mt-2">
+        <span class="eyebrow">
+          {{
+            t('course.subtitle', {
+              specialization: page.specialization,
+              year: page.studyYear,
+              semester: page.semesterNo,
+            })
+          }}
+        </span>
+        <h1 class="h1">{{ page.subjectName }}</h1>
+        <RouterLink v-if="rateOffering" :to="`/rate/${rateOffering}`" class="btn btn-primary mt-5">
+          {{ t('course.rateThis') }}
+        </RouterLink>
+      </header>
 
-      <Button
-        v-if="rateOffering"
-        as="router-link"
-        :to="`/rate/${rateOffering}`"
-        :label="t('course.rateThis')"
-        class="rate"
-      />
-
-      <section>
-        <h2>
+      <section class="mt-8">
+        <h2 class="h2">
           {{
             page.survival && page.survival.n >= page.threshold
               ? t('course.survivalCount', { n: page.survival.n })
               : t('course.survival')
           }}
         </h2>
-        <div v-if="!page.signedIn" class="card">
-          <p>{{ t('course.signInPrompt') }}</p>
-          <RouterLink :to="{ name: 'signin', query: { next: `/courses/${itemId}` } }">{{
-            t('auth.signIn')
-          }}</RouterLink>
+        <div
+          v-if="!page.signedIn"
+          class="card mt-3 flex flex-wrap items-center justify-between gap-3"
+        >
+          <p class="text-sm text-muted">{{ t('course.signInPrompt') }}</p>
+          <RouterLink
+            :to="{ name: 'signin', query: { next: `/courses/${itemId}` } }"
+            class="btn btn-outline"
+          >
+            {{ t('auth.signInAction') }}
+          </RouterLink>
         </div>
-        <p v-else-if="!page.survival || page.survival.n < page.threshold" class="locked">
+        <p
+          v-else-if="!page.survival || page.survival.n < page.threshold"
+          class="mt-3 text-sm text-muted italic"
+        >
           {{ missing(page.survival?.n ?? 0) }}
         </p>
-        <dl v-else class="survival">
-          <dt>{{ t('rateForm.examDifficulty') }}</dt>
-          <dd>{{ score(page.survival.examDifficulty) }}</dd>
-          <dt>{{ t('rateForm.labsHelp') }}</dt>
-          <dd>{{ score(page.survival.labsHelp) }}</dd>
-          <dt>{{ t('rateForm.attendanceUseful') }}</dt>
-          <dd>{{ page.survival.attendanceUseful ?? '—' }}</dd>
-          <dt>{{ t('rateForm.weeklyHours') }}</dt>
-          <dd>{{ page.survival.weeklyHours?.toFixed(1) ?? '—' }}</dd>
-          <dt>{{ t('rateForm.examFormat') }}</dt>
-          <dd>{{ page.survival.examFormat ?? '—' }}</dd>
-          <dt>{{ t('rateForm.attendanceStrictness') }}</dt>
-          <dd>{{ score(page.survival.attendanceStrictness) }}</dd>
+        <dl
+          v-else
+          class="mt-3 grid grid-cols-2 gap-px overflow-hidden rounded-lg border border-line bg-line md:grid-cols-3"
+        >
+          <div v-for="[label, value] in stats" :key="label" class="bg-panel p-3">
+            <dt class="text-xs text-muted">{{ label }}</dt>
+            <dd class="mono mt-1 text-base font-medium md:text-lg">{{ value }}</dd>
+          </div>
         </dl>
       </section>
 
-      <section>
-        <h2>{{ t('course.teachers') }}</h2>
-        <label v-if="page.years.length > 1" class="year">
-          {{ t('course.academicYear') }}
-          <Select
-            :model-value="page.academicYearId"
-            :options="page.years"
-            option-label="label"
-            option-value="id"
-            @update:model-value="load"
-          />
-        </label>
-        <p v-if="!page.teachers.length" class="muted">{{ t('course.noTeachers') }}</p>
+      <section class="mt-8">
+        <div class="flex flex-wrap items-end justify-between gap-3">
+          <h2 class="h2">{{ t('course.teachers') }}</h2>
+          <label v-if="page.years.length > 1" class="field text-xs">
+            {{ t('course.academicYear') }}
+            <select
+              :value="page.academicYearId"
+              class="input min-h-9 text-sm"
+              @change="load(Number(($event.target as HTMLSelectElement).value))"
+            >
+              <option v-for="y in page.years" :key="y.id" :value="y.id">{{ y.label }}</option>
+            </select>
+          </label>
+        </div>
+        <p v-if="!page.teachers.length" class="mt-3 text-sm text-muted">
+          {{ t('course.noTeachers') }}
+        </p>
         <article
           v-for="teacher in page.teachers"
           :key="`${teacher.professorId}-${teacher.componentLabel}`"
-          class="card"
+          class="card mt-3"
         >
-          <strong>
-            {{ teacher.componentLabel }}:
+          <div class="flex flex-wrap items-center gap-2">
+            <span class="tag bg-board text-muted">{{ teacher.componentLabel }}</span>
+            <span v-if="teacher.subgroups" class="text-xs text-muted">{{
+              t('course.subgroups', { list: teacher.subgroups })
+            }}</span>
+          </div>
+          <strong class="mt-2 block text-base">
             <RouterLink v-if="page.signedIn" :to="`/professors/${teacher.slug}`"
               >{{ teacher.title }} {{ teacher.fullName }}</RouterLink
             >
             <template v-else>{{ teacher.title }} {{ teacher.fullName }}</template>
           </strong>
-          <span v-if="teacher.subgroups" class="muted">
-            · {{ t('course.subgroups', { list: teacher.subgroups }) }}</span
-          >
           <template v-if="page.signedIn">
-            <p v-if="!teacher.radar || teacher.radar.n < page.threshold" class="locked">
+            <p
+              v-if="!teacher.radar || teacher.radar.n < page.threshold"
+              class="mt-2 text-sm text-muted italic"
+            >
               {{ missing(teacher.radar?.n ?? 0) }}
             </p>
             <template v-else-if="labels">
-              <p class="muted">n = {{ teacher.radar.n }}</p>
+              <p class="mono mt-1 text-xs text-muted">n = {{ teacher.radar.n }}</p>
               <RadarChart
                 :scores="teacher.radar.scores"
                 :axes="labels.axes"
                 :pillars="labels.pillars"
               />
             </template>
-            <details v-if="teacher.comments?.length">
-              <summary>{{ t('course.comments', { n: teacher.comments.length }) }}</summary>
-              <blockquote v-for="c in teacher.comments" :key="c.id">
+            <details v-if="teacher.comments?.length" class="mt-3">
+              <summary class="cursor-pointer text-sm font-medium text-mask">
+                {{ t('course.comments', { n: teacher.comments.length }) }}
+              </summary>
+              <blockquote v-for="c in teacher.comments" :key="c.id" class="quote mt-3 text-sm">
                 {{ c.body }}
-                <footer class="muted">
+                <footer class="mt-1 flex flex-wrap items-center gap-2 text-xs text-muted">
                   {{ t('course.week', { date: d(c.week, 'short') }) }}
                   <ReportButton :post-id="c.id" />
                 </footer>
@@ -211,52 +239,18 @@ onMounted(async () => {
         </article>
       </section>
 
-      <section v-if="page.signedIn">
-        <h2>{{ t('course.tips', { n: page.tips.length }) }}</h2>
-        <p v-if="!page.tips.length" class="muted">{{ t('course.noTips') }}</p>
-        <blockquote v-for="tip in page.tips" :key="tip.id" class="card">
+      <section v-if="page.signedIn" class="mt-8">
+        <h2 class="h2">{{ t('course.tips', { n: page.tips.length }) }}</h2>
+        <p v-if="!page.tips.length" class="mt-3 text-sm text-muted">{{ t('course.noTips') }}</p>
+        <blockquote v-for="tip in page.tips" :key="tip.id" class="card quote mt-3 text-sm">
           {{ tip.body }}
-          <footer class="muted">
+          <footer class="mt-2 flex flex-wrap items-center gap-2 text-xs text-muted">
             {{ t('course.week', { date: d(tip.week, 'short') }) }}
             <ReportButton :post-id="tip.id" />
           </footer>
         </blockquote>
       </section>
-      <p class="muted">{{ t('course.updated') }}</p>
+      <p class="mt-8 text-xs text-muted">{{ t('course.updated') }}</p>
     </template>
   </main>
 </template>
-
-<style scoped>
-h2 {
-  font-size: 1.05rem;
-  margin: 1.5rem 0 0.5rem;
-}
-
-.survival {
-  display: grid;
-  grid-template-columns: 1fr auto;
-  gap: 0.35rem 1rem;
-}
-
-.survival dd {
-  margin: 0;
-  font-weight: 600;
-}
-
-.year {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  margin-bottom: 0.75rem;
-}
-
-blockquote {
-  margin: 0.5rem 0;
-  white-space: pre-wrap;
-}
-
-.rate {
-  margin: 0.5rem 0;
-}
-</style>

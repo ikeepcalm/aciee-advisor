@@ -2,13 +2,9 @@
 import { computed, onMounted, reactive, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
-import Button from 'primevue/button'
-import InputNumber from 'primevue/inputnumber'
-import Message from 'primevue/message'
-import RadioButton from 'primevue/radiobutton'
-import Select from 'primevue/select'
-import SelectButton from 'primevue/selectbutton'
-import Textarea from 'primevue/textarea'
+import { ArrowLeft, Loader2 } from 'lucide-vue-next'
+import AppNotice from '@/components/AppNotice.vue'
+import SegmentedChips from '@/components/SegmentedChips.vue'
 import { anonApi, ApiError, describeError, lookups, type Lookups } from '@/api'
 import { useAuthStore } from '@/stores/auth'
 import { markSubmitted, tokenFor } from '@/crypto/tokens'
@@ -62,7 +58,7 @@ const survival = reactive({
 const scores = reactive<Record<number, (number | null)[]>>({})
 const comments = reactive<Record<number, string>>({})
 const tip = ref('')
-const scale = Array.from({ length: 11 }, (_, i) => i)
+const scale = Array.from({ length: 11 }, (_, i) => ({ value: i, label: String(i) }))
 
 const pillars = computed(() =>
   (labels.value?.pillars ?? []).map((pillar) => ({
@@ -172,167 +168,160 @@ async function submit() {
 </script>
 
 <template>
-  <main>
-    <RouterLink to="/rate">← {{ t('rate.title') }}</RouterLink>
-    <Message v-if="error" severity="error">
+  <main class="page">
+    <RouterLink
+      to="/rate"
+      class="inline-flex min-h-11 items-center gap-1 text-sm no-underline hover:underline"
+    >
+      <ArrowLeft class="size-4" aria-hidden="true" /> {{ t('rate.title') }}
+    </RouterLink>
+    <AppNotice v-if="error" kind="error">
       {{ error }}
-      <RouterLink v-if="duplicate" to="/me/submissions">{{ t('rateForm.edit') }}</RouterLink>
-    </Message>
-    <p v-if="state === 'noToken'">
+      <RouterLink v-if="duplicate" to="/me/submissions" class="ml-1">{{
+        t('rateForm.edit')
+      }}</RouterLink>
+    </AppNotice>
+    <p v-if="state === 'noToken'" class="lede">
       {{ t('rateForm.noToken') }} <RouterLink to="/rate">{{ t('rate.title') }}</RouterLink>
     </p>
     <template v-if="state === 'saved'">
-      <Message severity="success">{{ t('rateForm.saved') }}</Message>
-      <RouterLink to="/me/submissions">{{ t('nav.submissions') }}</RouterLink>
+      <AppNotice kind="success">{{ t('rateForm.saved') }}</AppNotice>
+      <RouterLink to="/me/submissions" class="btn btn-outline">{{
+        t('nav.submissions')
+      }}</RouterLink>
     </template>
-    <form v-if="state === 'ready' && form && labels" @submit.prevent="submit">
-      <h1>{{ form.title }}</h1>
-      <p class="muted">
+    <form v-if="state === 'ready' && form && labels" class="mt-2" @submit.prevent="submit">
+      <span class="eyebrow">
         {{ form.academicYear }} · {{ t('rate.semester', { n: form.semesterNo }) }} ·
         {{ t('rateForm.anonymous') }}
-      </p>
+      </span>
+      <h1 class="h1">{{ form.title }}</h1>
 
-      <h2>1. {{ t('rateForm.howToPass') }}</h2>
-      <fieldset>
-        <legend>{{ t('rateForm.examDifficulty') }}</legend>
-        <SelectButton
-          v-model="survival.examDifficulty"
-          :options="scale"
-          size="small"
-          class="scale"
-        />
-      </fieldset>
-      <fieldset>
-        <legend>{{ t('rateForm.labsHelp') }}</legend>
-        <SelectButton v-model="survival.labsHelp" :options="scale" size="small" class="scale" />
-      </fieldset>
-      <fieldset>
-        <legend>{{ t('rateForm.attendanceUseful') }}</legend>
-        <span v-for="o in labels.attendance" :key="o.code" class="radio">
-          <RadioButton
-            v-model="survival.attendanceUseful"
-            :input-id="`att-${o.code}`"
-            :value="o.code"
-          />
-          <label :for="`att-${o.code}`">{{ o.label }}</label>
-        </span>
-      </fieldset>
-      <label class="field">
-        {{ t('rateForm.weeklyHours') }}
-        <InputNumber v-model="survival.weeklyHours" :min="0" :max="80" show-buttons />
-      </label>
-      <label class="field">
-        {{ t('rateForm.examFormat') }}
-        <Select
-          v-model="survival.examFormat"
-          :options="labels.examFormats"
-          option-label="label"
-          option-value="code"
-          show-clear
-        />
-      </label>
-      <fieldset>
-        <legend>{{ t('rateForm.attendanceStrictness') }}</legend>
-        <SelectButton
-          v-model="survival.attendanceStrictness"
-          :options="scale"
-          size="small"
-          class="scale"
-        />
-      </fieldset>
-
-      <h2>2. {{ t('rateForm.teachers') }}</h2>
-      <p class="muted">{{ t('rateForm.teachersHint') }}</p>
-      <p v-if="!form.assignments.length" class="muted">{{ t('rateForm.noTeachers') }}</p>
-      <details
-        v-for="a in form.assignments"
-        :key="a.id"
-        class="card"
-        :open="scores[a.id]?.some((s) => s !== null) || !!comments[a.id]"
-      >
-        <summary>
-          <strong>{{ a.componentLabel }}: {{ a.title }} {{ a.professor }}</strong>
-          <span v-if="a.subgroup" class="muted">
-            ({{ t('rateForm.subgroup', { label: a.subgroup }) }})</span
-          >
-        </summary>
-        <div v-for="pillar in pillars" :key="pillar.code">
-          <h3>{{ pillar.label }}</h3>
-          <fieldset v-for="axis in pillar.axes" :key="axis.code">
-            <legend>{{ axis.index + 1 }}. {{ axis.label }}</legend>
-            <SelectButton
-              v-model="scores[a.id]![axis.index]"
-              :options="scale"
-              size="small"
-              class="scale"
+      <section class="card mt-8 grid gap-5">
+        <h2 class="h2"><span class="mono text-copper">1</span> {{ t('rateForm.howToPass') }}</h2>
+        <fieldset class="m-0 min-w-0 border-0 p-0">
+          <legend class="mb-1.5 text-sm font-medium">{{ t('rateForm.examDifficulty') }}</legend>
+          <SegmentedChips v-model="survival.examDifficulty" :options="scale" clearable size="sm" />
+        </fieldset>
+        <fieldset class="m-0 min-w-0 border-0 p-0">
+          <legend class="mb-1.5 text-sm font-medium">{{ t('rateForm.labsHelp') }}</legend>
+          <SegmentedChips v-model="survival.labsHelp" :options="scale" clearable size="sm" />
+        </fieldset>
+        <fieldset class="m-0 min-w-0 border-0 p-0">
+          <legend class="mb-1.5 text-sm font-medium">{{ t('rateForm.attendanceUseful') }}</legend>
+          <div class="flex flex-wrap gap-x-5 gap-y-2">
+            <label
+              v-for="o in labels.attendance"
+              :key="o.code"
+              class="inline-flex min-h-11 items-center gap-2 text-sm"
+            >
+              <input
+                v-model="survival.attendanceUseful"
+                type="radio"
+                :value="o.code"
+                class="check"
+              />
+              {{ o.label }}
+            </label>
+          </div>
+        </fieldset>
+        <div class="grid gap-5 sm:grid-cols-2">
+          <label class="field">
+            {{ t('rateForm.weeklyHours') }}
+            <input
+              v-model.number="survival.weeklyHours"
+              type="number"
+              min="0"
+              max="80"
+              inputmode="numeric"
+              class="input"
             />
-          </fieldset>
+          </label>
+          <label class="field">
+            {{ t('rateForm.examFormat') }}
+            <select v-model="survival.examFormat" class="input">
+              <option :value="null">—</option>
+              <option v-for="o in labels.examFormats" :key="o.code" :value="o.code">
+                {{ o.label }}
+              </option>
+            </select>
+          </label>
         </div>
+        <fieldset class="m-0 min-w-0 border-0 p-0">
+          <legend class="mb-1.5 text-sm font-medium">
+            {{ t('rateForm.attendanceStrictness') }}
+          </legend>
+          <SegmentedChips
+            v-model="survival.attendanceStrictness"
+            :options="scale"
+            clearable
+            size="sm"
+          />
+        </fieldset>
+      </section>
+
+      <section class="mt-8">
+        <h2 class="h2"><span class="mono text-copper">2</span> {{ t('rateForm.teachers') }}</h2>
+        <p class="mt-1 text-sm text-muted">{{ t('rateForm.teachersHint') }}</p>
+        <p v-if="!form.assignments.length" class="mt-3 text-sm text-muted">
+          {{ t('rateForm.noTeachers') }}
+        </p>
+        <details
+          v-for="a in form.assignments"
+          :key="a.id"
+          class="card mt-3"
+          :open="scores[a.id]?.some((s) => s !== null) || !!comments[a.id]"
+        >
+          <summary class="-m-4 cursor-pointer p-4 font-semibold">
+            <span class="tag mr-2 bg-board text-muted">{{ a.componentLabel }}</span>
+            {{ a.title }} {{ a.professor }}
+            <span v-if="a.subgroup" class="text-sm font-normal text-muted">
+              · {{ t('rateForm.subgroup', { label: a.subgroup }) }}</span
+            >
+          </summary>
+          <div v-for="pillar in pillars" :key="pillar.code" class="mt-5">
+            <h3 class="eyebrow">{{ pillar.label }}</h3>
+            <fieldset
+              v-for="axis in pillar.axes"
+              :key="axis.code"
+              class="m-0 mt-3 min-w-0 border-0 p-0"
+            >
+              <legend class="mb-1.5 text-sm font-medium">
+                <span class="mono text-xs text-muted">{{ axis.index + 1 }}.</span> {{ axis.label }}
+              </legend>
+              <SegmentedChips
+                v-model="scores[a.id]![axis.index]"
+                :options="scale"
+                clearable
+                size="sm"
+              />
+            </fieldset>
+          </div>
+          <label class="field mt-5">
+            {{ t('rateForm.comment') }}
+            <textarea v-model="comments[a.id]" maxlength="280" rows="3" class="input"></textarea>
+            <span class="text-xs font-normal text-muted">
+              <span class="mono">{{ (comments[a.id] ?? '').length }} / 280</span> ·
+              {{ t('rateForm.commentHint') }}
+            </span>
+          </label>
+        </details>
+      </section>
+
+      <section class="card mt-8">
         <label class="field">
-          {{ t('rateForm.comment') }}
-          <Textarea v-model="comments[a.id]" :maxlength="280" rows="3" auto-resize />
-          <span class="muted"
-            >{{ (comments[a.id] ?? '').length }} / 280 · {{ t('rateForm.commentHint') }}</span
-          >
+          <h2 class="h2 font-display">
+            <span class="mono text-copper">3</span> {{ t('rateForm.tip') }}
+          </h2>
+          <textarea v-model="tip" maxlength="1000" rows="4" class="input mt-2"></textarea>
+          <span class="mono text-xs font-normal text-muted">{{ tip.length }} / 1000</span>
         </label>
-      </details>
+      </section>
 
-      <h2>3. {{ t('rateForm.tip') }}</h2>
-      <Textarea v-model="tip" :maxlength="1000" rows="4" auto-resize fluid />
-      <p class="muted">{{ tip.length }} / 1000</p>
-
-      <Button
-        type="submit"
-        :label="editing ? t('rateForm.save') : t('rateForm.submit')"
-        :loading="busy"
-        fluid
-      />
+      <button type="submit" class="btn btn-primary mt-8 w-full" :disabled="busy">
+        <Loader2 v-if="busy" class="size-4 animate-spin" aria-hidden="true" />
+        {{ editing ? t('rateForm.save') : t('rateForm.submit') }}
+      </button>
     </form>
   </main>
 </template>
-
-<style scoped>
-h2 {
-  font-size: 1.05rem;
-  margin: 1.5rem 0 0.5rem;
-}
-
-h3 {
-  font-size: 0.95rem;
-  margin: 1rem 0 0.25rem;
-}
-
-fieldset {
-  border: none;
-  padding: 0;
-  margin: 0 0 0.75rem;
-}
-
-legend {
-  font-size: 0.9rem;
-  margin-bottom: 0.25rem;
-}
-
-.scale {
-  display: flex;
-  flex-wrap: wrap;
-}
-
-.radio {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-  margin-right: 1rem;
-}
-
-.field {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-  margin-bottom: 0.75rem;
-}
-
-summary {
-  cursor: pointer;
-}
-</style>

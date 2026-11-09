@@ -1,8 +1,7 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
-import Button from 'primevue/button'
-import Message from 'primevue/message'
+import AppNotice from '@/components/AppNotice.vue'
 import { anonApi, api, ApiError, describeError, lookups } from '@/api'
 import { useAuthStore } from '@/stores/auth'
 import {
@@ -104,72 +103,62 @@ onMounted(() => load().catch((e) => (error.value = describeError(t, e))))
 </script>
 
 <template>
-  <main>
-    <h1>{{ t('nav.submissions') }}</h1>
-    <p class="muted">{{ t('submissions.deviceOnly') }}</p>
-    <Message v-if="error" severity="error">{{ error }}</Message>
-    <p v-if="needsRestore">
+  <main class="page">
+    <span class="eyebrow">{{ t('rate.title') }}</span>
+    <h1 class="h1">{{ t('nav.submissions') }}</h1>
+    <p class="lede text-sm">{{ t('submissions.deviceOnly') }}</p>
+    <AppNotice v-if="error" kind="error">{{ error }}</AppNotice>
+    <p v-if="needsRestore" class="mt-6 text-sm">
       {{ t('submissions.restore') }}
       <RouterLink to="/me/recovery">{{ t('recovery.title') }}</RouterLink>
     </p>
-    <p v-else-if="entries && !entries.length">
+    <p v-else-if="entries && !entries.length" class="mt-6 text-sm">
       {{ t('submissions.none') }} <RouterLink to="/rate">{{ t('nav.rate') }}</RouterLink>
     </p>
-    <article v-for="entry in entries" :key="entry.offeringId" class="card">
-      <strong>{{ entry.title }}</strong> <span class="muted">{{ entry.academicYear }}</span>
-      <p v-if="entry.posts === null" class="muted">{{ t('submissions.notFound') }}</p>
+    <article v-for="entry in entries" :key="entry.offeringId" class="card mt-4">
+      <strong class="block font-semibold">{{ entry.title }}</strong>
+      <span class="mono text-xs text-muted">{{ entry.academicYear }}</span>
+      <p v-if="entry.posts === null" class="mt-2 text-sm text-muted">
+        {{ t('submissions.notFound') }}
+      </p>
       <template v-else>
-        <p>{{ t('submissions.ratingSent') }}</p>
-        <p v-for="post in entry.posts" :key="post.id">
-          {{ post.kind === 'tip' ? t('submissions.tip') : t('submissions.comment') }}:
-          {{ postStatus(post) }}
-        </p>
-        <div class="actions">
-          <Button
-            as="router-link"
-            :to="`/rate/${entry.offeringId}`"
-            :label="t('rateForm.edit')"
-            size="small"
-          />
-          <Button
+        <ul class="m-0 mt-3 list-none p-0 text-sm">
+          <li class="border-t border-line py-1.5 text-mask">{{ t('submissions.ratingSent') }}</li>
+          <li
+            v-for="post in entry.posts"
+            :key="post.id"
+            class="flex gap-2 border-t border-line py-1.5"
+          >
+            <span class="text-muted">{{
+              post.kind === 'tip' ? t('submissions.tip') : t('submissions.comment')
+            }}</span>
+            <span class="ml-auto text-right">{{ postStatus(post) }}</span>
+          </li>
+        </ul>
+        <div class="mt-3 flex flex-wrap gap-2">
+          <RouterLink :to="`/rate/${entry.offeringId}`" class="btn btn-outline btn-sm">{{
+            t('rateForm.edit')
+          }}</RouterLink>
+          <button
             v-if="!entry.confirming"
-            :label="t('submissions.delete')"
-            severity="danger"
-            text
-            size="small"
+            class="btn btn-danger btn-sm border-transparent"
             @click="entry.confirming = true"
-          />
+          >
+            {{ t('submissions.delete') }}
+          </button>
         </div>
-        <Message v-if="entry.confirming" severity="warn">
+        <AppNotice v-if="entry.confirming" kind="warn" class="mb-0">
           {{ t('submissions.deleteWarning') }}
-          <div class="actions">
-            <Button
-              :label="t('submissions.delete')"
-              severity="danger"
-              size="small"
-              @click="remove(entry)"
-            />
-            <Button
-              :label="t('common.cancel')"
-              text
-              size="small"
-              @click="entry.confirming = false"
-            />
+          <div class="mt-2 flex gap-2">
+            <button class="btn btn-danger btn-sm" @click="remove(entry)">
+              {{ t('submissions.delete') }}
+            </button>
+            <button class="btn btn-ghost btn-sm" @click="entry.confirming = false">
+              {{ t('common.cancel') }}
+            </button>
           </div>
-        </Message>
+        </AppNotice>
       </template>
     </article>
   </main>
 </template>
-
-<style scoped>
-.actions {
-  display: flex;
-  gap: 0.5rem;
-  margin-top: 0.5rem;
-}
-
-article p {
-  margin: 0.35rem 0;
-}
-</style>

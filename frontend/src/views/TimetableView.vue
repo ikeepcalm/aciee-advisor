@@ -2,13 +2,10 @@
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
-import Drawer from 'primevue/drawer'
-import Message from 'primevue/message'
-import '@fontsource/chakra-petch/600.css'
-import '@fontsource/martian-mono/400.css'
-import '@fontsource/martian-mono/500.css'
 import { api, describeError, type Lesson, type Timetable } from '@/api'
 import LessonCard from '@/components/LessonCard.vue'
+import AppNotice from '@/components/AppNotice.vue'
+import AppSheet from '@/components/AppSheet.vue'
 import TimetablePicker from '@/components/TimetablePicker.vue'
 
 type Parity = 'ODD' | 'EVEN'
@@ -23,10 +20,11 @@ const DAYS = [1, 2, 3, 4, 5]
 const WINDOW = 3
 const ORDER = { ALL: 0, ODD: 1, EVEN: 2 }
 const LEVEL = { ODD: 8, EVEN: 36 }
-const dayMonth = new Intl.DateTimeFormat('ro-RO', { day: 'numeric', month: 'short' })
-const monthShort = new Intl.DateTimeFormat('ro-RO', { month: 'short' })
-
-const { t } = useI18n()
+const { t, locale } = useI18n()
+const dayMonth = computed(
+  () => new Intl.DateTimeFormat(locale.value, { day: 'numeric', month: 'short' }),
+)
+const monthShort = computed(() => new Intl.DateTimeFormat(locale.value, { month: 'short' }))
 const route = useRoute()
 const router = useRouter()
 const timetable = ref<Timetable | null>(null)
@@ -103,8 +101,8 @@ function flipParity() {
 function range(monday: Date) {
   const friday = addDays(monday, 4)
   return monday.getMonth() === friday.getMonth()
-    ? `${monday.getDate()}–${dayMonth.format(friday)}`
-    : `${dayMonth.format(monday)} – ${dayMonth.format(friday)}`
+    ? `${monday.getDate()}–${dayMonth.value.format(friday)}`
+    : `${dayMonth.value.format(monday)} – ${dayMonth.value.format(friday)}`
 }
 
 const weeks = computed(() =>
@@ -204,7 +202,7 @@ const agenda = computed(() => {
 
 function formatted(iso: string | null) {
   return iso
-    ? new Date(iso).toLocaleString('ro-RO', { dateStyle: 'medium', timeStyle: 'short' })
+    ? new Date(iso).toLocaleString(locale.value, { dateStyle: 'medium', timeStyle: 'short' })
     : '—'
 }
 
@@ -242,11 +240,9 @@ watch(group, (g) => {
 </script>
 
 <template>
-  <main class="board tt-theme">
-    <Message v-if="error" severity="error">{{ error }}</Message>
-    <Message v-else-if="timetable && !programs.length" severity="info">
-      {{ t('timetable.loading') }}
-    </Message>
+  <main class="page-wide">
+    <AppNotice v-if="error" kind="error">{{ error }}</AppNotice>
+    <AppNotice v-else-if="timetable && !programs.length">{{ t('timetable.loading') }}</AppNotice>
 
     <template v-if="programs.length">
       <section v-if="!program" class="welcome">
@@ -411,89 +407,18 @@ watch(group, (g) => {
           </button>
         </footer>
 
-        <Drawer
-          v-model:visible="pickerOpen"
-          position="bottom"
-          :header="t('timetable.pickTitle')"
-          class="tt-theme"
-          style="height: auto; max-height: 85vh"
-        >
+        <AppSheet v-model="pickerOpen" :title="t('timetable.pickTitle')">
           <TimetablePicker :programs="programs" :group="group" @choose="chooseGroup" />
-        </Drawer>
+        </AppSheet>
       </template>
     </template>
   </main>
 </template>
 
-<style>
-.tt-theme {
-  --tt-board: #e9f0ec;
-  --tt-panel: #ffffff;
-  --tt-ink: #10241d;
-  --tt-muted: #5b6e66;
-  --tt-line: #c9d8d0;
-  --tt-mask: #1d5b45;
-  --tt-copper: #b5652a;
-  --tt-on-mask: #f2f7f4;
-}
-
-@media (prefers-color-scheme: dark) {
-  .tt-theme {
-    --tt-board: #0d211b;
-    --tt-panel: #142d25;
-    --tt-ink: #e4eee8;
-    --tt-muted: #8fa79c;
-    --tt-line: #24443a;
-    --tt-mask: #2f8a68;
-    --tt-copper: #e0904f;
-    --tt-on-mask: #0d211b;
-  }
-}
-
-.tt-theme .k-C {
-  --kind: var(--tt-copper);
-}
-
-.tt-theme .k-S {
-  --kind: #3d86b8;
-}
-
-.tt-theme .k-L {
-  --kind: #8a6bd1;
-}
-
-.tt-theme .k-P {
-  --kind: #c9a227;
-}
-
-.tt-theme .k-X {
-  --kind: #7c8a84;
-}
-</style>
-
 <style scoped>
-main.board {
-  max-width: none;
-  margin: 0;
-  padding: 1rem 1rem 2.5rem;
-  color: var(--tt-ink);
-  background-color: var(--tt-board);
-  background-image: radial-gradient(var(--tt-line) 1px, transparent 1px);
-  background-size: 18px 18px;
-  min-height: calc(100vh - 3.5rem);
-  box-sizing: border-box;
-}
-
-.board > * {
-  max-width: 72rem;
-  margin-left: auto;
-  margin-right: auto;
-}
-
-.display,
 .dname,
 .ticket .code {
-  font-family: 'Chakra Petch', system-ui, sans-serif;
+  font-family: var(--font-display);
   font-weight: 600;
 }
 
@@ -505,23 +430,12 @@ main.board {
 .eyebrow,
 .probe,
 .swap {
-  font-family: 'Martian Mono', ui-monospace, monospace;
+  font-family: var(--font-mono);
   font-variant-numeric: tabular-nums;
 }
 
 .dim {
-  color: var(--tt-muted);
-}
-
-button {
-  font: inherit;
-  color: inherit;
-  cursor: pointer;
-}
-
-button:focus-visible {
-  outline: 2px solid var(--tt-copper);
-  outline-offset: 2px;
+  color: var(--muted);
 }
 
 .eyebrow {
@@ -529,7 +443,7 @@ button:focus-visible {
   font-size: 0.6875rem;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: var(--tt-copper);
+  color: var(--copper);
 }
 
 .welcome {
@@ -546,7 +460,7 @@ button:focus-visible {
 
 .lede {
   margin: 0 0 1.75rem;
-  color: var(--tt-muted);
+  color: var(--muted);
 }
 
 .top {
@@ -564,8 +478,8 @@ button:focus-visible {
   text-align: left;
   border: 0;
   border-radius: 0.8rem;
-  background: var(--tt-mask);
-  color: var(--tt-on-mask);
+  background: var(--mask);
+  color: var(--on-mask);
 }
 
 .ticket .code {
@@ -597,9 +511,9 @@ button:focus-visible {
 
 .clock {
   padding: 1.6rem 0.75rem 0.9rem;
-  border: 1px solid var(--tt-line);
+  border: 1px solid var(--line);
   border-radius: 0.9rem;
-  background: var(--tt-panel);
+  background: var(--panel);
 }
 
 .wave {
@@ -614,18 +528,18 @@ button:focus-visible {
 
 .trace {
   fill: none;
-  stroke: var(--tt-copper);
+  stroke: var(--copper);
   stroke-width: 2.5;
   vector-effect: non-scaling-stroke;
 }
 
 .trace.unknown {
-  stroke: var(--tt-muted);
+  stroke: var(--muted);
   stroke-dasharray: 6 5;
 }
 
 .sel {
-  fill: color-mix(in srgb, var(--tt-mask) 18%, transparent);
+  fill: color-mix(in srgb, var(--mask) 18%, transparent);
 }
 
 .weeks {
@@ -652,23 +566,23 @@ button:focus-visible {
 
 .week .month {
   margin-top: -0.2rem;
-  color: var(--tt-muted);
+  color: var(--muted);
   font-size: 0.5625rem;
 }
 
 .week .bit {
-  color: var(--tt-muted);
+  color: var(--muted);
   font-size: 0.5625rem;
   letter-spacing: 0.06em;
 }
 
 .week.selected {
-  border-top-color: var(--tt-mask);
+  border-top-color: var(--mask);
   font-weight: 600;
 }
 
 .week.selected .bit {
-  color: var(--tt-ink);
+  color: var(--ink);
 }
 
 .probe {
@@ -678,8 +592,8 @@ button:focus-visible {
   transform: translateX(-50%);
   padding: 0.05rem 0.35rem;
   border-radius: 0.25rem;
-  background: var(--tt-copper);
-  color: var(--tt-panel);
+  background: var(--copper);
+  color: var(--panel);
   font-size: 0.5625rem;
   font-weight: 500;
   text-transform: uppercase;
@@ -705,19 +619,19 @@ button:focus-visible {
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  background: var(--tt-copper);
-  color: var(--tt-panel);
+  background: var(--copper);
+  color: var(--panel);
 }
 
 .tag.EVEN {
-  background: var(--tt-mask);
-  color: var(--tt-on-mask);
+  background: var(--mask);
+  color: var(--on-mask);
 }
 
 .ask {
   margin-top: 0.8rem;
   padding-top: 0.8rem;
-  border-top: 1px dashed var(--tt-line);
+  border-top: 1px dashed var(--line);
 }
 
 .ask > p:first-child {
@@ -732,22 +646,22 @@ button:focus-visible {
 
 .answers button {
   padding: 0.6rem 1.1rem;
-  border: 1px solid var(--tt-line);
+  border: 1px solid var(--line);
   border-radius: 999px;
-  background: var(--tt-panel);
+  background: var(--panel);
   font-weight: 600;
 }
 
 .answers button:hover {
-  border-color: var(--tt-mask);
-  background: var(--tt-mask);
-  color: var(--tt-on-mask);
+  border-color: var(--mask);
+  background: var(--mask);
+  color: var(--on-mask);
 }
 
 .hint {
   margin: 0.6rem 0 0;
   font-size: 0.8125rem;
-  color: var(--tt-muted);
+  color: var(--muted);
 }
 
 .days {
@@ -763,9 +677,9 @@ button:focus-visible {
   align-items: center;
   gap: 0.2rem;
   padding: 0.5rem 0;
-  border: 1px solid var(--tt-line);
+  border: 1px solid var(--line);
   border-radius: 0.7rem;
-  background: var(--tt-panel);
+  background: var(--panel);
 }
 
 .dname {
@@ -787,22 +701,22 @@ button:focus-visible {
   width: 5px;
   height: 5px;
   border-radius: 50%;
-  background: var(--tt-copper);
+  background: var(--copper);
 }
 
 .day.today {
-  border-color: var(--tt-copper);
-  box-shadow: inset 0 -3px 0 var(--tt-copper);
+  border-color: var(--copper);
+  box-shadow: inset 0 -3px 0 var(--copper);
 }
 
 .day.on {
-  border-color: var(--tt-mask);
-  background: var(--tt-mask);
-  color: var(--tt-on-mask);
+  border-color: var(--mask);
+  background: var(--mask);
+  color: var(--on-mask);
 }
 
 .day.on .pads i {
-  background: var(--tt-on-mask);
+  background: var(--on-mask);
 }
 
 .trace-list {
@@ -822,7 +736,7 @@ button:focus-visible {
   bottom: 0.9rem;
   left: 3.62rem;
   width: 2px;
-  background: var(--tt-copper);
+  background: var(--copper);
   opacity: 0.5;
 }
 
@@ -849,7 +763,7 @@ button:focus-visible {
   margin: 0.65rem 0 0 0.18rem;
   border: 3px solid var(--kind);
   border-radius: 50%;
-  background: var(--tt-board);
+  background: var(--board);
   box-sizing: border-box;
 }
 
@@ -878,16 +792,16 @@ button:focus-visible {
   font-size: 0.625rem;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: var(--tt-muted);
+  color: var(--muted);
 }
 
 .empty {
   padding: 2.5rem 1rem;
   text-align: center;
-  color: var(--tt-muted);
-  border: 1px dashed var(--tt-line);
+  color: var(--muted);
+  border: 1px dashed var(--line);
   border-radius: 0.9rem;
-  background: var(--tt-panel);
+  background: var(--panel);
 }
 
 .grid {
@@ -898,12 +812,12 @@ button:focus-visible {
   margin-top: 1.75rem;
   font-size: 0.8125rem;
   line-height: 1.6;
-  color: var(--tt-muted);
+  color: var(--muted);
 }
 
 .source a,
 .link {
-  color: var(--tt-mask);
+  color: var(--mask);
 }
 
 .link {
@@ -914,10 +828,6 @@ button:focus-visible {
 }
 
 @media (min-width: 52rem) {
-  main.board {
-    padding: 1.5rem 1.5rem 3rem;
-  }
-
   .top {
     grid-template-columns: minmax(16rem, 22rem) minmax(0, 1fr);
   }
@@ -962,11 +872,11 @@ button:focus-visible {
     justify-content: space-between;
     align-items: baseline;
     padding: 0.45rem 0.6rem;
-    border-bottom: 2px solid var(--tt-line);
+    border-bottom: 2px solid var(--line);
   }
 
   .colhead.today {
-    border-bottom-color: var(--tt-copper);
+    border-bottom-color: var(--copper);
   }
 
   .colhead .display {
@@ -975,7 +885,7 @@ button:focus-visible {
 
   .colhead .date {
     font-size: 0.6875rem;
-    color: var(--tt-muted);
+    color: var(--muted);
   }
 
   .cell {
@@ -988,7 +898,7 @@ button:focus-visible {
   }
 
   .cell.today {
-    background: color-mix(in srgb, var(--tt-copper) 8%, transparent);
+    background: color-mix(in srgb, var(--copper) 8%, transparent);
   }
 
   .cell :deep(.live) {

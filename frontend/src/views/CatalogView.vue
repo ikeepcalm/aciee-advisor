@@ -2,10 +2,10 @@
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
-import Select from 'primevue/select'
-import SelectButton from 'primevue/selectbutton'
-import Message from 'primevue/message'
+import { ChevronRight } from 'lucide-vue-next'
 import { api, describeError } from '@/api'
+import AppNotice from '@/components/AppNotice.vue'
+import SegmentedChips from '@/components/SegmentedChips.vue'
 
 interface Plan {
   id: number
@@ -56,7 +56,7 @@ const plans = computed(() =>
 const years = computed(() =>
   Array.from({ length: current.value?.durationYears ?? 4 }, (_, i) => ({
     value: i + 1,
-    label: t('catalog.year', { n: i + 1 }),
+    label: ['I', 'II', 'III', 'IV', 'V', 'VI'][i]!,
   })),
 )
 
@@ -73,14 +73,11 @@ const sections = computed(() => {
 
 function hours(item: Item) {
   return [
-    [item.lectureHours, t('catalog.lecture')],
-    [item.seminarHours, t('catalog.seminar')],
-    [item.labHours, t('catalog.lab')],
-    [item.projectHours, t('catalog.project')],
-  ]
-    .filter(([h]) => Number(h) > 0)
-    .map(([h, label]) => `${label} ${h}h`)
-    .join(' · ')
+    ['C', item.lectureHours, t('catalog.lecture')],
+    ['S', item.seminarHours, t('catalog.seminar')],
+    ['L', item.labHours, t('catalog.lab')],
+    ['P', item.projectHours, t('catalog.project')],
+  ].filter(([, h]) => Number(h) > 0)
 }
 
 function defaultPlan(s: Specialization) {
@@ -134,76 +131,61 @@ watch([spec, planId, year], async ([s, p, y]) => {
 </script>
 
 <template>
-  <main>
-    <h1>{{ t('catalog.title') }}</h1>
-    <p>{{ t('catalog.tagline') }}</p>
-    <Message v-if="error" severity="error">{{ error }}</Message>
-    <div class="filters">
-      <label>
+  <main class="page">
+    <header>
+      <span class="eyebrow">{{ t('nav.courses') }}</span>
+      <h1 class="h1">{{ t('catalog.title') }}</h1>
+      <p class="lede">{{ t('catalog.tagline') }}</p>
+    </header>
+
+    <AppNotice v-if="error" kind="error">{{ error }}</AppNotice>
+
+    <section class="card mt-6 grid gap-4 md:grid-cols-2">
+      <label class="field">
         {{ t('catalog.specialization') }}
-        <Select
-          v-model="spec"
-          :options="specializations"
-          option-label="name"
-          option-value="code"
-          fluid
-          @change="changeSpec"
-        />
+        <select v-model="spec" class="input" @change="changeSpec">
+          <option v-for="s in specializations" :key="s.code" :value="s.code">{{ s.name }}</option>
+        </select>
       </label>
-      <label v-if="plans.length">
+      <label v-if="plans.length" class="field">
         {{ t('catalog.plan') }}
-        <Select v-model="planId" :options="plans" option-label="label" option-value="id" fluid />
+        <select v-model="planId" class="input">
+          <option v-for="p in plans" :key="p.id" :value="p.id">{{ p.label }}</option>
+        </select>
       </label>
-      <SelectButton
-        v-model="year"
-        :options="years"
-        option-label="label"
-        option-value="value"
-        :allow-empty="false"
-      />
-    </div>
-    <Message v-if="current && !current.plans.length" severity="info">{{
-      t('catalog.noPlan')
-    }}</Message>
-    <p v-else-if="items && !items.length">{{ t('catalog.noItems') }}</p>
-    <section v-for="[title, group] in sections" :key="title">
-      <h2>{{ title }}</h2>
-      <RouterLink
-        v-for="item in group"
-        :key="item.id"
-        :to="`/courses/${item.id}`"
-        class="card course"
-      >
-        <strong>{{ item.subjectName }}</strong>
-        <span class="muted">{{ hours(item) }}</span>
-      </RouterLink>
+      <div class="field md:col-span-2">
+        {{ t('timetable.pickYear') }}
+        <SegmentedChips v-model="year" :options="years" class="display text-lg" />
+      </div>
+    </section>
+
+    <AppNotice v-if="current && !current.plans.length">{{ t('catalog.noPlan') }}</AppNotice>
+    <p v-else-if="items && !items.length" class="mt-8 text-center text-muted">
+      {{ t('catalog.noItems') }}
+    </p>
+
+    <section v-for="[title, group] in sections" :key="title" class="mt-8">
+      <h2 class="eyebrow mb-3">{{ title }}</h2>
+      <ul class="m-0 grid list-none gap-2 p-0">
+        <li v-for="item in group" :key="item.id">
+          <RouterLink :to="`/courses/${item.id}`" class="row-link">
+            <span class="min-w-0 flex-1">
+              <strong class="block font-semibold text-balance">{{ item.subjectName }}</strong>
+              <span class="mt-1.5 flex flex-wrap gap-x-3 gap-y-1">
+                <span
+                  v-for="[k, h, label] in hours(item)"
+                  :key="k"
+                  class="kind-tag"
+                  :class="`k-${k}`"
+                >
+                  {{ label }} {{ h }}h
+                </span>
+              </span>
+            </span>
+            <ChevronRight class="size-4 shrink-0 text-muted" aria-hidden="true" />
+          </RouterLink>
+        </li>
+      </ul>
     </section>
   </main>
 </template>
-
-<style scoped>
-.filters {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-  margin-bottom: 1rem;
-}
-
-.filters label {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-}
-
-h2 {
-  font-size: 1rem;
-  margin: 1.25rem 0 0.5rem;
-}
-
-.course {
-  display: flex;
-  flex-direction: column;
-  text-decoration: none;
-  color: inherit;
-}
-</style>

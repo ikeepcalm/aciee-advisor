@@ -2,7 +2,6 @@
 import { computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
-import Select from 'primevue/select'
 
 const sections = [
   'leaders',
@@ -26,10 +25,12 @@ const sections = [
 const { t } = useI18n()
 const route = useRoute()
 const router = useRouter()
-const current = computed(() => (route.name === 'admin-table' ? route.params.table : String(route.name).replace('admin-', '')))
-const options = computed(() => sections.map((value) => ({ value, label: t(`admin.sections.${value}`) })))
+const current = computed(() =>
+  route.name === 'admin-table' ? route.params.table : String(route.name).replace('admin-', ''),
+)
 
-function go(section: string) {
+function go(event: Event) {
+  const section = (event.target as HTMLSelectElement).value
   if (['leaders', 'history', 'reports'].includes(section)) {
     router.push({ name: `admin-${section}` })
   } else {
@@ -39,6 +40,10 @@ function go(section: string) {
 </script>
 
 <template>
-  <label for="admin-section">{{ t('admin.section') }}</label>
-  <Select input-id="admin-section" :model-value="current" :options="options" option-value="value" option-label="label" fluid @update:model-value="go" />
+  <label class="field mt-5">
+    {{ t('admin.section') }}
+    <select id="admin-section" :value="current" class="input" @change="go">
+      <option v-for="s in sections" :key="s" :value="s">{{ t(`admin.sections.${s}`) }}</option>
+    </select>
+  </label>
 </template>

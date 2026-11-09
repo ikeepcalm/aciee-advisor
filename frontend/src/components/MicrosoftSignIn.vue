@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
-import Button from 'primevue/button'
 import { api } from '@/api'
 
 const { t } = useI18n()
@@ -17,15 +16,19 @@ onMounted(async () => {
 
 <template>
   <template v-if="enabled">
-    <p class="or">{{ t('auth.or') }}</p>
-    <Button as="a" href="/api/auth/oauth2/microsoft" :label="t('auth.microsoft')" severity="secondary" outlined fluid />
+    <p
+      class="flex items-center gap-3 text-xs text-muted before:h-px before:flex-1 before:bg-line after:h-px after:flex-1 after:bg-line"
+    >
+      {{ t('auth.or') }}
+    </p>
+    <a href="/api/auth/oauth2/microsoft" class="btn btn-outline w-full">
+      <svg viewBox="0 0 16 16" class="size-4" aria-hidden="true">
+        <rect width="7" height="7" fill="#f25022" />
+        <rect x="9" width="7" height="7" fill="#7fba00" />
+        <rect y="9" width="7" height="7" fill="#00a4ef" />
+        <rect x="9" y="9" width="7" height="7" fill="#ffb900" />
+      </svg>
+      {{ t('auth.microsoft') }}
+    </a>
   </template>
 </template>
-
-<style scoped>
-.or {
-  text-align: center;
-  opacity: 0.7;
-  margin: 1rem 0 0.5rem;
-}
-</style>

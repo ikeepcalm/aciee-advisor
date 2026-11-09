@@ -104,26 +104,27 @@ svg {
 
 .grid {
   fill: none;
-  stroke: var(--p-content-border-color, #e5e7eb);
+  stroke: var(--line);
   stroke-width: 1;
 }
 
 .axis {
-  font-size: 11px;
-  fill: var(--p-text-muted-color, #6b7280);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  fill: var(--muted);
 }
 
 .area {
-  fill: var(--p-primary-color, #10b981);
+  fill: var(--mask);
   fill-opacity: 0.18;
-  stroke: var(--p-primary-color, #10b981);
+  stroke: var(--mask);
   stroke-width: 2;
   stroke-linejoin: round;
 }
 
 .mark {
-  fill: var(--p-primary-color, #10b981);
-  stroke: var(--p-content-background);
+  fill: var(--copper);
+  stroke: var(--panel);
   stroke-width: 2;
 }
 
@@ -131,6 +132,13 @@ svg {
   display: flex;
   justify-content: space-between;
   gap: 1rem;
+  padding: 0.35rem 0;
+  border-top: 1px solid var(--line);
   font-size: 0.875rem;
+}
+
+.pillar strong {
+  font-family: var(--font-mono);
+  font-weight: 500;
 }
 </style>

@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
-import Button from 'primevue/button'
-import Message from 'primevue/message'
-import SelectButton from 'primevue/selectbutton'
+import { Flag } from 'lucide-vue-next'
+import AppNotice from '@/components/AppNotice.vue'
+import SegmentedChips from '@/components/SegmentedChips.vue'
 import { api, ApiError, describeError, lookups, type Option } from '@/api'
 
 interface QueueItem {
@@ -37,8 +37,8 @@ const info = ref('')
 
 const current = computed(() => queue.value[0])
 const tabs = computed(() => [
-  { value: 'texts', label: t('moderation.texts', { n: total.value }) },
-  { value: 'reports', label: t('moderation.reports', { n: reports.value.length }) },
+  { value: 'texts' as const, label: t('moderation.texts', { n: total.value }) },
+  { value: 'reports' as const, label: t('moderation.reports', { n: reports.value.length }) },
 ])
 
 const FLAGS: [RegExp, string][] = [
@@ -102,61 +102,77 @@ onMounted(async () => {
 </script>
 
 <template>
-  <main>
-    <h1>{{ t('nav.moderation') }}</h1>
-    <SelectButton
-      v-model="tab"
-      :options="tabs"
-      option-label="label"
-      option-value="value"
-      :allow-empty="false"
-    />
-    <Message v-if="error" severity="error">{{ error }}</Message>
-    <Message v-if="info" severity="info">{{ info }}</Message>
+  <main class="page">
+    <span class="eyebrow">{{ t('nav.moderation') }}</span>
+    <h1 class="h1">{{ t('nav.moderation') }}</h1>
+    <div class="mt-5">
+      <SegmentedChips v-model="tab" :options="tabs" />
+    </div>
+    <AppNotice v-if="error" kind="error">{{ error }}</AppNotice>
+    <AppNotice v-if="info">{{ info }}</AppNotice>
 
     <template v-if="tab === 'texts'">
-      <p v-if="!current" class="muted">{{ t('moderation.empty') }}</p>
-      <section v-else class="card">
-        <p>
-          <strong>{{
+      <p v-if="!current" class="mt-8 text-center text-muted">{{ t('moderation.empty') }}</p>
+      <section v-else class="card mt-5 grid gap-4">
+        <div class="flex flex-wrap items-center gap-2 text-sm">
+          <span class="tag bg-board text-muted">{{
             current.kind === 'tip' ? t('submissions.tip') : t('submissions.comment')
-          }}</strong>
-          · {{ current.course }}
-        </p>
-        <p class="muted">{{ t('moderation.submitted', { date: d(current.week, 'short') }) }}</p>
-        <blockquote>{{ current.body }}</blockquote>
-        <p v-for="flag in flags" :key="flag" class="flag">⚑ {{ flag }}</p>
-        <details v-if="current.previousBody">
-          <summary>{{ t('moderation.previous') }}</summary>
-          <blockquote>{{ current.previousBody }}</blockquote>
-        </details>
-        <Button :label="t('moderation.approve')" fluid @click="decide(current)" />
-        <p>{{ t('moderation.rejectFor') }}</p>
-        <div class="reasons">
-          <Button
-            v-for="r in reasons"
-            :key="r.code"
-            :label="r.label"
-            severity="danger"
-            outlined
-            size="small"
-            @click="decide(current, r.code)"
-          />
+          }}</span>
+          <strong>{{ current.course }}</strong>
+          <span class="ml-auto text-xs text-muted">{{
+            t('moderation.submitted', { date: d(current.week, 'short') })
+          }}</span>
         </div>
-        <Button v-if="queue.length > 1" :label="t('moderation.next')" text @click="skip" />
+        <blockquote class="quote">{{ current.body }}</blockquote>
+        <p
+          v-for="flag in flags"
+          :key="flag"
+          class="flex items-center gap-2 text-sm font-medium text-copper"
+        >
+          <Flag class="size-4" aria-hidden="true" /> {{ flag }}
+        </p>
+        <details v-if="current.previousBody" class="text-sm">
+          <summary class="cursor-pointer font-medium text-mask">
+            {{ t('moderation.previous') }}
+          </summary>
+          <blockquote class="quote mt-2 border-line text-muted">
+            {{ current.previousBody }}
+          </blockquote>
+        </details>
+        <button class="btn btn-primary w-full" @click="decide(current)">
+          {{ t('moderation.approve') }}
+        </button>
+        <div>
+          <p class="mb-2 text-sm text-muted">{{ t('moderation.rejectFor') }}</p>
+          <div class="flex flex-wrap gap-2">
+            <button
+              v-for="r in reasons"
+              :key="r.code"
+              class="btn btn-danger btn-sm"
+              @click="decide(current, r.code)"
+            >
+              {{ r.label }}
+            </button>
+          </div>
+        </div>
+        <button v-if="queue.length > 1" class="btn btn-ghost justify-self-start" @click="skip">
+          {{ t('moderation.next') }}
+        </button>
       </section>
     </template>
 
     <template v-else>
-      <p v-if="!reports.length" class="muted">{{ t('moderation.noReports') }}</p>
-      <section v-for="report in reports" :key="report.postId" class="card">
-        <p>
-          <strong>{{
+      <p v-if="!reports.length" class="mt-8 text-center text-muted">
+        {{ t('moderation.noReports') }}
+      </p>
+      <section v-for="report in reports" :key="report.postId" class="card mt-5 grid gap-4">
+        <div class="flex flex-wrap items-center gap-2 text-sm">
+          <span class="tag bg-board text-muted">{{
             report.kind === 'tip' ? t('submissions.tip') : t('submissions.comment')
-          }}</strong>
-          · {{ report.course }}
-        </p>
-        <p class="muted">
+          }}</span>
+          <strong>{{ report.course }}</strong>
+        </div>
+        <p class="text-xs text-muted">
           {{
             t('moderation.reportLine', {
               reasons: report.reasons,
@@ -165,45 +181,24 @@ onMounted(async () => {
             })
           }}
         </p>
-        <blockquote>{{ report.body }}</blockquote>
-        <Button :label="t('moderation.dismiss')" text @click="closeReport(report)" />
-        <p>{{ t('moderation.upholdFor') }}</p>
-        <div class="reasons">
-          <Button
-            v-for="r in reasons"
-            :key="r.code"
-            :label="r.label"
-            severity="danger"
-            outlined
-            size="small"
-            @click="closeReport(report, r.code)"
-          />
+        <blockquote class="quote">{{ report.body }}</blockquote>
+        <button class="btn btn-outline justify-self-start" @click="closeReport(report)">
+          {{ t('moderation.dismiss') }}
+        </button>
+        <div>
+          <p class="mb-2 text-sm text-muted">{{ t('moderation.upholdFor') }}</p>
+          <div class="flex flex-wrap gap-2">
+            <button
+              v-for="r in reasons"
+              :key="r.code"
+              class="btn btn-danger btn-sm"
+              @click="closeReport(report, r.code)"
+            >
+              {{ r.label }}
+            </button>
+          </div>
         </div>
       </section>
     </template>
   </main>
 </template>
-
-<style scoped>
-section {
-  margin-top: 1rem;
-}
-
-blockquote {
-  margin: 0.75rem 0;
-  padding: 0.75rem;
-  border-left: 3px solid var(--p-content-border-color, #e5e7eb);
-  white-space: pre-wrap;
-}
-
-.flag {
-  color: var(--p-orange-600, #c2410c);
-}
-
-.reasons {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  margin-bottom: 0.5rem;
-}
-</style>

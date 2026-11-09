@@ -2,10 +2,10 @@
 import { ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
-import InputOtp from 'primevue/inputotp'
-import Password from 'primevue/password'
-import Button from 'primevue/button'
-import Message from 'primevue/message'
+import { Loader2 } from 'lucide-vue-next'
+import BrandMark from '@/components/BrandMark.vue'
+import AppNotice from '@/components/AppNotice.vue'
+import PasswordField from '@/components/PasswordField.vue'
 import { api, describeError, safeNext } from '@/api'
 import { useAuthStore } from '@/stores/auth'
 
@@ -23,6 +23,10 @@ const busy = ref(false)
 
 if (!email) {
   router.replace({ name: 'signup' })
+}
+
+function typeCode(event: Event) {
+  code.value = (event.target as HTMLInputElement).value.replace(/\D/g, '').slice(0, 6)
 }
 
 async function submit() {
@@ -56,19 +60,42 @@ async function resend() {
 </script>
 
 <template>
-  <main class="auth">
-    <h1>{{ t('auth.verifyTitle') }}</h1>
-    <p>{{ t('auth.verifySent', { email }) }}</p>
-    <form @submit.prevent="submit">
-      <InputOtp v-model="code" :length="6" integer-only />
-      <template v-if="askPassword">
+  <main class="page max-w-md">
+    <BrandMark class="size-12" />
+    <span class="eyebrow mt-4">ACIEE Advisor</span>
+    <h1 class="h1">{{ t('auth.verifyTitle') }}</h1>
+    <p class="lede text-sm">{{ t('auth.verifySent', { email }) }}</p>
+    <form class="card mt-6 grid gap-4" @submit.prevent="submit">
+      <div class="field">
+        <label for="code">{{ t('auth.verifyCode') }}</label>
+        <input
+          id="code"
+          :value="code"
+          class="input mono text-center text-2xl tracking-[0.5em]"
+          inputmode="numeric"
+          autocomplete="one-time-code"
+          maxlength="6"
+          required
+          @input="typeCode"
+        />
+      </div>
+      <div v-if="askPassword" class="field">
         <label for="password">{{ t('auth.password') }}</label>
-        <Password input-id="password" v-model="password" :feedback="false" toggle-mask :input-props="{ autocomplete: 'current-password' }" required fluid />
-      </template>
-      <Message v-if="error" severity="error">{{ error }}</Message>
-      <Message v-if="notice" severity="success">{{ notice }}</Message>
-      <Button type="submit" :label="t('auth.verifyAction')" :loading="busy" :disabled="code.length !== 6 || !password" fluid />
+        <PasswordField id="password" v-model="password" autocomplete="current-password" />
+      </div>
+      <AppNotice v-if="error" kind="error" class="my-0">{{ error }}</AppNotice>
+      <AppNotice v-if="notice" kind="success" class="my-0">{{ notice }}</AppNotice>
+      <button
+        type="submit"
+        class="btn btn-primary w-full"
+        :disabled="busy || code.length !== 6 || !password"
+      >
+        <Loader2 v-if="busy" class="size-4 animate-spin" aria-hidden="true" />
+        {{ t('auth.verifyAction') }}
+      </button>
     </form>
-    <Button :label="t('auth.resend')" link :disabled="busy" @click="resend" />
+    <button class="btn btn-ghost mx-auto mt-3 flex" :disabled="busy" @click="resend">
+      {{ t('auth.resend') }}
+    </button>
   </main>
 </template>

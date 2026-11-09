@@ -2,12 +2,10 @@
 import { computed, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
-import Button from 'primevue/button'
-import Dialog from 'primevue/dialog'
-import InputText from 'primevue/inputtext'
-import Message from 'primevue/message'
-import Select from 'primevue/select'
 import AdminSections from '@/components/AdminSections.vue'
+import ComboSelect from '@/components/ComboSelect.vue'
+import AppNotice from '@/components/AppNotice.vue'
+import AppSheet from '@/components/AppSheet.vue'
 import { api, describeError } from '@/api'
 
 interface Column {
@@ -49,6 +47,10 @@ const options = ref<Record<string, Option[]>>({})
 const key = computed(() => route.params.table as string)
 const table = computed(() => tables.value.find((candidate) => candidate.key === key.value))
 const editable = computed(() => table.value?.columns.filter((column) => column.editable) ?? [])
+const open = computed({
+  get: () => editing.value !== null,
+  set: (v) => v || (editing.value = null),
+})
 
 function shown(row: Row, column: Column) {
   return column.ref ? row[`${column.name}_label`] : row[column.name]
@@ -72,17 +74,26 @@ async function load(append = false) {
 async function loadOptions(column: Column, filter = '') {
   const query = filter ? `?search=${encodeURIComponent(filter)}` : ''
   const found = await api<Option[]>('GET', `/api/admin/tables/${column.ref}/options${query}`)
-  const selected = options.value[column.name]?.find((option) => option.value === editing.value?.[column.name])
-  options.value[column.name] = selected && !found.some((option) => option.value === selected.value) ? [selected, ...found] : found
+  const selected = options.value[column.name]?.find(
+    (option) => option.value === editing.value?.[column.name],
+  )
+  options.value[column.name] =
+    selected && !found.some((option) => option.value === selected.value)
+      ? [selected, ...found]
+      : found
 }
 
-function open(row: Row | null) {
+function openForm(row: Row | null) {
   formError.value = ''
   editingId.value = row?.id ?? null
-  editing.value = Object.fromEntries(editable.value.map((column) => [column.name, row?.[column.name] ?? '']))
+  editing.value = Object.fromEntries(
+    editable.value.map((column) => [column.name, row?.[column.name] ?? '']),
+  )
   for (const column of editable.value.filter((candidate) => candidate.ref)) {
     const selected = row?.[column.name]
-    options.value[column.name] = selected ? [{ value: selected, label: row![`${column.name}_label`] ?? selected }] : []
+    options.value[column.name] = selected
+      ? [{ value: selected, label: row![`${column.name}_label`] ?? selected }]
+      : []
     loadOptions(column).catch(() => {})
   }
 }
@@ -114,117 +125,113 @@ async function act(method: string, path: string, done = '') {
   }
 }
 
-watch(key, () => {
-  search.value = ''
-  load()
-}, { immediate: true })
+watch(
+  key,
+  () => {
+    search.value = ''
+    load()
+  },
+  { immediate: true },
+)
 </script>
 
 <template>
-  <main class="admin">
-    <h1>{{ t(`admin.sections.${key}`) }}</h1>
+  <main class="page">
+    <span class="eyebrow">{{ t('nav.admin') }}</span>
+    <h1 class="h1">{{ t(`admin.sections.${key}`) }}</h1>
     <AdminSections />
-    <form class="filters" @submit.prevent="load()">
-      <InputText v-model.trim="search" :placeholder="t('admin.search')" />
-      <Button type="submit" :label="t('admin.search')" />
-      <Button type="button" :label="t('admin.add')" outlined @click="open(null)" />
+    <form class="mt-4 flex flex-wrap gap-2" @submit.prevent="load()">
+      <input
+        v-model.trim="search"
+        class="input flex-1"
+        :placeholder="t('admin.search')"
+        :aria-label="t('admin.search')"
+      />
+      <button type="submit" class="btn btn-primary">{{ t('admin.search') }}</button>
+      <button type="button" class="btn btn-outline" @click="openForm(null)">
+        {{ t('admin.add') }}
+      </button>
     </form>
-    <Message v-if="error" severity="error">{{ error }}</Message>
-    <Message v-if="notice" severity="success">{{ notice }}</Message>
+    <AppNotice v-if="error" kind="error">{{ error }}</AppNotice>
+    <AppNotice v-if="notice" kind="success">{{ notice }}</AppNotice>
 
-    <div v-for="row in rows" :key="row.id!" class="card">
-      <strong>{{ row.label }}</strong>
-      <small v-for="column in table?.columns" :key="column.name">
-        {{ t(`admin.columns.${column.name}`) }}: {{ shown(row, column) ?? '—' }}
-      </small>
-      <div>
-        <Button :label="t('admin.edit')" size="small" text @click="open(row)" />
-        <Button
-          :label="t('admin.delete')"
-          size="small"
-          severity="danger"
-          text
+    <div v-for="row in rows" :key="row.id!" class="border-t border-line py-3">
+      <strong class="block font-semibold">{{ row.label }}</strong>
+      <dl class="mt-1 grid grid-cols-[auto_1fr] gap-x-3 gap-y-0.5 text-xs">
+        <template v-for="column in table?.columns" :key="column.name">
+          <dt class="text-muted">{{ t(`admin.columns.${column.name}`) }}</dt>
+          <dd class="m-0 break-all">{{ shown(row, column) ?? '—' }}</dd>
+        </template>
+      </dl>
+      <div class="mt-2 flex flex-wrap gap-1">
+        <button class="btn btn-ghost btn-sm" @click="openForm(row)">{{ t('admin.edit') }}</button>
+        <button
+          class="btn btn-danger btn-sm border-transparent"
           @click="act('DELETE', `/api/admin/tables/${key}/${row.id}`)"
-        />
-        <Button
+        >
+          {{ t('admin.delete') }}
+        </button>
+        <button
           v-if="key === 'professor' && !row.archived_at"
-          :label="t('admin.archive')"
-          size="small"
-          severity="secondary"
-          text
+          class="btn btn-ghost btn-sm text-muted"
           @click="act('POST', `/api/admin/tables/professor/${row.id}/archive`)"
-        />
-        <Button
+        >
+          {{ t('admin.archive') }}
+        </button>
+        <button
           v-if="key === 'study_group'"
-          :label="t('admin.createOfferings')"
-          size="small"
-          severity="secondary"
-          text
-          @click="act('POST', `/api/admin/tables/study_group/${row.id}/offerings`, 'admin.offeringsCreated')"
-        />
-        <Button
+          class="btn btn-ghost btn-sm text-muted"
+          @click="
+            act(
+              'POST',
+              `/api/admin/tables/study_group/${row.id}/offerings`,
+              'admin.offeringsCreated',
+            )
+          "
+        >
+          {{ t('admin.createOfferings') }}
+        </button>
+        <button
           v-if="key === 'academic_year'"
-          :label="t('admin.rollover')"
-          size="small"
-          severity="secondary"
-          text
-          @click="act('POST', `/api/admin/tables/academic_year/${row.id}/rollover`, 'admin.rolloverDone')"
-        />
+          class="btn btn-ghost btn-sm text-muted"
+          @click="
+            act('POST', `/api/admin/tables/academic_year/${row.id}/rollover`, 'admin.rolloverDone')
+          "
+        >
+          {{ t('admin.rollover') }}
+        </button>
       </div>
     </div>
-    <Button v-if="more" :label="t('admin.more')" text @click="load(true)" />
+    <button v-if="more" class="btn btn-ghost mt-4" @click="load(true)">
+      {{ t('admin.more') }}
+    </button>
 
-    <Dialog :visible="editing !== null" modal :header="t(editingId ? 'admin.edit' : 'admin.add')" @update:visible="editing = null">
-      <form v-if="editing" class="form" @submit.prevent="save">
-        <template v-for="column in editable" :key="column.name">
+    <AppSheet v-model="open" :title="t(editingId ? 'admin.edit' : 'admin.add')" side="modal">
+      <form v-if="editing" class="grid gap-4" @submit.prevent="save">
+        <div v-for="column in editable" :key="column.name" class="field">
           <label :for="`field-${column.name}`">{{ t(`admin.columns.${column.name}`) }}</label>
-          <Select
+          <ComboSelect
             v-if="column.ref"
+            :id="`field-${column.name}`"
             v-model="editing[column.name]"
-            :input-id="`field-${column.name}`"
             :options="options[column.name] ?? []"
-            option-value="value"
-            option-label="label"
-            :show-clear="column.nullable"
-            filter
-            auto-filter-focus
-            fluid
-            @filter="(event: { value: string }) => loadOptions(column, event.value)"
+            :clearable="column.nullable"
+            remote
+            @search="loadOptions(column, $event)"
           />
-          <InputText
+          <input
             v-else
             :id="`field-${column.name}`"
             v-model="editing[column.name]"
+            class="input"
             :placeholder="placeholders[column.type]"
             :inputmode="column.type === 'smallint' ? 'numeric' : undefined"
             :required="!column.nullable"
-            fluid
           />
-        </template>
-        <Message v-if="formError" severity="error">{{ formError }}</Message>
-        <Button type="submit" :label="t('admin.save')" />
+        </div>
+        <AppNotice v-if="formError" kind="error" class="my-0">{{ formError }}</AppNotice>
+        <button type="submit" class="btn btn-primary">{{ t('admin.save') }}</button>
       </form>
-    </Dialog>
+    </AppSheet>
   </main>
 </template>
-
-<style scoped>
-.filters {
-  display: flex;
-  gap: 0.5rem;
-  margin: 1rem 0;
-}
-.card {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-  padding: 0.5rem 0;
-  border-bottom: 1px solid var(--p-content-border-color);
-}
-.form {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  min-width: min(24rem, 80vw);
-}
-</style>

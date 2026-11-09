@@ -2,11 +2,11 @@
 import { ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
-import InputText from 'primevue/inputtext'
-import Password from 'primevue/password'
-import Button from 'primevue/button'
-import Message from 'primevue/message'
+import { Loader2 } from 'lucide-vue-next'
+import BrandMark from '@/components/BrandMark.vue'
 import MicrosoftSignIn from '@/components/MicrosoftSignIn.vue'
+import AppNotice from '@/components/AppNotice.vue'
+import PasswordField from '@/components/PasswordField.vue'
 import { ApiError, describeError, safeNext } from '@/api'
 import { useAuthStore } from '@/stores/auth'
 
@@ -39,19 +39,38 @@ async function submit() {
 </script>
 
 <template>
-  <main class="auth">
-    <h1>{{ t('auth.signIn') }}</h1>
-    <form @submit.prevent="submit">
-      <label for="email">{{ t('auth.email') }}</label>
-      <InputText id="email" v-model.trim="email" type="email" autocomplete="email" :placeholder="t('auth.emailPlaceholder')" required fluid />
-      <label for="password">{{ t('auth.password') }}</label>
-      <Password input-id="password" v-model="password" :feedback="false" toggle-mask :input-props="{ autocomplete: 'current-password' }" required fluid />
-      <Message v-if="error" severity="error">{{ error }}</Message>
-      <Button type="submit" :label="t('auth.signInAction')" :loading="busy" fluid />
+  <main class="page max-w-md">
+    <BrandMark class="size-12" />
+    <span class="eyebrow mt-4">ACIEE Advisor</span>
+    <h1 class="h1">{{ t('auth.signIn') }}</h1>
+    <p class="lede text-sm">{{ t('auth.signInLede') }}</p>
+    <form class="card mt-6 grid gap-4" @submit.prevent="submit">
+      <div class="field">
+        <label for="email">{{ t('auth.email') }}</label>
+        <input
+          id="email"
+          v-model.trim="email"
+          type="email"
+          autocomplete="email"
+          :placeholder="t('auth.emailPlaceholder')"
+          required
+          class="input"
+        />
+      </div>
+      <div class="field">
+        <label for="password">{{ t('auth.password') }}</label>
+        <PasswordField id="password" v-model="password" autocomplete="current-password" />
+      </div>
+      <AppNotice v-if="error" kind="error" class="my-0">{{ error }}</AppNotice>
+      <button type="submit" class="btn btn-primary w-full" :disabled="busy">
+        <Loader2 v-if="busy" class="size-4 animate-spin" aria-hidden="true" />
+        {{ t('auth.signInAction') }}
+      </button>
+      <MicrosoftSignIn />
     </form>
-    <MicrosoftSignIn />
-    <p>
-      {{ t('auth.noAccount') }} <RouterLink :to="{ name: 'signup' }">{{ t('auth.signUp') }}</RouterLink>
+    <p class="mt-5 text-center text-sm text-muted">
+      {{ t('auth.noAccount') }}
+      <RouterLink :to="{ name: 'signup' }">{{ t('auth.signUp') }}</RouterLink>
     </p>
   </main>
 </template>

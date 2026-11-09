@@ -73,24 +73,13 @@ function chooseProgram(p: TimetableProgram) {
 </template>
 
 <style scoped>
-button {
-  font: inherit;
-  color: inherit;
-  cursor: pointer;
-}
-
-button:focus-visible {
-  outline: 2px solid var(--tt-copper);
-  outline-offset: 2px;
-}
-
 .step {
   margin: 1.4rem 0 0.5rem;
-  font-family: 'Martian Mono', ui-monospace, monospace;
+  font-family: var(--font-mono);
   font-size: 0.6875rem;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: var(--tt-copper);
+  color: var(--copper);
 }
 
 .step:first-child {
@@ -106,28 +95,28 @@ button:focus-visible {
 .chip {
   min-width: 3rem;
   padding: 0.6rem 1rem;
-  border: 1px solid var(--tt-line);
+  border: 1px solid var(--line);
   border-radius: 999px;
-  background: var(--tt-panel);
+  background: var(--panel);
   font-weight: 600;
 }
 
 .chip.year {
   min-width: 3.5rem;
-  font-family: 'Chakra Petch', system-ui, sans-serif;
+  font-family: var(--font-display);
   font-size: 1.125rem;
 }
 
 .chip.code {
-  font-family: 'Martian Mono', ui-monospace, monospace;
+  font-family: var(--font-mono);
   font-weight: 500;
 }
 
 .chip.on,
 .chip:hover {
-  border-color: var(--tt-mask);
-  background: var(--tt-mask);
-  color: var(--tt-on-mask);
+  border-color: var(--mask);
+  background: var(--mask);
+  color: var(--on-mask);
 }
 
 .programs {
@@ -142,23 +131,23 @@ button:focus-visible {
   gap: 1rem;
   padding: 0.85rem 1rem;
   text-align: left;
-  border: 1px solid var(--tt-line);
-  border-left: 4px solid var(--tt-line);
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--line);
   border-radius: 0.6rem;
-  background: var(--tt-panel);
+  background: var(--panel);
   font-weight: 600;
 }
 
 .codes {
-  font-family: 'Martian Mono', ui-monospace, monospace;
+  font-family: var(--font-mono);
   font-size: 0.6875rem;
   font-weight: 400;
-  color: var(--tt-muted);
+  color: var(--muted);
   white-space: nowrap;
 }
 
 .program.on,
 .program:hover {
-  border-left-color: var(--tt-copper);
+  border-left-color: var(--copper);
 }
 </style>
