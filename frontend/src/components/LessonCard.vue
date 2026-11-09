@@ -88,7 +88,7 @@ const { t } = useI18n()
   display: inline-block;
 }
 
-.meta > * + *::before {
+.meta > :not(:last-child)::after {
   content: '·';
   content: '·' / '';
   margin: 0 0.35rem;

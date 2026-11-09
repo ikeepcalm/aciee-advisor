@@ -632,6 +632,8 @@ watch(group, (g) => {
 }
 
 .par {
+  justify-content: center;
+  min-width: 2.75rem;
   padding: 0 0.6rem;
   border-color: var(--copper);
   color: var(--copper);
