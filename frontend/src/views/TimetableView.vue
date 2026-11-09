@@ -2,6 +2,7 @@
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
+import { ArrowLeftRight, ChevronDown } from 'lucide-vue-next'
 import { api, describeError, type Lesson, type Timetable } from '@/api'
 import LessonCard from '@/components/LessonCard.vue'
 import AppNotice from '@/components/AppNotice.vue'
@@ -32,6 +33,8 @@ const error = ref('')
 const group = ref<string | null>(null)
 const pickerOpen = ref(false)
 const calibration = ref<Calibration | null>(readJson('timetable.calibration'))
+// The week signal stays folded unless the parity is still unknown and needs an answer.
+const weekOpen = ref(!calibration.value)
 const now = ref(new Date())
 const selectedMonday = ref(addDays(mondayOf(now.value), isWeekend(now.value) ? 7 : 0))
 const day = ref(isWeekend(now.value) ? 1 : now.value.getDay())
@@ -92,10 +95,16 @@ function calibrate(parity: Parity) {
   const m = selectedMonday.value
   calibration.value = { anchor: `${m.getFullYear()}-${m.getMonth() + 1}-${m.getDate()}`, parity }
   writeJson('timetable.calibration', calibration.value)
+  weekOpen.value = false
 }
 
-function flipParity() {
-  calibrate(parityOf(selectedMonday.value) === 'ODD' ? 'EVEN' : 'ODD')
+// One tap on the parity chip flips the stored calibration, so every week shifts with it.
+function tapParity() {
+  if (calibration.value) {
+    calibrate(parityOf(selectedMonday.value) === 'ODD' ? 'EVEN' : 'ODD')
+  } else {
+    weekOpen.value = true
+  }
 }
 
 function range(monday: Date) {
@@ -224,9 +233,13 @@ onMounted(async () => {
     error.value = describeError(t, e)
     return
   }
+  // Codes are upper case since the parser change; stored and linked values may still be lower case.
   const known = (g: unknown): g is string =>
     typeof g === 'string' && programs.value.some((p) => p.groups.includes(g))
-  group.value = [route.query.g, readJson<string>('timetable.group')].find(known) ?? null
+  group.value =
+    [route.query.g, readJson<string>('timetable.group')]
+      .map((g) => (typeof g === 'string' ? g.toUpperCase() : g))
+      .find(known) ?? null
 })
 
 onUnmounted(() => clearInterval(timer))
@@ -253,17 +266,41 @@ watch(group, (g) => {
       </section>
 
       <template v-else>
-        <header class="top">
-          <button class="ticket" :aria-label="t('timetable.change')" @click="pickerOpen = true">
-            <span class="code">{{ group }}</span>
-            <span class="meta">
-              <span>{{ program.name }}</span>
-              <span class="sub">{{ t('timetable.year', { n: ROMAN[program.year] }) }}</span>
-            </span>
-            <span class="swap">{{ t('timetable.changeShort') }}</span>
-          </button>
+        <div class="controls">
+          <div class="bar">
+            <button class="grp" :aria-label="t('timetable.change')" @click="pickerOpen = true">
+              <span class="code">{{ group }}</span>
+              <span class="prog"
+                >{{ program.name }} · {{ t('timetable.year', { n: ROMAN[program.year] }) }}</span
+              >
+              <ChevronDown class="icon" aria-hidden="true" />
+            </button>
+            <button
+              class="wk"
+              :aria-expanded="weekOpen"
+              :aria-label="t('timetable.weekPicker')"
+              @click="weekOpen = !weekOpen"
+            >
+              <span class="range">{{ range(selectedMonday) }}</span>
+              <ChevronDown class="icon chev" :class="{ open: weekOpen }" aria-hidden="true" />
+            </button>
+            <button
+              class="par"
+              :class="selectedParity ?? 'ask'"
+              :aria-label="calibration ? t('timetable.flip') : t('timetable.parityUnknown')"
+              @click="tapParity"
+            >
+              <template v-if="selectedParity">
+                {{ t(`timetable.parity.${selectedParity}`) }}
+                <ArrowLeftRight class="icon" aria-hidden="true" />
+              </template>
+              <template v-else>
+                ?<span class="prog">{{ t('timetable.parityUnknown') }}</span>
+              </template>
+            </button>
+          </div>
 
-          <section class="clock" :aria-label="t('timetable.weekPicker')">
+          <section v-if="weekOpen" class="clock" :aria-label="t('timetable.weekPicker')">
             <div class="wave">
               <svg viewBox="0 0 700 44" preserveAspectRatio="none" aria-hidden="true">
                 <rect
@@ -295,12 +332,6 @@ watch(group, (g) => {
                 </button>
               </div>
             </div>
-            <div class="readout">
-              <span class="display">{{ range(selectedMonday) }}</span>
-              <span v-if="selectedParity" class="tag" :class="selectedParity">
-                {{ t(`timetable.parity.${selectedParity}`) }}
-              </span>
-            </div>
             <div v-if="!calibration" class="ask">
               <p>{{ t('timetable.askParity', { range: range(selectedMonday) }) }}</p>
               <div class="answers">
@@ -309,8 +340,9 @@ watch(group, (g) => {
               </div>
               <p class="hint">{{ t('timetable.askHint') }}</p>
             </div>
+            <p v-else class="hint">{{ t('timetable.parityNote') }}</p>
           </section>
-        </header>
+        </div>
 
         <nav class="days" :aria-label="t('timetable.dayPicker')">
           <button
@@ -400,11 +432,6 @@ watch(group, (g) => {
           </a>
           · {{ t('timetable.updatedAt', { at: formatted(program.updatedAt) }) }} ·
           {{ t('timetable.checkedAt', { at: formatted(timetable!.checkedAt) }) }}
-          <br />
-          {{ t('timetable.parityNote') }}
-          <button v-if="calibration" class="link" @click="flipParity">
-            {{ t('timetable.flip') }}
-          </button>
         </footer>
 
         <AppSheet v-model="pickerOpen" :title="t('timetable.pickTitle')">
@@ -417,7 +444,8 @@ watch(group, (g) => {
 
 <style scoped>
 .dname,
-.ticket .code {
+.grp .code,
+.wk .range {
   font-family: var(--font-display);
   font-weight: 600;
 }
@@ -429,7 +457,8 @@ watch(group, (g) => {
 .gap,
 .eyebrow,
 .probe,
-.swap {
+.par,
+.prog {
   font-family: var(--font-mono);
   font-variant-numeric: tabular-nums;
 }
@@ -463,53 +492,105 @@ watch(group, (g) => {
   color: var(--muted);
 }
 
-.top {
-  display: grid;
-  gap: 0.75rem;
-  margin-bottom: 1rem;
+/* Sticky controls: group · week · parity, then the day strip; lessons start right under them. */
+.controls {
+  position: sticky;
+  top: 3.5rem;
+  z-index: 20;
+  margin: 0 -1rem 0.75rem;
+  padding: 0.5rem 1rem 0.6rem;
+  background: var(--board);
+  box-shadow: 0 1px 0 var(--line);
 }
 
-.ticket {
-  display: grid;
-  grid-template-columns: auto 1fr auto;
+.bar {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.grp,
+.wk,
+.par {
+  display: inline-flex;
+  flex: none;
   align-items: center;
-  gap: 0.9rem;
-  padding: 0.75rem 0.95rem;
-  text-align: left;
-  border: 0;
-  border-radius: 0.8rem;
+  gap: 0.3rem;
+  min-height: 2.75rem;
+  padding: 0 0.7rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--panel);
+}
+
+.grp {
+  border-color: var(--mask);
   background: var(--mask);
   color: var(--on-mask);
 }
 
-.ticket .code {
-  padding-right: 0.9rem;
-  border-right: 1px dashed currentColor;
-  font-size: 1.75rem;
-  line-height: 1;
+.grp .code {
+  font-size: 1rem;
+  letter-spacing: 0.02em;
 }
 
-.ticket .meta {
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
-  font-size: 0.875rem;
-  font-weight: 600;
-}
-
-.ticket .sub {
-  opacity: 0.75;
-  font-weight: 400;
-}
-
-.swap {
+.prog {
+  display: none;
   font-size: 0.625rem;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
-  letter-spacing: 0.08em;
-  opacity: 0.85;
+  opacity: 0.8;
+}
+
+.wk {
+  flex: 1 1 auto;
+  min-width: 0;
+  justify-content: space-between;
+  font-size: 0.9375rem;
+}
+
+.wk .range {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.icon {
+  flex: none;
+  width: 0.9rem;
+  height: 0.9rem;
+}
+
+.chev {
+  transition: rotate 150ms ease-out;
+}
+
+.chev.open {
+  rotate: 180deg;
+}
+
+.par {
+  padding: 0 0.6rem;
+  border-color: var(--copper);
+  color: var(--copper);
+  font-size: 0.625rem;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.par.EVEN {
+  border-color: var(--mask);
+  color: var(--mask);
+}
+
+.par.ask {
+  border-style: dashed;
+  border-color: var(--muted);
+  color: var(--muted);
 }
 
 .clock {
+  margin-top: 0.6rem;
   padding: 1.6rem 0.75rem 0.9rem;
   border: 1px solid var(--line);
   border-radius: 0.9rem;
@@ -600,18 +681,6 @@ watch(group, (g) => {
   letter-spacing: 0.08em;
 }
 
-.readout {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.6rem;
-  margin-top: 0.6rem;
-}
-
-.readout .display {
-  font-size: 1.375rem;
-}
-
 .tag {
   padding: 0.15rem 0.55rem;
   border-radius: 999px;
@@ -668,7 +737,7 @@ watch(group, (g) => {
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 0.4rem;
-  margin-bottom: 1.1rem;
+  margin-top: 0.6rem;
 }
 
 .day {
@@ -815,40 +884,27 @@ watch(group, (g) => {
   color: var(--muted);
 }
 
-.source a,
-.link {
+.source a {
   color: var(--mask);
 }
 
-.link {
-  padding: 0;
-  border: 0;
-  background: none;
-  text-decoration: underline;
-}
-
 @media (min-width: 52rem) {
-  .top {
-    grid-template-columns: minmax(16rem, 22rem) minmax(0, 1fr);
+  .controls {
+    position: static;
+    padding-bottom: 0;
   }
 
-  .ticket {
-    grid-template-columns: 1fr auto;
-    grid-template-rows: auto 1fr;
-    align-content: space-between;
-    padding: 1.1rem 1.2rem;
+  .prog {
+    display: inline;
   }
 
-  .ticket .code {
-    grid-column: 1 / -1;
-    padding: 0 0 0.7rem;
-    border-right: 0;
-    border-bottom: 1px dashed currentColor;
-    font-size: 2.75rem;
+  .wk {
+    max-width: 22rem;
   }
 
-  .ticket .swap {
-    align-self: end;
+  .par .prog {
+    text-transform: none;
+    opacity: 1;
   }
 
   .days,

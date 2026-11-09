@@ -405,6 +405,7 @@
       "ODD": "Impară",
       "EVEN": "Pară"
     },
+    "parityUnknown": "Impară sau pară?",
     "bit": {
       "ODD": "IMP",
       "EVEN": "PAR"

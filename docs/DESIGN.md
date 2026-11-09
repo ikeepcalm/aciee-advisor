@@ -6,12 +6,24 @@ One visual language for the whole SPA, grown out of the timetable page that the 
 
 | Axis | Choice | Why |
 |---|---|---|
-| Metaphor | Circuit board: solder mask, copper traces and pads, a dot grid of vias | ACIEE's own material; not a stock "edu app" look |
+| Metaphor | Circuit board: a blue solder mask, copper traces and pads, a dot grid of vias on a cool white bench | ACIEE's own material (every Arduino and dev board on a lab bench is blue + copper); not a stock "edu app" look |
 | Primary target | Phone, 360 px wide, one hand | Students open it between classes |
 | Tone | Technical but friendly; plain verbs, sentence case | A tool, not a brochure |
 | Boldness budget | Spent on one element: the copper pad and trace | Everything else stays quiet |
 
 Rejected on purpose: cream + terracotta serif, black + acid green, newspaper hairlines (the three current AI defaults), and the "Claymorphism / Baloo 2" suggestion the style database returned for "educational app" (toy-like, wrong for an engineering faculty and for dark mode).
+
+### Light palette: the three candidates
+
+The first pass used a green-tinted board (`#e9f0ec`) with a dark solder-mask green primary (`#1d5b45`). The owner's verdict: muddy and dated in light mode. Three replacements were rendered side by side on the catalog and the timetable (shots `pal-graphite-*`, `pal-bluemask-*`, `pal-emerald-*`):
+
+| Candidate | Board / primary | Verdict |
+|---|---|---|
+| Graphite | `#f3f5f6` / `#242e34`, copper accent | Clean and premium, but a dark-neutral primary plus one warm accent is the current "tasteful default"; nothing in it says ACIEE |
+| **Blue mask** | `#f3f6fa` / `#1f4fb8`, copper accent | Chosen. A blue solder mask with copper is literally what sits on a lab bench; the cool white base keeps it crisp, the blue primary reads as a confident product colour, and copper stays the signature |
+| Emerald | `#f4f6f5` / `#0c7a59`, copper accent | Cleaner than the first pass, but still "the green" the owner reacted to, and the weakest contrast of the three (5.3:1 for white on the primary) |
+
+Dark mode was not criticised, but the hue had to follow the light primary or the brand word would change colour between themes. It was retuned from green-black to the same board unlit: navy `#0b1420` with a light blue primary `#6ea0ff`; copper, kinds and structure are unchanged.
 
 ## Tokens
 
@@ -21,18 +33,18 @@ Tokens live in `frontend/src/app.css`: primitives on `:root` and `.dark`, mapped
 
 | Token | Light | Dark | Role |
 |---|---|---|---|
-| `--board` | `#e9f0ec` | `#0d211b` | Page background, with an 18 px dot grid of `--line` |
-| `--panel` | `#ffffff` | `#142d25` | Cards, inputs, sheets, the bottom bar |
-| `--ink` | `#10241d` | `#e4eee8` | Body text |
-| `--muted` | `#5b6e66` | `#8fa79c` | Secondary text (≥ 4.6:1 on both backgrounds) |
-| `--line` | `#c9d8d0` | `#24443a` | Borders, dividers, the via grid |
-| `--mask` | `#1d5b45` | `#3fa97f` | Primary: buttons, links, selected chips, the brand word |
-| `--on-mask` | `#f2f7f4` | `#0d211b` | Text on `--mask` (7.4:1 / 5.8:1) |
-| `--copper` | `#9a5220` | `#e0904f` | Accent: eyebrow trace, active-tab bar, focus ring, "now" |
+| `--board` | `#f3f6fa` | `#0b1420` | Page background, with an 18 px dot grid of `--line` |
+| `--panel` | `#ffffff` | `#122033` | Cards, inputs, sheets, the bottom bar |
+| `--ink` | `#111c2b` | `#e6ecf4` | Body text |
+| `--muted` | `#5a6678` | `#92a1b5` | Secondary text (5.4:1 / 6.2:1 on panel) |
+| `--line` | `#d3dbe6` | `#243650` | Borders, dividers, the via grid |
+| `--mask` | `#1f4fb8` | `#6ea0ff` | Primary: buttons, links, selected chips, the brand word |
+| `--on-mask` | `#ffffff` | `#0b1420` | Text on `--mask` (7.3:1 / 7.2:1) |
+| `--copper` | `#a0531f` | `#e0904f` | Accent: eyebrow trace, active-tab bar, focus ring, "now", odd week |
 | `--danger` | `#b4232c` | `#ff8a8a` | Errors and destructive actions |
-| `--kind-c/s/l/p/x` | copper / `#2f6f9e` / `#6f4fc0` / `#8a6a0c` / muted | copper / `#6fb1e0` / `#b39cf0` / `#e2c04a` / muted | Lesson kinds: lecture, seminar, lab, project, other |
+| `--kind-c/s/l/p/x` | copper / `#0f7a73` / `#6a4bc4` / `#8a6a0c` / muted | copper / `#4fc3b8` / `#b39cf0` / `#e2c04a` / muted | Lesson kinds: lecture, seminar (teal, so it never fights the blue primary), lab, project, other |
 
-All text pairs were checked at ≥ 4.5:1 in both themes (copper text sits at 5.0:1 on the light board, 5.8:1 on white). Dark mode follows the system and can be forced from the account sheet; the choice is stored in `localStorage.theme` and applied before first paint by a two-line script in `index.html`.
+All text pairs were checked at ≥ 4.5:1 in both themes (lowest: light copper on the board at 5.2:1, light seminar teal on white at 5.2:1). Dark mode follows the system and can be forced from the account sheet; the choice is stored in `localStorage.theme` and applied before first paint by a two-line script in `index.html`.
 
 ### Type
 
@@ -61,6 +73,10 @@ Lucide (`lucide-vue-next`), 20 px in navigation and 16 px inline. Icon-only butt
 ## Signature element: the pad and trace
 
 Every page title is introduced by an **eyebrow**: a copper via (ring) soldered to a short copper trace, then a small mono label in uppercase — `○— CURSURI`, `○— CALCULATOARE · AN 1 · SEM. 1`. The same copper trace runs vertically down the timetable's day view, with a pad at every lesson that fills and pulses while the lesson is running; the odd/even week picker is a square-wave clock signal drawn in copper; the brand mark is an IC package with that clock trace inside it. One idea, four places, nothing else decorative.
+
+## Timetable controls
+
+Lessons are the content, so they start at the top. A sticky bar under the header holds three pills: the **group** (`22C11A`, tap to change, the programme name appears on desktop), the **week** (`9–13 nov.`, tap to unfold the square-wave clock and pick another week) and the **parity** chip (`Impară` / `Pară`). One tap on the parity chip flips the stored calibration, so every week shifts; when the parity is still unknown the chip reads `?`, the clock panel opens by itself and asks the question once. The day strip sits in the same sticky block, so on a 360×740 phone the first lesson is visible at about 230 px. Desktop uses the same bar and leads with the five-day grid.
 
 ## Components
 

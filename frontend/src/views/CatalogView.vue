@@ -135,26 +135,26 @@ watch([spec, planId, year], async ([s, p, y]) => {
     <header>
       <span class="eyebrow">{{ t('nav.courses') }}</span>
       <h1 class="h1">{{ t('catalog.title') }}</h1>
-      <p class="lede">{{ t('catalog.tagline') }}</p>
+      <p class="lede text-sm md:text-base">{{ t('catalog.tagline') }}</p>
     </header>
 
     <AppNotice v-if="error" kind="error">{{ error }}</AppNotice>
 
-    <section class="card mt-6 grid gap-4 md:grid-cols-2">
+    <section class="mt-5 grid gap-3 md:grid-cols-[1fr_auto_auto] md:items-end">
       <label class="field">
-        {{ t('catalog.specialization') }}
+        <span class="sr-only">{{ t('catalog.specialization') }}</span>
         <select v-model="spec" class="input" @change="changeSpec">
           <option v-for="s in specializations" :key="s.code" :value="s.code">{{ s.name }}</option>
         </select>
       </label>
       <label v-if="plans.length" class="field">
-        {{ t('catalog.plan') }}
-        <select v-model="planId" class="input">
+        <span class="sr-only">{{ t('catalog.plan') }}</span>
+        <select v-model="planId" class="input md:w-56">
           <option v-for="p in plans" :key="p.id" :value="p.id">{{ p.label }}</option>
         </select>
       </label>
-      <div class="field md:col-span-2">
-        {{ t('timetable.pickYear') }}
+      <div class="field">
+        <span class="sr-only">{{ t('timetable.pickYear') }}</span>
         <SegmentedChips v-model="year" :options="years" class="display text-lg" />
       </div>
     </section>

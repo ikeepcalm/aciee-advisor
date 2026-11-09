@@ -405,6 +405,7 @@
       "ODD": "Odd",
       "EVEN": "Even"
     },
+    "parityUnknown": "Odd or even?",
     "bit": {
       "ODD": "ODD",
       "EVEN": "EVN"
