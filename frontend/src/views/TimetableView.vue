@@ -295,7 +295,7 @@ watch(group, (g) => {
 </script>
 
 <template>
-  <main class="page-wide tt-page">
+  <main class="page-wide tt-page pt-4 md:pt-8">
     <AppNotice v-if="error" kind="error">{{ error }}</AppNotice>
     <AppNotice v-else-if="timetable && !programs.length">{{ t('timetable.loading') }}</AppNotice>
 
@@ -328,7 +328,7 @@ watch(group, (g) => {
             </button>
             <button
               class="par"
-              :class="selectedParity ?? 'ask'"
+              :class="selectedParity ?? 'unknown'"
               :aria-label="calibration ? t('timetable.flip') : t('timetable.parityUnknown')"
               @click="tapParity"
             >
@@ -405,7 +405,7 @@ watch(group, (g) => {
         </nav>
 
         <p v-if="!blocks.length" class="empty">{{ t('timetable.free') }}</p>
-        <div v-else class="axis" :style="{ minHeight: `${((span.to - span.from) / 60) * 2.4}rem` }">
+        <div v-else class="axis" :style="{ minHeight: `${((span.to - span.from) / 60) * 3.4}rem` }">
           <span v-for="h in hours" :key="h" class="tick" :style="{ top: `${y(h)}%` }">
             <span>{{ clockLabel(h) }}</span>
           </span>
@@ -443,7 +443,7 @@ watch(group, (g) => {
               :progress="b.progress"
               :soon="b.soon"
               :show-parity="!selectedParity"
-              :time="`${b.lesson.start}–${b.lesson.end}`"
+              :time="b.cols === 1 ? `${b.lesson.start}–${b.lesson.end}` : undefined"
               class="big"
             />
           </div>
@@ -541,7 +541,7 @@ watch(group, (g) => {
 .welcome {
   max-width: 34rem;
   margin: 0;
-  padding-top: 1.5rem;
+  padding-top: 0.5rem;
 }
 
 .welcome h1 {
@@ -646,7 +646,7 @@ watch(group, (g) => {
   color: var(--mask);
 }
 
-.par.ask {
+.par.unknown {
   border-style: dashed;
   border-color: var(--muted);
   color: var(--muted);
@@ -937,7 +937,26 @@ watch(group, (g) => {
   font-size: 0.875rem;
 }
 
+.block .big > :deep(*) {
+  flex-shrink: 0;
+}
+
+.block .big :deep(.meta) {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.block .big :deep(.meta > *) {
+  display: inline;
+}
+
 .block .big :deep(strong) {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
   font-size: 0.9375rem;
 }
 
@@ -1020,7 +1039,16 @@ watch(group, (g) => {
 
   .controls {
     position: static;
-    padding-bottom: 0;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+  }
+
+  .when {
+    display: flex;
+    flex-direction: column;
+    padding: 0.55rem 0 0 0.2rem;
+    font-size: 0.75rem;
+    font-weight: 500;
   }
 
   .prog {
