@@ -20,12 +20,12 @@ import ro.aciee.advisor.domain.timetable.model.source.WeekParity;
 import java.awt.geom.Point2D;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.TreeMap;
 import java.util.TreeSet;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -36,6 +36,14 @@ public class TimetableParser {
     private static final Pattern GROUP = Pattern.compile("[A-Z0-9]{2,3}\\d\\d");
     private static final Pattern SUBGROUP = Pattern.compile("[a-z]");
     private static final Pattern KIND = Pattern.compile("\\(\\s*([CSLP])\\s*\\)");
+    private static final String ONE_ROOM = "(?<![\\p{L}\\d])(?:\\p{Lu}\\p{L}{0,2} ?\\d{2,3}(?:[A-Za-z]|\\s[ab])?|P\\d)(?![\\p{L}\\d.])";
+    private static final String ROOMS = ONE_ROOM + "(?:\\s*[/+,]\\s*" + ONE_ROOM + ")*";
+    private static final Pattern ROOM = Pattern.compile("\\(\\s*(" + ROOMS + ")\\s*\\)|(" + ROOMS + ")");
+    private static final Pattern TEACHER = Pattern.compile("(?<![\\p{L}.])(?iu:prof|conf|[sșş]\\.?\\s?l|lector|lect|asis|as|drd|dr)(?:\\s?\\.|\\s)"
+            + "|(?<![\\p{L}.])\\p{Lu}\\.(?:\\s?\\p{Lu}\\.)*\\s?\\p{Lu}\\p{Ll}+");
+    private static final Pattern NAME = Pattern.compile("\\p{Lu}[\\p{L}.,\\s'-]*\\p{Ll}[\\p{L}.\\s'-]*");
+    private static final Pattern NOTE = Pattern.compile("(?iu)(?<!\\p{L})(?:stadion|sala |clubul|portu|s\\d+\\s?-\\s?\\d+|săptămânile|saptamanile)");
+    private static final String BREAK = "\u0001";
 
     private final List<Word> words;
     private final List<Box> horizontals = new ArrayList<>();
@@ -205,9 +213,52 @@ public class TimetableParser {
         var weeks = halves.size() == 2 ? WeekParity.ALL : halves.getFirst() == 0 ? WeekParity.ODD : WeekParity.EVEN;
         var groups = cells.stream().map(i -> i % columns.size()).distinct().sorted().map(c -> columns.get(c).getLabel()).toList();
         var lines = lines(regionWords);
-        Matcher kind = KIND.matcher(String.join(" ", lines));
-        var title = KIND.matcher(lines.getFirst()).replaceFirst("").replaceAll("\\s+", " ").strip();
-        return new Lesson(slot.getDay(), slot.getStart(), slot.getEnd(), weeks, groups, kind.find() ? kind.group(1) : null, title, lines.subList(1, lines.size()));
+        var kinds = KIND.matcher(String.join("\n", lines)).results().map(m -> m.group(1)).toList();
+        var kind = kinds.isEmpty() ? null : kinds.getFirst();
+        var markedLines = lines.stream().filter(line -> KIND.matcher(line).find()).count();
+        if (kinds.stream().distinct().count() > 1 || markedLines > 1) {
+            var subject = clean(KIND.matcher(lines.getFirst()).replaceAll(" "));
+            var note = clean(KIND.matcher(String.join(" · ", lines.subList(1, lines.size()))).replaceAll(" "));
+            return new Lesson(slot.getDay(), slot.getStart(), slot.getEnd(), weeks, groups, kind, subject, null, null, note, lines);
+        }
+        var text = KIND.matcher(String.join("\n", lines)).replaceAll(BREAK);
+        String room = null;
+        var roomMatch = ROOM.matcher(text);
+        if (roomMatch.find()) {
+            room = clean(roomMatch.group(roomMatch.group(1) != null ? 1 : 2)).replaceAll("(?<=[\\p{L}\\d]) (?=[\\p{L}\\d])", "");
+            text = text.substring(0, roomMatch.start()) + BREAK + text.substring(roomMatch.end());
+        }
+        var cut = Math.min(Math.min(index(text, "\n"), index(text, BREAK)), Math.min(start(TEACHER, text), start(NOTE, text)));
+        var subject = clean(text.substring(0, cut));
+        var rest = text.substring(cut);
+        String teacher = null;
+        var teacherMatch = TEACHER.matcher(rest);
+        if (teacherMatch.find()) {
+            var end = index(rest.substring(teacherMatch.start()), BREAK) + teacherMatch.start();
+            teacher = clean(rest.substring(teacherMatch.start(), end));
+            rest = rest.substring(0, teacherMatch.start()) + BREAK + rest.substring(end);
+        }
+        var parts = new ArrayList<>(Arrays.stream(rest.split("[\n" + BREAK + "]")).map(TimetableParser::clean).filter(p -> !p.isEmpty()).toList());
+        if (teacher == null) {
+            teacher = parts.stream().filter(p -> NAME.matcher(p).matches() && !NOTE.matcher(p).find()).findFirst().orElse(null);
+            parts.remove(teacher);
+        }
+        return new Lesson(slot.getDay(), slot.getStart(), slot.getEnd(), weeks, groups, kind,
+                subject.isEmpty() ? clean(lines.getFirst()) : subject, room, teacher, parts.isEmpty() ? null : String.join(" · ", parts), lines);
+    }
+
+    private static int index(String text, String token) {
+        var i = text.indexOf(token);
+        return i < 0 ? text.length() : i;
+    }
+
+    private static int start(Pattern pattern, String text) {
+        var m = pattern.matcher(text);
+        return m.find() ? m.start() : text.length();
+    }
+
+    private static String clean(String text) {
+        return text.replace(BREAK, " ").replaceAll("\\s+", " ").replaceAll("^[\\s\\-–,;/·]+|[\\s\\-–,;/·]+$", "");
     }
 
     private String title() {

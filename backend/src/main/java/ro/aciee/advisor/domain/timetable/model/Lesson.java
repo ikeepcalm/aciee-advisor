@@ -15,6 +15,9 @@ public class Lesson {
     private WeekParity weeks;
     private List<String> groups;
     private String kind;
-    private String title;
+    private String subject;
+    private String room;
+    private String teacher;
+    private String note;
     private List<String> lines;
 }

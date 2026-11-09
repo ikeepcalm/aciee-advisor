@@ -100,7 +100,10 @@ export interface Lesson {
   weeks: WeekParity
   groups: string[]
   kind: string | null
-  title: string
+  subject: string
+  room: string | null
+  teacher: string | null
+  note: string | null
   lines: string[]
 }
 
