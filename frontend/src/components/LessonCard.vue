@@ -7,6 +7,7 @@ defineProps<{
   progress: number | null
   soon?: number | null
   showParity: boolean
+  time?: string
 }>()
 
 const { t } = useI18n()
@@ -21,6 +22,7 @@ const { t } = useI18n()
       </span>
       <span v-if="progress !== null" class="now">{{ t('timetable.now') }}</span>
       <span v-else-if="soon != null" class="soon">{{ t('timetable.startsIn', { n: soon }) }}</span>
+      <span v-if="time" class="dim time">{{ time }}</span>
     </span>
     <strong>{{ lesson.title }}</strong>
     <span v-for="(line, i) in lesson.lines" :key="i" class="dim">{{ line }}</span>
@@ -31,6 +33,10 @@ const { t } = useI18n()
 </template>
 
 <style scoped>
+.time {
+  margin-left: auto;
+}
+
 .lesson {
   display: flex;
   flex-direction: column;

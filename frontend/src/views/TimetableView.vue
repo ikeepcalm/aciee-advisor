@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
+import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { ArrowLeftRight, ChevronDown } from 'lucide-vue-next'
@@ -108,10 +108,7 @@ function tapParity() {
 }
 
 function range(monday: Date) {
-  const friday = addDays(monday, 4)
-  return monday.getMonth() === friday.getMonth()
-    ? `${monday.getDate()}–${dayMonth.value.format(friday)}`
-    : `${dayMonth.value.format(monday)} – ${dayMonth.value.format(friday)}`
+  return dayMonth.value.formatRange(monday, addDays(monday, 4))
 }
 
 const weeks = computed(() =>
@@ -196,18 +193,64 @@ const slots = computed(() => {
     .map(([start, end]) => ({ start, end }))
 })
 
-const agenda = computed(() => {
-  const items: ({ gap: false; entry: Entry } | { gap: true; from: string; to: string })[] = []
-  let previousEnd = ''
-  for (const e of byDay.value[day.value]!) {
-    if (previousEnd && minutes(e.lesson.start) - minutes(previousEnd) >= 30) {
-      items.push({ gap: true, from: previousEnd, to: e.lesson.start })
-    }
-    items.push({ gap: false, entry: e })
-    previousEnd = previousEnd > e.lesson.end ? previousEnd : e.lesson.end
+const PX_PER_MINUTE = 1.1
+
+const span = computed(() => {
+  const all = program.value?.lessons ?? []
+  return {
+    from: Math.floor(Math.min(480, ...all.map((l) => minutes(l.start))) / 60) * 60,
+    to: Math.ceil(Math.max(1200, ...all.map((l) => minutes(l.end))) / 60) * 60,
   }
-  return items
 })
+
+function y(time: number) {
+  return (time - span.value.from) * PX_PER_MINUTE
+}
+
+function clockLabel(time: number) {
+  return `${String(Math.floor(time / 60)).padStart(2, '0')}:${String(time % 60).padStart(2, '0')}`
+}
+
+const hours = computed(() =>
+  Array.from(
+    { length: (span.value.to - span.value.from) / 60 + 1 },
+    (_, i) => span.value.from + i * 60,
+  ),
+)
+
+const blocks = computed(() => {
+  const list = byDay.value[day.value]!
+  return list.map((e) => {
+    const same = list.filter((o) => o.lesson.start === e.lesson.start)
+    const start = minutes(e.lesson.start)
+    return {
+      ...e,
+      top: y(start),
+      height: (minutes(e.lesson.end) - start) * PX_PER_MINUTE,
+      col: same.indexOf(e),
+      cols: same.length,
+    }
+  })
+})
+
+const gaps = computed(() => {
+  const result: { from: string; to: string }[] = []
+  let previousEnd = ''
+  for (const b of blocks.value) {
+    if (previousEnd && minutes(b.lesson.start) - minutes(previousEnd) >= 30) {
+      result.push({ from: previousEnd, to: b.lesson.start })
+    }
+    previousEnd = previousEnd > b.lesson.end ? previousEnd : b.lesson.end
+  }
+  return result
+})
+
+const nowTop = computed(() =>
+  isToday(day.value) && nowMinutes.value >= span.value.from && nowMinutes.value <= span.value.to
+    ? y(nowMinutes.value)
+    : null,
+)
+const nowLine = ref<HTMLElement | null>(null)
 
 function formatted(iso: string | null) {
   return iso
@@ -240,6 +283,8 @@ onMounted(async () => {
     [route.query.g, readJson<string>('timetable.group')]
       .map((g) => (typeof g === 'string' ? g.toUpperCase() : g))
       .find(known) ?? null
+  await nextTick()
+  nowLine.value?.scrollIntoView({ block: 'center' })
 })
 
 onUnmounted(() => clearInterval(timer))
@@ -362,32 +407,58 @@ watch(group, (g) => {
           </button>
         </nav>
 
-        <ol class="trace-list">
-          <li v-if="!agenda.length" class="empty">{{ t('timetable.free') }}</li>
-          <template v-for="(item, i) in agenda" :key="i">
-            <li v-if="item.gap" class="gap">
-              {{ t('timetable.freeGap', { from: item.from, to: item.to }) }}
-            </li>
-            <li v-else class="stop" :class="`k-${item.entry.lesson.kind ?? 'X'}`">
-              <span class="when">
-                <span>{{ item.entry.lesson.start }}</span>
-                <span class="dim">{{ item.entry.lesson.end }}</span>
-              </span>
-              <span
-                class="pad"
-                :class="{ live: item.entry.progress !== null }"
-                aria-hidden="true"
-              ></span>
-              <LessonCard
-                :lesson="item.entry.lesson"
-                :progress="item.entry.progress"
-                :soon="item.entry.soon"
-                :show-parity="!selectedParity"
-                class="big"
-              />
-            </li>
-          </template>
-        </ol>
+        <p v-if="!blocks.length" class="empty">{{ t('timetable.free') }}</p>
+        <div v-else class="axis" :style="{ height: `${y(span.to)}px` }">
+          <span v-for="h in hours" :key="h" class="tick" :style="{ top: `${y(h)}px` }">
+            <span>{{ clockLabel(h) }}</span>
+          </span>
+          <span
+            v-for="g in gaps"
+            :key="g.from"
+            class="gap"
+            :style="{
+              top: `${y(minutes(g.from))}px`,
+              height: `${y(minutes(g.to)) - y(minutes(g.from))}px`,
+            }"
+          >
+            {{ t('timetable.freeGap', { from: g.from, to: g.to }) }}
+          </span>
+          <div
+            v-for="(b, i) in blocks"
+            :key="i"
+            class="block"
+            :class="`k-${b.lesson.kind ?? 'X'}`"
+            :style="{
+              top: `${b.top}px`,
+              height: `${b.height}px`,
+              '--col': b.col,
+              '--cols': b.cols,
+            }"
+          >
+            <span
+              v-if="b.col === 0"
+              class="pad"
+              :class="{ live: b.progress !== null }"
+              aria-hidden="true"
+            ></span>
+            <LessonCard
+              :lesson="b.lesson"
+              :progress="b.progress"
+              :soon="b.soon"
+              :show-parity="!selectedParity"
+              :time="`${b.lesson.start}–${b.lesson.end}`"
+              class="big"
+            />
+          </div>
+          <div
+            v-if="nowTop !== null"
+            ref="nowLine"
+            class="now-line"
+            :style="{ top: `${nowTop}px` }"
+          >
+            <span>{{ clockLabel(nowMinutes) }}</span>
+          </div>
+        </div>
 
         <div class="grid" role="table" :aria-label="t('timetable.title')">
           <div role="row" class="row">
@@ -738,6 +809,7 @@ watch(group, (g) => {
   grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 0.4rem;
   margin-top: 0.6rem;
+  padding-bottom: 0.25rem;
 }
 
 .day {
@@ -788,48 +860,63 @@ watch(group, (g) => {
   background: var(--on-mask);
 }
 
-.trace-list {
+.axis {
   position: relative;
-  display: flex;
-  flex-direction: column;
-  gap: 0.6rem;
-  margin: 0;
-  padding: 0;
-  list-style: none;
+  margin: 1.25rem 0 0.5rem;
 }
 
-.trace-list::before {
+.axis::before {
   content: '';
   position: absolute;
-  top: 0.9rem;
-  bottom: 0.9rem;
-  left: 3.62rem;
+  top: 0;
+  bottom: 0;
+  left: 3.4rem;
   width: 2px;
   background: var(--copper);
-  opacity: 0.5;
+  opacity: 0.4;
 }
 
-.stop {
-  display: grid;
-  grid-template-columns: 3rem 1.25rem minmax(0, 1fr);
-  align-items: start;
-  gap: 0 0.35rem;
+.tick {
+  position: absolute;
+  left: 0;
+  right: 0;
+  border-top: 1px dashed var(--line);
 }
 
-.when {
-  display: flex;
-  flex-direction: column;
-  padding-top: 0.55rem;
-  font-size: 0.75rem;
-  font-weight: 500;
+.tick > span {
+  position: absolute;
+  top: -0.55rem;
+  left: 0;
+  padding-right: 0.35rem;
+  background: var(--board);
+  font-family: 'Martian Mono', ui-monospace, monospace;
+  font-size: 0.6875rem;
+  color: var(--muted);
+}
+
+.block {
+  --rail: 4.3rem;
+  position: absolute;
+  z-index: 3;
+  left: calc(var(--rail) + (100% - var(--rail)) * var(--col) / var(--cols));
+  width: calc((100% - var(--rail)) / var(--cols) - 0.25rem);
+  padding: 2px 0;
+  box-sizing: border-box;
+}
+
+.block .lesson {
+  height: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
 }
 
 .pad {
-  position: relative;
+  position: absolute;
+  top: 0.7rem;
+  left: -1.33rem;
   z-index: 1;
   width: 0.9rem;
   height: 0.9rem;
-  margin: 0.65rem 0 0 0.18rem;
   border: 3px solid var(--kind);
   border-radius: 50%;
   background: var(--board);
@@ -848,20 +935,60 @@ watch(group, (g) => {
   }
 }
 
-.stop .big {
+.block .big {
   font-size: 0.875rem;
 }
 
-.stop .big :deep(strong) {
+.block .big :deep(strong) {
   font-size: 0.9375rem;
 }
 
 .gap {
-  padding: 0.1rem 0 0.1rem 4.6rem;
+  position: absolute;
+  left: 4.3rem;
+  right: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Martian Mono', ui-monospace, monospace;
   font-size: 0.625rem;
   letter-spacing: 0.06em;
   text-transform: uppercase;
   color: var(--muted);
+}
+
+.now-line {
+  position: absolute;
+  left: 3rem;
+  right: 0;
+  z-index: 2;
+  height: 2px;
+  background: var(--copper);
+  pointer-events: none;
+}
+
+.now-line::before {
+  content: '';
+  position: absolute;
+  top: -4px;
+  left: calc(0.4rem - 4px);
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--copper);
+}
+
+.now-line > span {
+  position: absolute;
+  top: -0.6rem;
+  left: -3rem;
+  padding: 0.1rem 0.3rem;
+  border-radius: 0.3rem;
+  background: var(--copper);
+  color: var(--panel);
+  font-family: 'Martian Mono', ui-monospace, monospace;
+  font-size: 0.625rem;
+  font-weight: 500;
 }
 
 .empty {
@@ -908,7 +1035,8 @@ watch(group, (g) => {
   }
 
   .days,
-  .trace-list {
+  .axis,
+  .empty {
     display: none;
   }
 
