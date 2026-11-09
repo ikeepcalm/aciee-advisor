@@ -30,6 +30,7 @@ dependencies {
 	runtimeOnly 'org.bouncycastle:bcprov-jdk18on:1.85.2'
 	implementation 'org.postgresql:postgresql'
 	implementation 'com.github.librepdf:openpdf:3.0.5'
+	implementation 'org.apache.pdfbox:pdfbox:3.0.5'
 	runtimeOnly 'com.github.librepdf:openpdf-fonts-extra:3.0.5'
 	implementation 'org.dhatim:fastexcel:0.20.2'
 	annotationProcessor 'org.projectlombok:lombok'

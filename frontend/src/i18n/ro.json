@@ -78,7 +78,8 @@
     "courses": "Cursuri",
     "submissions": "Contribuțiile mele",
     "moderation": "Moderare",
-    "menu": "Meniu"
+    "menu": "Meniu",
+    "timetable": "Orar"
   },
   "group": {
     "title": "Grupa mea",
@@ -371,5 +372,60 @@
     "xlsx": "Descarcă Excel",
     "pdf": "Descarcă PDF",
     "note": "Datele vin din agregatele actualizate periodic. Sub k evaluări mediile nu sunt afișate."
+  },
+  "timetable": {
+    "title": "Orar",
+    "loading": "Orarul se descarcă de pe site-ul facultății. Revino în câteva minute.",
+    "pickTitle": "Al cui e orarul?",
+    "pickLede": "Alege anul, specializarea și grupa. Ținem minte alegerea pe acest dispozitiv.",
+    "pickYear": "Anul de studiu",
+    "pickProgram": "Specializarea",
+    "pickGroup": "Grupa",
+    "change": "Schimbă grupa",
+    "changeShort": "Schimbă",
+    "year": "Anul {n}",
+    "weekPicker": "Alege săptămâna",
+    "dayPicker": "Alege ziua",
+    "today": "azi",
+    "parity": {
+      "ODD": "Impară",
+      "EVEN": "Pară"
+    },
+    "bit": {
+      "ODD": "IMP",
+      "EVEN": "PAR"
+    },
+    "askParity": "Săptămâna {range} e impară sau pară?",
+    "askHint": "Răspunzi o singură dată. De acum, orarul trece singur de la o săptămână la alta.",
+    "flip": "Paritate greșită? Inversează",
+    "kinds": {
+      "C": "Curs",
+      "S": "Seminar",
+      "L": "Laborator",
+      "P": "Proiect",
+      "X": "Activitate"
+    },
+    "days": {
+      "1": "Luni",
+      "2": "Marți",
+      "3": "Miercuri",
+      "4": "Joi",
+      "5": "Vineri"
+    },
+    "daysShort": {
+      "1": "Lu",
+      "2": "Ma",
+      "3": "Mi",
+      "4": "Jo",
+      "5": "Vi"
+    },
+    "now": "Acum",
+    "startsIn": "în {n} min",
+    "free": "Liber toată ziua.",
+    "freeGap": "Liber {from}–{to}",
+    "officialPdf": "PDF-ul oficial",
+    "updatedAt": "modificat de facultate {at}",
+    "checkedAt": "verificat {at}",
+    "parityNote": "O oră împărțită în PDF: jumătatea de sus e săptămâna impară, cea de jos săptămâna pară."
   }
 }

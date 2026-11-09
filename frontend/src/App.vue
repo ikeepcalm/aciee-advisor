@@ -18,7 +18,10 @@ watch(
 
 const links = computed(() => {
   const user = auth.user
-  const items = [{ to: '/', label: t('nav.courses') }]
+  const items = [
+    { to: '/', label: t('nav.courses') },
+    { to: '/orar', label: t('nav.timetable') },
+  ]
   if (!user) {
     return items
   }

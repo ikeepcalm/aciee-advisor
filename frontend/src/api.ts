@@ -90,3 +90,34 @@ export function safeNext(query: LocationQuery): string {
   const next = query.next
   return typeof next === 'string' && next.startsWith('/') && !next.startsWith('//') ? next : '/'
 }
+
+export type WeekParity = 'ALL' | 'ODD' | 'EVEN'
+
+export interface Lesson {
+  day: number
+  start: string
+  end: string
+  weeks: WeekParity
+  groups: string[]
+  kind: string | null
+  title: string
+  lines: string[]
+}
+
+export interface TimetableProgram {
+  code: string
+  year: number
+  name: string
+  title: string
+  semester: string
+  pdfUrl: string
+  updatedAt: string | null
+  groups: string[]
+  lessons: Lesson[]
+}
+
+export interface Timetable {
+  checkedAt: string | null
+  source: string
+  programs: TimetableProgram[]
+}

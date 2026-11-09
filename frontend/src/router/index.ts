@@ -19,6 +19,11 @@ const router = createRouter({
       meta: { signedIn: true },
     },
     {
+      path: '/orar',
+      name: 'timetable',
+      component: () => import('../views/TimetableView.vue'),
+    },
+    {
       path: '/signup',
       name: 'signup',
       component: () => import('../views/SignUpView.vue'),
