@@ -2,39 +2,39 @@
 
 @custom-variant dark (&:where(.dark, .dark *));
 
-/* Primitive + semantic tokens. Light = a solder-mask board; dark = the same board unlit. */
+/* Primitive + semantic tokens. Light = a blue solder-mask board on a cool white bench; dark = the same board unlit. */
 :root {
-  --board: #e9f0ec;
+  --board: #f3f6fa;
   --panel: #ffffff;
-  --ink: #10241d;
-  --muted: #5b6e66;
-  --line: #c9d8d0;
-  --mask: #1d5b45;
-  --on-mask: #f2f7f4;
-  --copper: #9a5220;
+  --ink: #111c2b;
+  --muted: #5a6678;
+  --line: #d3dbe6;
+  --mask: #1f4fb8;
+  --on-mask: #ffffff;
+  --copper: #a0531f;
   --danger: #b4232c;
   --kind-c: var(--copper);
-  --kind-s: #2f6f9e;
-  --kind-l: #6f4fc0;
+  --kind-s: #0f7a73;
+  --kind-l: #6a4bc4;
   --kind-p: #8a6a0c;
-  --kind-x: #5b6e66;
+  --kind-x: #5a6678;
   color-scheme: light;
 }
 
 .dark {
-  --board: #0d211b;
-  --panel: #142d25;
-  --ink: #e4eee8;
-  --muted: #8fa79c;
-  --line: #24443a;
-  --mask: #3fa97f;
-  --on-mask: #0d211b;
+  --board: #0b1420;
+  --panel: #122033;
+  --ink: #e6ecf4;
+  --muted: #92a1b5;
+  --line: #243650;
+  --mask: #6ea0ff;
+  --on-mask: #0b1420;
   --copper: #e0904f;
   --danger: #ff8a8a;
-  --kind-s: #6fb1e0;
+  --kind-s: #4fc3b8;
   --kind-l: #b39cf0;
   --kind-p: #e2c04a;
-  --kind-x: #8fa79c;
+  --kind-x: #92a1b5;
   color-scheme: dark;
 }
 
@@ -250,11 +250,11 @@
 
   select.input {
     @apply appearance-none bg-[length:1rem] bg-[position:right_0.75rem_center] bg-no-repeat pr-9;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%235b6e66' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%235a6678' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
   }
 
   .dark select.input {
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238fa79c' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2392a1b5' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
   }
 
   textarea.input {
