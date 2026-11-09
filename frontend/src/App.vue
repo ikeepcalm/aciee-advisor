@@ -92,7 +92,7 @@ async function signOut() {
       class="sticky top-0 z-30 border-b border-line bg-board/85 backdrop-blur supports-backdrop-filter:bg-board/70"
     >
       <div class="mx-auto flex h-14 max-w-6xl items-center gap-2 px-4 md:px-6">
-        <RouterLink to="/" class="flex items-center gap-2 text-ink no-underline">
+        <RouterLink to="/" class="flex min-h-11 items-center gap-2 text-ink no-underline">
           <BrandMark class="size-7" />
           <span class="display text-lg leading-none"
             >ACIEE <span class="text-mask">Advisor</span></span

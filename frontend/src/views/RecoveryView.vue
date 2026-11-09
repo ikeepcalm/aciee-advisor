@@ -91,7 +91,7 @@ const restore = () =>
     <template v-if="mode === 'show' || mode === 'create'">
       <p class="lede text-sm">{{ t('recovery.yourCode') }}</p>
       <p
-        class="mono mt-4 rounded-lg border border-dashed border-copper bg-panel p-4 text-center text-lg leading-relaxed font-medium break-all select-all"
+        class="mono mt-4 rounded-lg border border-dashed border-copper bg-panel p-4 text-center text-lg leading-relaxed font-medium [overflow-wrap:anywhere] select-all"
       >
         {{ code }}
       </p>

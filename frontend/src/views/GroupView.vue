@@ -191,7 +191,7 @@ onMounted(() => run(load))
       <div>
         <p class="font-semibold">
           {{ current.specialization }} · {{ t('catalog.year', { n: current.studyYear }) }}
-          <span class="mono ml-1 text-xs font-normal text-muted">{{ current.academicYear }}</span>
+          <span class="mono ml-1 text-xs whitespace-nowrap font-normal text-muted">{{ current.academicYear }}</span>
         </p>
         <p class="mt-1 text-sm text-muted">
           {{
@@ -234,7 +234,7 @@ onMounted(() => run(load))
         class="flex flex-wrap items-center gap-2 border-t border-line py-2 text-sm"
       >
         <strong>{{ r.groupCode }}</strong>
-        <span class="mono text-xs text-muted">{{ r.academicYear }}</span>
+        <span class="mono text-xs whitespace-nowrap text-muted">{{ r.academicYear }}</span>
         <span class="text-muted">· {{ t(`group.kind.${r.kind}`) }}</span>
         <span class="tag ml-auto bg-board text-muted">{{ t(`group.status.${r.status}`) }}</span>
       </p>

@@ -160,7 +160,7 @@ watch(
       <dl class="mt-1 grid grid-cols-[auto_1fr] gap-x-3 gap-y-0.5 text-xs">
         <template v-for="column in table?.columns" :key="column.name">
           <dt class="text-muted">{{ t(`admin.columns.${column.name}`) }}</dt>
-          <dd class="m-0 break-all">{{ shown(row, column) ?? '—' }}</dd>
+          <dd class="m-0 [overflow-wrap:anywhere]">{{ shown(row, column) ?? '—' }}</dd>
         </template>
       </dl>
       <div class="mt-2 flex flex-wrap gap-1">

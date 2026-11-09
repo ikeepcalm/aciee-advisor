@@ -49,13 +49,13 @@ onMounted(() => load())
     <form class="mt-4 flex flex-wrap gap-2" @submit.prevent="load()">
       <input
         v-model.trim="table"
-        class="input flex-1"
+        class="input basis-full sm:basis-0 sm:flex-1"
         :placeholder="t('admin.historyTable')"
         :aria-label="t('admin.historyTable')"
       />
       <input
         v-model.trim="rowId"
-        class="input w-28"
+        class="input min-w-0 flex-1 sm:w-28 sm:flex-none"
         :placeholder="t('admin.historyRow')"
         :aria-label="t('admin.historyRow')"
         inputmode="numeric"
@@ -63,8 +63,8 @@ onMounted(() => load())
       <button type="submit" class="btn btn-primary">{{ t('admin.search') }}</button>
     </form>
     <AppNotice v-if="error" kind="error">{{ error }}</AppNotice>
-    <details v-for="e in entries" :key="e.id" class="border-t border-line py-2 text-sm">
-      <summary class="mono cursor-pointer text-xs">
+    <details v-for="e in entries" :key="e.id" class="border-t border-line pb-2 text-sm">
+      <summary class="mono cursor-pointer pt-3 pb-1 text-xs">
         {{ d(new Date(e.createdAt), 'short') }} · <strong>{{ e.op }}</strong> {{ e.tableName }} #{{
           e.rowId
         }}
