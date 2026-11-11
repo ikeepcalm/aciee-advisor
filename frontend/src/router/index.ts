@@ -1,12 +1,22 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import CatalogView from '../views/CatalogView.vue'
+import HomeView from '../views/HomeView.vue'
 import { useAuthStore } from '@/stores/auth'
 import { safeNext } from '@/api'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
-    { path: '/', name: 'home', component: CatalogView },
+    {
+      path: '/',
+      name: 'home',
+      component: HomeView,
+      beforeEnter: (to) => ('year' in to.query ? { name: 'catalog', query: to.query } : true),
+    },
+    {
+      path: '/courses',
+      name: 'catalog',
+      component: () => import('../views/CatalogView.vue'),
+    },
     {
       path: '/courses/:itemId',
       name: 'course',
@@ -16,7 +26,6 @@ const router = createRouter({
       path: '/professors/:slug',
       name: 'professor',
       component: () => import('../views/ProfessorView.vue'),
-      meta: { signedIn: true },
     },
     { path: '/orar', redirect: '/timetable' },
     {

@@ -17,7 +17,6 @@ public class CoursePage {
     private int studyYear;
     private int semesterNo;
     private int planId;
-    private boolean signedIn;
     private int threshold;
     private Integer academicYearId;
     private List<YearOption> years;

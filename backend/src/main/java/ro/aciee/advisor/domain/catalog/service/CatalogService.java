@@ -101,7 +101,7 @@ public class CatalogService {
     }
 
     @Transactional(readOnly = true)
-    public CoursePage course(int itemId, Integer academicYearId, boolean signedIn) {
+    public CoursePage course(int itemId, Integer academicYearId) {
         var page = jdbc.sql("""
                         SELECT ci.id AS item_id, sr.root_id AS root_subject_id, s.name_ro AS subject_name, sp.name_ro AS specialization,
                                ci.study_year, ci.semester_no, ci.plan_id
@@ -116,7 +116,6 @@ public class CatalogService {
                 .optional()
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "not_found"));
         int root = page.getRootSubjectId();
-        page.setSignedIn(signedIn);
         page.setThreshold(threshold());
         page.setYears(jdbc.sql("SELECT DISTINCT g.academic_year_id AS id, g.academic_year AS label FROM (" + SUBJECT_OFFERINGS + """
                         ) o JOIN core.group_v g ON g.id = o.group_id ORDER BY label DESC""")
@@ -142,10 +141,6 @@ public class CatalogService {
                 .query(CourseTeacher.class)
                 .list());
         page.setOfferingIds(jdbc.sql("SELECT offering_id FROM (" + SUBJECT_OFFERINGS + ") o").param("root", root).query(Integer.class).list());
-        if (!signedIn) {
-            page.setTips(List.of());
-            return page;
-        }
         Map<Integer, Radar> radars = radars("subject_id = :key", "professor_id", root);
         Map<Integer, List<PublishedText>> comments = comments("sr.root_id = :key", "ta.professor_id", root);
         page.getTeachers().forEach(teacher -> {

@@ -37,7 +37,7 @@ server:
   servlet:
     session:
       cookie:
-        secure: true
+        secure: ${COOKIE_SECURE:true}
         same-site: lax
 
 app:

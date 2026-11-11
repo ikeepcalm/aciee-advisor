@@ -8,6 +8,15 @@ What is left for a person to do: things code cannot do, decisions only you can m
 - [ ] Open `/admin/reports` and the sign-in / sign-up pages in a browser, including at 360 px. They were tested through the API and the build only, never looked at.
 - [ ] Free local resources: `dropdb -h localhost -U aciee aciee_large` (full-volume Stage 4 data, several GB) and stop `infra` compose (`docker compose down`) when not developing.
 
+## After the Doodle redesign (2026-11-11)
+
+- [ ] Have a native speaker read `uk.json` and `ru.json`. Flagged by the translators: the "(а)" / "(ла)" gender endings in the recovery messages, the odd/even week chips (НЕП/ПАР, НЕЧ/ЧЁТ), and "Survival" in the reports section rendered literally in Ukrainian.
+- [ ] Subject names, titles, components and other `label_ro` values come from the database in Romanian only, so they stay Romanian in en/uk/ru. Decide whether that is acceptable or the reference tables need translated labels.
+- [ ] Course and professor pages (ratings, comments, tips) are now public. Watch traffic; if scraping or load shows up, cache `radars()`/`comments()` per subject and year (identical for every viewer) or rate-limit `/api/catalog/courses/*` and `/api/professors/*`. Check that ADR-012 / the LIA covers public visibility of comments.
+- [ ] Update `docs/DESIGN.md`: it still describes the old circuit-board style (Chakra Petch, blue board palette). The site now uses the paper style: Caveat 700 display, IBM Plex Sans body, ink/ballpoint/marker tokens in `frontend/src/app.css`.
+- [ ] Look at the views never checked in the new style: Join, Verify, Recovery, Submissions, Moderation, Admin leaders/history/reports. Also try Safari, Firefox and a real phone, and the theme and language animations in Safari (view transitions).
+- [ ] Optional: preload the Caveat latin woff2 in `index.html` to cut the heading font swap; restyle the timetable picker and day chips with the shared `.chip` / `.chip-on` classes instead of their local copies.
+
 ## Deploy (DEPLOY.md)
 
 - [ ] Buy the domain `acieeadvisor.ro`.

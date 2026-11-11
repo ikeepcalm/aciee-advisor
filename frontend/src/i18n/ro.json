@@ -3,6 +3,70 @@
     "title": "ACIEE Advisor",
     "tagline": "Ghiduri de supraviețuire pentru cursuri și evaluări anonime ale profesorilor"
   },
+  "home": {
+    "eyebrow": "Ghidul studentului de la ACIEE",
+    "title": "Ce îți cere de fapt fiecare curs,",
+    "titleMark": "spus de studenții care l-au trecut.",
+    "lede": "Evaluări anonime și sfaturi de la studenți despre cursuri și profesori, lângă orarul grupei tale. Oricine le poate citi. Ai nevoie de cont doar ca să evaluezi.",
+    "browse": "Vezi cursurile",
+    "openTimetable": "Deschide orarul",
+    "pending": "Chestionare care te așteaptă: {n}",
+    "pendingBody": "Răspunsurile tale rămân anonime și le poți schimba mai târziu.",
+    "fillIn": "Completează chestionarul",
+    "sample": "Exemplu",
+    "sampleCaption": "Ce arată pagina unui curs",
+    "sampleCourse": "Un curs din planul tău",
+    "featuresTitle": "Ce găsești aici",
+    "features": {
+      "catalog": {
+        "title": "Toate cursurile din planul tău",
+        "body": "Alegi specializarea, planul de învățământ și anul. Fiecare semestru își arată cursurile, cu orele săptămânale de curs, seminar, laborator și proiect."
+      },
+      "survival": {
+        "title": "Cum se trece",
+        "body": "Dificultatea examenului, cât ajută laboratorul, cât de strictă e prezența, orele pe săptămână și formatul examenului, plus sfaturi de la colegi."
+      },
+      "professors": {
+        "title": "Profesorii, criteriu cu criteriu",
+        "body": "Fiecare profesor are câte o diagramă radar pentru fiecare disciplină predată, construită din evaluările studenților, cu comentarii dedesubt."
+      },
+      "timetable": {
+        "title": "Orarul grupei tale",
+        "body": "Luat din PDF-ul oficial al facultății și așezat pe zile, cu săptămânile pare și impare deja descurcate. Nu ai nevoie de cont."
+      },
+      "groups": {
+        "title": "Grupa ta",
+        "body": "Intri cu linkul de invitație de la șeful de grupă. Fiind în grupă, poți evalua cursurile pe care le urmezi."
+      },
+      "control": {
+        "title": "Evaluările rămân ale tale",
+        "body": "Vezi ce ai trimis, apoi modifici sau ștergi oricând vrei."
+      }
+    },
+    "anonTitle": "O evaluare nu este legată niciodată de contul tău",
+    "anonLede": "Chestionarul folosește semnături oarbe, aceeași idee ca un plic de vot sigilat: putem verifica dacă votul este valabil fără să știm al cui este.",
+    "steps": {
+      "account": {
+        "title": "Te autentifici ca student",
+        "body": "Adresa {'@'}student.ugal.ro și grupa ta stabilesc ce cursuri poți evalua."
+      },
+      "token": {
+        "title": "Browserul tău primește un token semnat",
+        "body": "Pentru fiecare curs, serverul semnează un token pe care nu îl vede. Mai târziu nu poate spune din ce cont a venit tokenul."
+      },
+      "submit": {
+        "title": "Evaluarea pleacă fără contul tău",
+        "body": "Este trimisă doar cu tokenul. Un token înseamnă o singură evaluare pe curs."
+      },
+      "recovery": {
+        "title": "Păstrezi un cod de recuperare",
+        "body": "Cu el poți modifica sau șterge evaluarea de pe orice dispozitiv. Noi nu îți putem recupera codul."
+      }
+    },
+    "anonNote": "Comentariile și sfaturile apar după moderare. Mediile apar abia după ce destui studenți au evaluat un curs.",
+    "closingTitle": "Ai trecut un curs? Spune-le studenților de anul viitor cum a fost.",
+    "closingBody": "Ai nevoie doar de un cont cu adresa de la universitate."
+  },
   "auth": {
     "email": "E-mail instituțional",
     "emailPlaceholder": "prenume.nume{'@'}student.ugal.ro",
@@ -23,7 +87,7 @@
     "or": "sau",
     "microsoft": "Continuă cu Microsoft",
     "verifyCode": "Codul din 6 cifre",
-    "signInLede": "Ghidurile și evaluările sunt vizibile doar studenților autentificați."
+    "signInLede": "Oricine poate citi ghidurile și evaluările. Autentifică-te ca să-ți evaluezi materiile și să lași sfaturi."
   },
   "errors": {
     "domain": "Folosește adresa ta {'@'}student.ugal.ro.",
@@ -290,7 +354,7 @@
     "subtitle": "{specialization} · An {year} · Sem. {semester}",
     "survival": "Cum se trece",
     "survivalCount": "Cum se trece (din {n} evaluări)",
-    "signInPrompt": "Autentifică-te cu adresa {'@'}student.ugal.ro ca să vezi evaluările și sfaturile.",
+    "signInPrompt": "Ai parcurs materia? Autentifică-te cu adresa {'@'}student.ugal.ro ca s-o evaluezi și să lași un sfat.",
     "teachers": "Profesori",
     "academicYear": "An universitar",
     "subgroups": "gr. {list}",

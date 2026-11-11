@@ -3,6 +3,7 @@ package ro.aciee.advisor.config;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.jdbc.support.JdbcTransactionManager;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -40,6 +41,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/auth/signup", "/api/auth/signin", "/api/auth/verify", "/api/auth/verify/resend", "/api/auth/csrf",
                                 "/api/auth/providers", "/api/auth/oauth2/**").permitAll()
                         .requestMatchers("/api/catalog/**", "/api/timetable").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/professors/*").permitAll()
                         .requestMatchers("/api/admin/**", "/api/reports/**").hasRole("ADMIN")
                         .requestMatchers("/api/moderation/**").hasAnyRole("MODERATOR", "ADMIN")
                         .requestMatchers("/api/**").authenticated()

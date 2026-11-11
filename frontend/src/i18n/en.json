@@ -3,6 +3,70 @@
     "title": "ACIEE Advisor",
     "tagline": "Course survival guides and anonymous professor evaluations"
   },
+  "home": {
+    "eyebrow": "The student's guide to ACIEE",
+    "title": "What each course really asks of you,",
+    "titleMark": "told by students who passed it.",
+    "lede": "Anonymous student ratings and tips on courses and professors, next to your group's timetable. Anyone can read them. You only need an account to rate.",
+    "browse": "Browse courses",
+    "openTimetable": "Open the timetable",
+    "pending": "Questionnaires waiting for you: {n}",
+    "pendingBody": "Your answers stay anonymous, and you can change them later.",
+    "fillIn": "Fill in the questionnaire",
+    "sample": "Example",
+    "sampleCaption": "What a course page shows",
+    "sampleCourse": "A course from your plan",
+    "featuresTitle": "What you'll find here",
+    "features": {
+      "catalog": {
+        "title": "Every course in your plan",
+        "body": "Pick your specialization, study plan and year. Each semester lists its courses with the weekly hours of lectures, seminars, labs and projects."
+      },
+      "survival": {
+        "title": "How to pass",
+        "body": "Exam difficulty, how much the lab helps, how strict attendance is, hours per week and the exam format, plus tips from classmates."
+      },
+      "professors": {
+        "title": "Professors, criterion by criterion",
+        "body": "Every professor has a radar chart for each subject they teach, drawn from student ratings, with comments underneath."
+      },
+      "timetable": {
+        "title": "Your group's timetable",
+        "body": "Taken from the faculty's official PDF and laid out by day, with odd and even weeks sorted out. No account needed."
+      },
+      "groups": {
+        "title": "Your group",
+        "body": "Join with the invitation link from your group leader. Being in a group is what lets you rate the courses you take."
+      },
+      "control": {
+        "title": "Your ratings stay yours",
+        "body": "See what you submitted, then change it or delete it whenever you want."
+      }
+    },
+    "anonTitle": "A rating is never tied to your account",
+    "anonLede": "The questionnaire uses blind signatures, the same idea as a sealed ballot envelope: we can check that a vote is valid without knowing whose it is.",
+    "steps": {
+      "account": {
+        "title": "You sign in as a student",
+        "body": "Your {'@'}student.ugal.ro address and your group decide which courses you can rate."
+      },
+      "token": {
+        "title": "Your browser gets a signed token",
+        "body": "For each course, the server signs a token it never sees. Later it cannot tell which account the token came from."
+      },
+      "submit": {
+        "title": "The rating is sent without your account",
+        "body": "It travels with the token only. One token means one rating per course."
+      },
+      "recovery": {
+        "title": "You keep a recovery code",
+        "body": "With it you can edit or delete your rating from any device. We cannot recover the code for you."
+      }
+    },
+    "anonNote": "Comments and tips are published after moderation. Averages appear only once enough students have rated a course.",
+    "closingTitle": "Passed a course? Tell next year’s students what it was like.",
+    "closingBody": "All it takes is an account with your university address."
+  },
   "auth": {
     "email": "University e-mail",
     "emailPlaceholder": "first.last{'@'}student.ugal.ro",
@@ -23,7 +87,7 @@
     "resent": "We sent you a new code.",
     "or": "or",
     "microsoft": "Continue with Microsoft",
-    "signInLede": "Guides and ratings are visible to signed-in students only."
+    "signInLede": "Anyone can read guides and ratings. Sign in to rate your courses and leave tips."
   },
   "errors": {
     "domain": "Use your {'@'}student.ugal.ro address.",
@@ -290,7 +354,7 @@
     "subtitle": "{specialization} · Year {year} · Sem. {semester}",
     "survival": "How to pass",
     "survivalCount": "How to pass (from {n} ratings)",
-    "signInPrompt": "Sign in with your {'@'}student.ugal.ro address to see ratings and tips.",
+    "signInPrompt": "Studied this course? Sign in with your {'@'}student.ugal.ro address to rate it and leave a tip.",
     "teachers": "Professors",
     "academicYear": "Academic year",
     "subgroups": "subgr. {list}",

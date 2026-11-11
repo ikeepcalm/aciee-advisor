@@ -1,7 +1,6 @@
 package ro.aciee.advisor.domain.catalog.controller;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -37,8 +36,8 @@ public class CatalogController {
     }
 
     @GetMapping("/api/catalog/courses/{itemId}")
-    public CoursePage course(@PathVariable int itemId, @RequestParam(required = false) Integer year, Authentication authentication) {
-        return catalogService.course(itemId, year, authentication != null && authentication.getPrincipal() instanceof Integer);
+    public CoursePage course(@PathVariable int itemId, @RequestParam(required = false) Integer year) {
+        return catalogService.course(itemId, year);
     }
 
     @GetMapping("/api/professors/{slug}")

@@ -114,9 +114,9 @@ function chooseProgram(p: TimetableProgram) {
 
 .chip.on,
 .chip:hover {
-  border-color: var(--mask);
-  background: var(--mask);
-  color: var(--on-mask);
+  border-color: var(--mark);
+  background: var(--mark);
+  color: var(--on-mark);
 }
 
 .programs {
@@ -133,7 +133,7 @@ function chooseProgram(p: TimetableProgram) {
   text-align: left;
   border: 1px solid var(--line);
   border-left: 4px solid var(--line);
-  border-radius: 0.6rem;
+  border-radius: var(--wobble);
   background: var(--panel);
   font-weight: 600;
 }

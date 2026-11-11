@@ -48,7 +48,7 @@ const { t } = useI18n()
   padding: 0.55rem 0.7rem;
   border: 1px solid var(--line);
   border-left: 4px solid var(--kind);
-  border-radius: 0.55rem;
+  border-radius: var(--wobble);
   background: var(--panel);
   font-size: 0.8125rem;
   line-height: 1.35;

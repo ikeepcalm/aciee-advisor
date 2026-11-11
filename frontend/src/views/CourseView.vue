@@ -47,7 +47,6 @@ interface CoursePage {
   specialization: string
   studyYear: number
   semesterNo: number
-  signedIn: boolean
   threshold: number
   academicYearId: number | null
   years: { id: number; label: string }[]
@@ -100,8 +99,11 @@ const stats = computed(() => {
 })
 
 onMounted(async () => {
-  await load()
-  labels.value = await lookups()
+  lookups().then(
+    (l) => (labels.value = l),
+    (e) => (error.value = describeError(t, e)),
+  )
+  await Promise.all([load(), auth.load()])
   if (auth.user && page.value) {
     const tokens = await localTokens(auth.user.id).catch(() => [])
     rateOffering.value =
@@ -114,7 +116,7 @@ onMounted(async () => {
 <template>
   <main class="page">
     <RouterLink
-      to="/"
+      to="/courses"
       class="inline-flex min-h-11 items-center gap-1 text-sm no-underline hover:underline"
     >
       <ArrowLeft class="size-4" aria-hidden="true" /> {{ t('common.back') }}
@@ -135,6 +137,18 @@ onMounted(async () => {
         <RouterLink v-if="rateOffering" :to="`/rate/${rateOffering}`" class="btn btn-primary mt-5">
           {{ t('course.rateThis') }}
         </RouterLink>
+        <div
+          v-if="auth.loaded && !auth.user"
+          class="card mt-5 flex flex-wrap items-center justify-between gap-3"
+        >
+          <p class="text-sm text-muted">{{ t('course.signInPrompt') }}</p>
+          <RouterLink
+            :to="{ name: 'signin', query: { next: `/courses/${itemId}` } }"
+            class="btn btn-outline"
+          >
+            {{ t('auth.signInAction') }}
+          </RouterLink>
+        </div>
       </header>
 
       <section class="mt-8">
@@ -145,20 +159,8 @@ onMounted(async () => {
               : t('course.survival')
           }}
         </h2>
-        <div
-          v-if="!page.signedIn"
-          class="card mt-3 flex flex-wrap items-center justify-between gap-3"
-        >
-          <p class="text-sm text-muted">{{ t('course.signInPrompt') }}</p>
-          <RouterLink
-            :to="{ name: 'signin', query: { next: `/courses/${itemId}` } }"
-            class="btn btn-outline"
-          >
-            {{ t('auth.signInAction') }}
-          </RouterLink>
-        </div>
         <p
-          v-else-if="!page.survival || page.survival.n < page.threshold"
+          v-if="!page.survival || page.survival.n < page.threshold"
           class="mt-3 text-sm text-muted italic"
         >
           {{ missing(page.survival?.n ?? 0) }}
@@ -203,43 +205,40 @@ onMounted(async () => {
             }}</span>
           </div>
           <strong class="mt-2 block text-base">
-            <RouterLink v-if="page.signedIn" :to="`/professors/${teacher.slug}`"
+            <RouterLink :to="`/professors/${teacher.slug}`"
               >{{ teacher.title }} {{ teacher.fullName }}</RouterLink
             >
-            <template v-else>{{ teacher.title }} {{ teacher.fullName }}</template>
           </strong>
-          <template v-if="page.signedIn">
-            <p
-              v-if="!teacher.radar || teacher.radar.n < page.threshold"
-              class="mt-2 text-sm text-muted italic"
-            >
-              {{ missing(teacher.radar?.n ?? 0) }}
-            </p>
-            <template v-else-if="labels">
-              <p class="mono mt-1 text-xs text-muted">n = {{ teacher.radar.n }}</p>
-              <RadarChart
-                :scores="teacher.radar.scores"
-                :axes="labels.axes"
-                :pillars="labels.pillars"
-              />
-            </template>
-            <details v-if="teacher.comments?.length" class="mt-3">
-              <summary class="cursor-pointer text-sm font-medium text-mask">
-                {{ t('course.comments', { n: teacher.comments.length }) }}
-              </summary>
-              <blockquote v-for="c in teacher.comments" :key="c.id" class="quote mt-3 text-sm">
-                {{ c.body }}
-                <footer class="mt-1 flex flex-wrap items-center gap-2 text-xs text-muted">
-                  {{ t('course.week', { date: d(c.week, 'short') }) }}
-                  <ReportButton :post-id="c.id" />
-                </footer>
-              </blockquote>
-            </details>
+          <p
+            v-if="!teacher.radar || teacher.radar.n < page.threshold"
+            class="mt-2 text-sm text-muted italic"
+          >
+            {{ missing(teacher.radar?.n ?? 0) }}
+          </p>
+          <template v-else-if="labels">
+            <p class="mono mt-1 text-xs text-muted">n = {{ teacher.radar.n }}</p>
+            <RadarChart
+              :scores="teacher.radar.scores"
+              :axes="labels.axes"
+              :pillars="labels.pillars"
+            />
           </template>
+          <details v-if="teacher.comments?.length" class="mt-3">
+            <summary class="cursor-pointer text-sm font-medium text-mask">
+              {{ t('course.comments', { n: teacher.comments.length }) }}
+            </summary>
+            <blockquote v-for="c in teacher.comments" :key="c.id" class="quote mt-3 text-sm">
+              {{ c.body }}
+              <footer class="mt-1 flex flex-wrap items-center gap-2 text-xs text-muted">
+                {{ t('course.week', { date: d(c.week, 'short') }) }}
+                <ReportButton :post-id="c.id" />
+              </footer>
+            </blockquote>
+          </details>
         </article>
       </section>
 
-      <section v-if="page.signedIn" class="mt-8">
+      <section class="mt-8">
         <h2 class="h2">{{ t('course.tips', { n: page.tips.length }) }}</h2>
         <p v-if="!page.tips.length" class="mt-3 text-sm text-muted">{{ t('course.noTips') }}</p>
         <blockquote v-for="tip in page.tips" :key="tip.id" class="card quote mt-3 text-sm">

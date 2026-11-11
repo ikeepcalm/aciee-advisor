@@ -11,13 +11,16 @@ export interface Account {
 export const useAuthStore = defineStore('auth', () => {
   const user = ref<Account | null>(null)
   const pendingPassword = ref('')
+  const loaded = ref(false)
   let loading: Promise<void> | null = null
 
   function load() {
-    loading ??= api<Account>('GET', '/api/auth/me').then(
-      (account) => void (user.value = account),
-      () => void (user.value = null),
-    )
+    loading ??= api<Account>('GET', '/api/auth/me')
+      .then(
+        (account) => void (user.value = account),
+        () => void (user.value = null),
+      )
+      .finally(() => (loaded.value = true))
     return loading
   }
 
@@ -42,5 +45,5 @@ export const useAuthStore = defineStore('auth', () => {
     user.value = null
   }
 
-  return { user, pendingPassword, load, signUp, signIn, verify, signOut }
+  return { user, pendingPassword, loaded, load, signUp, signIn, verify, signOut }
 })

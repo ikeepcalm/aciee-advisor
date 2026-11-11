@@ -534,7 +534,6 @@ watch(group, (g) => {
 .date,
 .dnum,
 .gap,
-.eyebrow,
 .probe,
 .par,
 .prog {
@@ -544,14 +543,6 @@ watch(group, (g) => {
 
 .dim {
   color: var(--muted);
-}
-
-.eyebrow {
-  margin: 0 0 0.5rem;
-  font-size: 0.6875rem;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--copper);
 }
 
 .welcome {
@@ -703,7 +694,7 @@ watch(group, (g) => {
   margin-top: 0.6rem;
   padding: 1.6rem 0.75rem 0.9rem;
   border: 1px solid var(--line);
-  border-radius: 0.9rem;
+  border-radius: var(--wobble);
   background: var(--panel);
 }
 
@@ -858,8 +849,12 @@ watch(group, (g) => {
   gap: 0.2rem;
   padding: 0.5rem 0;
   border: 1px solid var(--line);
-  border-radius: 0.7rem;
+  border-radius: var(--wobble);
   background: var(--panel);
+}
+
+.day:nth-child(even) {
+  border-radius: var(--wobble-alt);
 }
 
 .dname {
@@ -890,13 +885,13 @@ watch(group, (g) => {
 }
 
 .day.on {
-  border-color: var(--mask);
-  background: var(--mask);
-  color: var(--on-mask);
+  border-color: var(--mark);
+  background: var(--mark);
+  color: var(--on-mark);
 }
 
 .day.on .pads i {
-  background: var(--on-mask);
+  background: var(--on-mark);
 }
 
 .tt-page {
@@ -1060,7 +1055,7 @@ watch(group, (g) => {
   text-align: center;
   color: var(--muted);
   border: 1px dashed var(--line);
-  border-radius: 0.9rem;
+  border-radius: var(--wobble);
   background: var(--panel);
 }
 

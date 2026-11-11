@@ -191,7 +191,9 @@ onMounted(() => run(load))
       <div>
         <p class="font-semibold">
           {{ current.specialization }} · {{ t('catalog.year', { n: current.studyYear }) }}
-          <span class="mono ml-1 text-xs whitespace-nowrap font-normal text-muted">{{ current.academicYear }}</span>
+          <span class="mono ml-1 text-xs whitespace-nowrap font-normal text-muted">{{
+            current.academicYear
+          }}</span>
         </p>
         <p class="mt-1 text-sm text-muted">
           {{

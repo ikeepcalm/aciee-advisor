@@ -70,6 +70,21 @@ export function localTokens(userId: number): Promise<StoredToken[]> {
   return run(userId, 'tokens', (s) => s.getAll())
 }
 
+export function pendingOfferings(
+  offerings: RateableOffering[],
+  tokens: StoredToken[],
+): RateableOffering[] {
+  const unsent = new Set(
+    tokens.filter((token) => !token.submitted).map((token) => token.offeringId),
+  )
+  return offerings.filter(
+    (offering) =>
+      offering.open &&
+      !!offering.fingerprint &&
+      (!offering.issued || unsent.has(offering.offeringId)),
+  )
+}
+
 async function remoteVault(): Promise<Vault | null> {
   try {
     return await api<Vault>('GET', '/api/vault')

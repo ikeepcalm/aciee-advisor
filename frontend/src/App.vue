@@ -16,7 +16,7 @@ import {
   Users,
 } from 'lucide-vue-next'
 import { useAuthStore } from '@/stores/auth'
-import { setLocale, type Locale } from '@/i18n'
+import { LOCALE_NAMES, LOCALES, setLocale, type Locale } from '@/i18n'
 import { isDark, setTheme, theme, type Theme } from '@/theme'
 import BrandMark from '@/components/BrandMark.vue'
 import SegmentedChips from '@/components/SegmentedChips.vue'
@@ -35,7 +35,7 @@ watch(
 
 const tabs = computed(() => {
   const items = [
-    { to: '/', label: t('nav.courses'), icon: BookOpen },
+    { to: '/courses', label: t('nav.courses'), icon: BookOpen },
     { to: '/timetable', label: t('nav.timetable'), icon: CalendarDays },
   ]
   if (auth.user) {
@@ -65,10 +65,7 @@ const more = computed(() => {
   return items
 })
 
-const locales = computed(() => [
-  { value: 'ro', label: 'Română' },
-  { value: 'en', label: 'English' },
-])
+const locales = LOCALES.map((value) => ({ value, label: LOCALE_NAMES[value] }))
 const themes = computed(() =>
   (['system', 'light', 'dark'] as Theme[]).map((value) => ({ value, label: t(`prefs.${value}`) })),
 )
@@ -76,7 +73,7 @@ const themeModel = computed({ get: () => theme.value, set: (v) => setTheme(v as 
 const localeModel = computed({ get: () => locale.value, set: (v) => setLocale(v as Locale) })
 
 function active(to: string) {
-  return to === '/' ? route.path === '/' : route.path.startsWith(to)
+  return route.path.startsWith(to)
 }
 
 async function signOut() {
@@ -104,7 +101,7 @@ async function signOut() {
             v-for="tab in tabs"
             :key="tab.to"
             :to="tab.to"
-            class="relative flex min-h-11 items-center px-3 text-sm font-medium text-ink no-underline hover:text-mask"
+            class="nav-tab relative flex min-h-11 items-center px-3 text-sm font-medium text-ink no-underline hover:text-mask"
             :class="{
               'text-mask after:absolute after:inset-x-3 after:bottom-1 after:h-0.5 after:bg-copper':
                 active(tab.to),
@@ -116,28 +113,24 @@ async function signOut() {
         </nav>
 
         <div class="ml-auto flex items-center gap-1">
-          <div
-            class="mono flex rounded-full border border-line bg-panel text-[0.6875rem] font-medium"
-            role="group"
-            :aria-label="t('prefs.language')"
+          <label
+            class="mono relative flex min-h-11 min-w-11 cursor-pointer items-center justify-center rounded-full border border-line bg-panel px-3 text-[0.6875rem] font-medium uppercase has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-copper"
           >
-            <button
-              v-for="l in locales"
-              :key="l.value"
-              class="min-h-11 min-w-11 rounded-full px-2 uppercase"
-              :class="locale === l.value ? 'bg-mask text-on-mask' : 'text-muted hover:text-ink'"
-              :aria-pressed="locale === l.value"
-              :lang="l.value"
-              :aria-label="l.label"
-              @click="setLocale(l.value as Locale)"
+            <span aria-hidden="true">{{ locale }}</span>
+            <select
+              v-model="localeModel"
+              :aria-label="t('prefs.language')"
+              class="absolute inset-0 cursor-pointer appearance-none opacity-0"
             >
-              {{ l.value }}
-            </button>
-          </div>
+              <option v-for="l in locales" :key="l.value" :value="l.value" :lang="l.value">
+                {{ l.label }}
+              </option>
+            </select>
+          </label>
           <button
             class="btn btn-ghost btn-icon text-ink"
             :aria-label="t('prefs.theme') + ': ' + t(isDark ? 'prefs.light' : 'prefs.dark')"
-            @click="setTheme(isDark ? 'light' : 'dark')"
+            @click="setTheme(isDark ? 'light' : 'dark', { x: $event.clientX, y: $event.clientY })"
           >
             <Sun v-if="isDark" class="size-5" />
             <Moon v-else class="size-5" />
@@ -167,7 +160,7 @@ async function signOut() {
         v-for="tab in tabs"
         :key="tab.to"
         :to="tab.to"
-        class="relative flex min-h-14 flex-col items-center justify-center gap-1 text-[0.6875rem] font-medium text-muted no-underline"
+        class="nav-tab relative flex min-h-14 flex-col items-center justify-center gap-1 text-[0.6875rem] font-medium text-muted no-underline"
         :class="{
           'text-mask before:absolute before:inset-x-5 before:top-0 before:h-0.5 before:bg-copper':
             active(tab.to),
