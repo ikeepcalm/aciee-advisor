@@ -4,6 +4,7 @@ import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { ArrowRight, Check, Loader2 } from 'lucide-vue-next'
 import AppNotice from '@/components/AppNotice.vue'
+import NoteStar from '@/components/NoteStar.vue'
 import { useAuthStore } from '@/stores/auth'
 import {
   issueTokens,
@@ -142,6 +143,7 @@ onMounted(load)
             {{ t('rate.action') }} <ArrowRight class="size-4" aria-hidden="true" />
           </span>
         </RouterLink>
+        <NoteStar v-else-if="allDone" class="mx-auto mt-2 size-20" />
       </section>
 
       <div class="grid gap-8" :class="{ 'lg:col-span-2': !rateable.length }">

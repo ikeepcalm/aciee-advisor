@@ -198,7 +198,7 @@ class TokenIssueTests {
         jdbc.sql("SELECT anon.refresh_aggregates()").query().listOfRows();
         int itemId = items.get(0);
         mvc.perform(get("/api/catalog/courses/" + itemId)).andExpect(jsonPath("$.teachers[0].fullName").value("Ion Popescu"))
-                .andExpect(jsonPath("$.tips.length()").value(0));
+                .andExpect(jsonPath("$.tips[0].body").value("Lucrați la laborator."));
         send(get("/api/catalog/courses/" + itemId), studentId)
                 .andExpect(jsonPath("$.tips[0].body").value("Lucrați la laborator."))
                 .andExpect(jsonPath("$.teachers[0].radar.n").value(1))

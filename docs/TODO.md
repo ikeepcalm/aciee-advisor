@@ -17,6 +17,24 @@ What is left for a person to do: things code cannot do, decisions only you can m
 - [ ] Look at the views never checked in the new style: Join, Verify, Recovery, Submissions, Moderation, Admin leaders/history/reports. Also try Safari, Firefox and a real phone, and the theme and language animations in Safari (view transitions).
 - [ ] Optional: preload the Caveat latin woff2 in `index.html` to cut the heading font swap; restyle the timetable picker and day chips with the shared `.chip` / `.chip-on` classes instead of their local copies.
 
+## Traffic features (agreed 2026-11-12)
+
+Public tools that need no account and lead into ratings with one small link each. Build in this order:
+
+- [x] Link previews: course and professor links shared in WhatsApp/Telegram show a card in the paper style with the key public metrics (same 5-rating rule as the page); other pages get a default card.
+- [x] Calendar subscription: an ICS feed per group/subgroup; each event links to its course page, and a "rate your courses" event in the exam session.
+- [x] Catch-up finder: for one of my classes, the other groups' slots with the same teacher, same class type and same course this and next week, with clashes greyed out; "show all groups" toggle.
+- [x] Add to home screen (PWA) with the timetable available offline. Still to do: an install hint in the UI (Android install prompt, iOS "Share → Add to Home Screen" note).
+- [ ] Timetable change alerts: backend done (`core.timetable_change`, `GET /api/timetable/changes`); the "Orarul s-a schimbat" note on the timetable page is still to build.
+- [ ] Share my week as an image, from a "…" → Share menu (not a headline feature); the image names the site and the timetable's last change.
+- [ ] First-year guide (restanță, credite, bursă, sesiune, attendance marks), after everything above.
+
+Known limits of the calendar feed and catch-up dates: the winter break is not excluded and odd/even weeks may flip after it (no academic calendar in the DB); classes end the day before `rating_opens_at`. A timetable cell holding two courses by weeks ("SO S1-7 / POO S8-14") stays one class. Test real subscriptions in Google/Apple/Outlook and the WhatsApp/Telegram preview once deployed (needs public https; set `PUBLIC_URL`).
+
+Deferred: "Where is room X?" (campus guide; 3D models from your campus knowledge), exam schedule (check whether the faculty publishes parseable PDFs first), free rooms (we only see ACIEE rooms, other faculties use them too), grade calculator (dropped).
+
+AI review checking (plan agreed, not built): Gemini free tier; harsh-but-fair publishes, rude goes to human review; shadow mode first.
+
 ## Deploy (DEPLOY.md)
 
 - [ ] Buy the domain `acieeadvisor.ro`.
@@ -64,7 +82,7 @@ What is left for a person to do: things code cannot do, decisions only you can m
 
 From VIEWS.md "Open questions" (items 1–4 and 17 are decided):
 
-- [ ] 5. What visitors see on the course page (survival data and tips hidden from them today).
+- [x] 5. What visitors see on the course page: everything public (decided in `c12b29d`, "make course and professor reviews public").
 - [ ] 6. Re-showing the recovery code from IndexedDB.
 - [ ] 7. Starting over with a new recovery code after losing it.
 - [ ] 8. Outbox delivery if the student never returns (matters once next-day redemption is back).

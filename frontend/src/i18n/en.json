@@ -534,6 +534,26 @@
     "checkedAt": "checked {at}",
     "parityNote": "A split slot in the PDF: the top half is the odd week, the bottom half the even week.",
     "prevWeek": "Previous week",
-    "nextWeek": "Next week"
+    "nextWeek": "Next week",
+    "calendar": {
+      "add": "Add to calendar",
+      "lede": "Group {group}'s timetable, right in your calendar. It updates by itself when the timetable changes.",
+      "google": "Google Calendar",
+      "apple": "Apple / iPhone / Outlook",
+      "copy": "Copy the link",
+      "copied": "Link copied",
+      "googleNote": "Google Calendar only syncs every few hours."
+    },
+    "catchUp": {
+      "action": "Catch up",
+      "lede": "Can't make your class? Go with another group.",
+      "sameTeacher": "Same teacher",
+      "noSameTeacher": "No other group has this class with the same teacher.",
+      "otherTeachers": "Other teachers",
+      "showAll": "Show all groups ({n})",
+      "clash": "Overlaps with your timetable",
+      "empty": "No other group has this class in the timetable.",
+      "reviews": "What students say about {course}"
+    }
   }
 }

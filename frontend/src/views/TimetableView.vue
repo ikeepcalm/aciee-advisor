@@ -2,21 +2,29 @@
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
-import { ArrowLeftRight, ChevronDown, ChevronLeft, ChevronRight } from 'lucide-vue-next'
+import {
+  ArrowLeftRight,
+  CalendarPlus,
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+} from 'lucide-vue-next'
 import { api, describeError, type Lesson, type Timetable } from '@/api'
 import LessonCard from '@/components/LessonCard.vue'
 import AppNotice from '@/components/AppNotice.vue'
 import AppSheet from '@/components/AppSheet.vue'
 import TimetablePicker from '@/components/TimetablePicker.vue'
-
-type Parity = 'ODD' | 'EVEN'
-
-interface Calibration {
-  anchor: string
-  parity: Parity
-}
-
-const ROMAN = ['', 'I', 'II', 'III', 'IV']
+import CalendarOptions from '@/components/CalendarOptions.vue'
+import CatchUpList from '@/components/CatchUpList.vue'
+import {
+  calendarFeedUrl,
+  freeDates,
+  mondayOf,
+  ROMAN,
+  type Calibration,
+  type Parity,
+} from '@/timetable/calendar'
+import { catchUpSlots, minutes, ownLessonsOf } from '@/timetable/catchUp'
 const DAYS = [1, 2, 3, 4, 5]
 const WINDOW = 3
 const ORDER = { ALL: 0, ODD: 1, EVEN: 2 }
@@ -32,6 +40,8 @@ const timetable = ref<Timetable | null>(null)
 const error = ref('')
 const group = ref<string | null>(null)
 const pickerOpen = ref(false)
+const calendarOpen = ref(false)
+const missedLesson = ref<Lesson | null>(null)
 const calibration = ref<Calibration | null>(readJson('timetable.calibration'))
 // The week signal stays folded unless the parity is still unknown and needs an answer.
 const weekOpen = ref(!calibration.value)
@@ -60,21 +70,12 @@ function isWeekend(date: Date) {
   return date.getDay() === 0 || date.getDay() === 6
 }
 
-function mondayOf(date: Date) {
-  return new Date(date.getFullYear(), date.getMonth(), date.getDate() - ((date.getDay() + 6) % 7))
-}
-
 function addDays(date: Date, days: number) {
   return new Date(date.getFullYear(), date.getMonth(), date.getDate() + days)
 }
 
 function sameDay(a: Date, b: Date) {
   return a.toDateString() === b.toDateString()
-}
-
-function minutes(time: string) {
-  const [h, m] = time.split(':').map(Number)
-  return h! * 60 + m!
 }
 
 const thisMonday = computed(() => mondayOf(now.value))
@@ -148,6 +149,52 @@ const lessons = computed(() =>
       (l.weeks === 'ALL' || !selectedParity.value || l.weeks === selectedParity.value),
   ),
 )
+
+const calendarFeed = computed(() =>
+  calibration.value && program.value && group.value
+    ? calendarFeedUrl(window.location.origin, program.value.code, group.value, calibration.value)
+    : null,
+)
+
+const catchUpSearch = computed(() => {
+  const missed = missedLesson.value
+  const own = program.value
+  if (!missed || !own || !group.value) {
+    return null
+  }
+  return {
+    missed,
+    ownLessons: ownLessonsOf(own, group.value, missed),
+    slots: catchUpSlots(programs.value, own, group.value, missed),
+  }
+})
+
+const catchUp = computed(() => {
+  const search = catchUpSearch.value
+  if (!search) {
+    return null
+  }
+  return {
+    missed: search.missed,
+    slots: search.slots.map((slot) => {
+      const dates = freeDates(slot.lesson, search.ownLessons, now.value, parityOf)
+      return { ...slot, dates, clash: calibration.value ? !dates.length : slot.clash }
+    }),
+  }
+})
+
+const catchUpOpen = computed({
+  get: () => catchUp.value !== null,
+  set: (open) => {
+    if (!open) {
+      missedLesson.value = null
+    }
+  },
+})
+
+function canCatchUp(l: Lesson) {
+  return l.kind === 'L' || l.kind === 'S' || l.kind === 'P'
+}
 
 function dateOf(d: number) {
   return addDays(selectedMonday.value, d - 1)
@@ -357,6 +404,10 @@ watch(group, (g) => {
                 ?<span class="prog">{{ t('timetable.parityUnknown') }}</span>
               </template>
             </button>
+            <button class="btn btn-outline cal-wide" @click="calendarOpen = true">
+              <CalendarPlus class="icon" aria-hidden="true" />
+              {{ t('timetable.calendar.add') }}
+            </button>
           </div>
 
           <section v-if="weekOpen" class="clock" :aria-label="t('timetable.weekPicker')">
@@ -461,13 +512,19 @@ watch(group, (g) => {
               :soon="b.soon"
               :show-parity="!selectedParity"
               :time="b.cols === 1 ? `${b.lesson.start}–${b.lesson.end}` : undefined"
+              :catch-up="canCatchUp(b.lesson)"
               class="big"
+              @catch-up="missedLesson = b.lesson"
             />
           </div>
           <div v-if="nowTop !== null" class="now-line" :style="{ top: `${nowTop}%` }">
             <span>{{ clockLabel(nowMinutes) }}</span>
           </div>
         </div>
+        <button class="btn btn-outline cal-narrow" @click="calendarOpen = true">
+          <CalendarPlus class="icon" aria-hidden="true" />
+          {{ t('timetable.calendar.add') }}
+        </button>
 
         <div class="grid" role="table" :aria-label="t('timetable.title')">
           <div role="row" class="row">
@@ -501,6 +558,8 @@ watch(group, (g) => {
                 :lesson="e.lesson"
                 :progress="e.progress"
                 :show-parity="!selectedParity"
+                :catch-up="canCatchUp(e.lesson)"
+                @catch-up="missedLesson = e.lesson"
               />
             </span>
           </div>
@@ -516,6 +575,24 @@ watch(group, (g) => {
 
         <AppSheet v-model="pickerOpen" :title="t('timetable.pickTitle')">
           <TimetablePicker :programs="programs" :group="group" @choose="chooseGroup" />
+        </AppSheet>
+        <AppSheet v-model="calendarOpen" :title="t('timetable.calendar.add')">
+          <CalendarOptions
+            :feed-url="calendarFeed"
+            :group="group!"
+            :week-range="range(selectedMonday)"
+            @calibrate="calibrate"
+          />
+        </AppSheet>
+        <AppSheet v-model="catchUpOpen" :title="t('timetable.catchUp.action')">
+          <CatchUpList
+            v-if="catchUp"
+            :slots="catchUp.slots"
+            :missed="catchUp.missed"
+            :course="catchUp.missed.course"
+            :course-id="catchUp.missed.courseId"
+            :own-program-code="program.code"
+          />
         </AppSheet>
       </template>
     </template>
@@ -689,6 +766,16 @@ watch(group, (g) => {
   border-style: dashed;
   border-color: var(--muted);
   color: var(--muted);
+}
+
+.cal-wide {
+  display: none;
+  flex: none;
+  margin-left: auto;
+}
+
+.cal-narrow {
+  margin-bottom: 0.75rem;
 }
 
 .clock {
@@ -1119,8 +1206,13 @@ watch(group, (g) => {
 
   .days,
   .axis,
-  .empty {
+  .empty,
+  .cal-narrow {
     display: none;
+  }
+
+  .cal-wide {
+    display: inline-flex;
   }
 
   .grid {
@@ -1162,6 +1254,14 @@ watch(group, (g) => {
     min-height: 4.25rem;
     padding: 0.2rem;
     border-radius: 0.6rem;
+  }
+
+  .cell :deep(.foot) {
+    flex-wrap: wrap;
+  }
+
+  .cell :deep(.catch) {
+    margin-left: auto;
   }
 
   .cell.today {

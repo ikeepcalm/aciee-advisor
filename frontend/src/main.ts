@@ -13,3 +13,9 @@ import router from './router'
 import { i18n, localeReady } from './i18n'
 
 localeReady.then(() => createApp(App).use(createPinia()).use(router).use(i18n).mount('#app'))
+
+if (import.meta.env.PROD && 'serviceWorker' in navigator) {
+  window.addEventListener('load', () =>
+    navigator.serviceWorker.register('/sw.js').catch(() => undefined),
+  )
+}

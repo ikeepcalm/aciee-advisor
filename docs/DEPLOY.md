@@ -33,6 +33,7 @@ The demo accounts are `demo.admin`, `demo.moderator`, `demo.leader` and `demo.st
    | `LIQUIBASE_CONTEXTS` | `prod` or `fixtures` |
    | `MAIL_HOST`, `MAIL_PORT`, `MAIL_USER`, `MAIL_PASSWORD` | SMTP provider (port 587, STARTTLS) |
    | `MAIL_FROM` | `ACIEE Advisor <no-reply@acieeadvisor.ro>` |
+   | `PUBLIC_URL` | `https://acieeadvisor.ro` (`https://demo.acieeadvisor.ro` on demo); absolute links in the WhatsApp/Telegram link-preview cards |
    | `SPRING_PROFILES_ACTIVE`, `ENTRA_CLIENT_ID`, `ENTRA_CLIENT_SECRET` | `microsoft` and the app registration below, to turn on Microsoft sign-in; leave empty to hide it |
 
    The role passwords are read only when the `pgdata` volume is created. Changing them later needs `ALTER ROLE … PASSWORD` in the database as well.

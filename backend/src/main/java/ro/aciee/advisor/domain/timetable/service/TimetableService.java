@@ -105,6 +105,7 @@ public class TimetableService {
             program.setName(PROGRAM_NAMES.getOrDefault(link.group(3), link.group(3).replace('_', ' ')));
             program.setPdfUrl(uri.toString());
             program.setUpdatedAt(lastModified(response));
+            LessonNames.attachCourseNames(program);
             return program;
         }
     }

@@ -110,6 +110,8 @@ export interface Lesson {
   teacher: string | null
   note: string | null
   lines: string[]
+  course: string
+  courseId: number | null
 }
 
 export interface TimetableProgram {

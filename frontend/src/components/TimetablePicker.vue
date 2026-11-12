@@ -2,11 +2,11 @@
 import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import type { TimetableProgram } from '@/api'
+import { ROMAN } from '@/timetable/calendar'
 
 const props = defineProps<{ programs: TimetableProgram[]; group: string | null }>()
 const emit = defineEmits<{ choose: [group: string] }>()
 
-const ROMAN = ['', 'I', 'II', 'III', 'IV']
 const { t } = useI18n()
 const current = props.programs.find((p) => props.group && p.groups.includes(props.group))
 const year = ref(current?.year ?? 1)

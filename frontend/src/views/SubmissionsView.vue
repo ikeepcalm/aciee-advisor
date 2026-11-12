@@ -3,6 +3,7 @@ import { onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { Loader2 } from 'lucide-vue-next'
 import AppNotice from '@/components/AppNotice.vue'
+import NoteStar from '@/components/NoteStar.vue'
 import { anonApi, api, ApiError, describeError, lookups } from '@/api'
 import { useAuthStore } from '@/stores/auth'
 import {
@@ -124,6 +125,7 @@ onMounted(() => load().catch((e) => (error.value = describeError(t, e))))
       <RouterLink to="/me/recovery" class="btn btn-primary">{{ t('recovery.title') }}</RouterLink>
     </section>
     <section v-else-if="entries && !entries.length" class="card mt-6 grid max-w-md gap-4">
+      <NoteStar class="size-16" />
       <p>{{ t('submissions.none') }}</p>
       <RouterLink to="/rate" class="btn btn-primary">{{ t('nav.rate') }}</RouterLink>
     </section>

@@ -534,6 +534,26 @@
     "checkedAt": "verificat {at}",
     "parityNote": "O oră împărțită în PDF: jumătatea de sus e săptămâna impară, cea de jos săptămâna pară.",
     "prevWeek": "Săptămâna anterioară",
-    "nextWeek": "Săptămâna următoare"
+    "nextWeek": "Săptămâna următoare",
+    "calendar": {
+      "add": "Adaugă în calendar",
+      "lede": "Orarul grupei {group}, direct în calendarul tău. Se actualizează singur când se schimbă orarul.",
+      "google": "Google Calendar",
+      "apple": "Apple / iPhone / Outlook",
+      "copy": "Copiază linkul",
+      "copied": "Link copiat",
+      "googleNote": "Google Calendar sincronizează doar la câteva ore."
+    },
+    "catchUp": {
+      "action": "Recuperează",
+      "lede": "Nu ajungi la ora ta? Mergi cu altă grupă.",
+      "sameTeacher": "Același profesor",
+      "noSameTeacher": "Nicio altă grupă nu face ora asta cu același profesor.",
+      "otherTeachers": "Alți profesori",
+      "showAll": "Arată toate grupele ({n})",
+      "clash": "Se suprapune cu orarul tău",
+      "empty": "Nicio altă grupă nu are ora asta în orar.",
+      "reviews": "Ce spun colegii despre {course}"
+    }
   }
 }

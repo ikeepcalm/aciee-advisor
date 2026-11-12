@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
+import { Repeat2 } from 'lucide-vue-next'
 import type { Lesson } from '@/api'
 
 defineProps<{
@@ -8,7 +9,10 @@ defineProps<{
   soon?: number | null
   showParity: boolean
   time?: string
+  catchUp?: boolean
 }>()
+
+const emit = defineEmits<{ catchUp: [] }>()
 
 const { t } = useI18n()
 </script>
@@ -25,10 +29,22 @@ const { t } = useI18n()
       <span v-if="time" class="dim time">{{ time }}</span>
     </span>
     <strong>{{ lesson.subject }}</strong>
-    <span v-if="lesson.room || lesson.teacher || lesson.note" class="meta">
-      <span v-if="lesson.room" class="room">{{ lesson.room }}</span>
-      <span v-if="lesson.teacher" class="dim">{{ lesson.teacher }}</span>
-      <span v-if="lesson.note" class="note">{{ lesson.note }}</span>
+    <span v-if="lesson.room || lesson.teacher || lesson.note || catchUp" class="foot">
+      <span class="meta">
+        <span v-if="lesson.room" class="room">{{ lesson.room }}</span>
+        <span v-if="lesson.teacher" class="dim">{{ lesson.teacher }}</span>
+        <span v-if="lesson.note" class="note">{{ lesson.note }}</span>
+      </span>
+      <button
+        v-if="catchUp"
+        type="button"
+        class="catch"
+        :aria-label="`${t('timetable.catchUp.action')}: ${lesson.subject}`"
+        @click="emit('catchUp')"
+      >
+        <Repeat2 aria-hidden="true" />
+        <span class="label">{{ t('timetable.catchUp.action') }}</span>
+      </button>
     </span>
     <span v-if="progress !== null" class="bar" aria-hidden="true">
       <span :style="{ width: `${progress}%` }"></span>
@@ -42,6 +58,8 @@ const { t } = useI18n()
 }
 
 .lesson {
+  position: relative;
+  container-type: inline-size;
   display: flex;
   flex-direction: column;
   gap: 0.15rem;
@@ -82,6 +100,73 @@ const { t } = useI18n()
 
 .dim {
   color: var(--muted);
+}
+
+.foot {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.4rem;
+}
+
+.meta {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.catch {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 0.2rem;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--mask);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  line-height: 1.35;
+  cursor: pointer;
+}
+
+.catch::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+}
+
+.catch svg {
+  width: 0.85rem;
+  height: 0.85rem;
+}
+
+.catch:focus-visible {
+  outline: none;
+}
+
+.lesson:has(.catch:hover) {
+  border-color: var(--mask);
+  border-left-color: var(--kind);
+}
+
+.lesson:has(.catch:focus-visible) {
+  outline: 2px solid var(--copper);
+  outline-offset: 2px;
+}
+
+@container (max-width: 9rem) {
+  .catch .label {
+    display: none;
+  }
+
+  .catch svg {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.55rem;
+  }
+
+  .tags {
+    padding-right: 1.1rem;
+  }
 }
 
 .meta > * {

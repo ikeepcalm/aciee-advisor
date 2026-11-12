@@ -14,6 +14,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { ArrowLeft, ArrowRight, Check, ListMinus, ListPlus, Loader2 } from 'lucide-vue-next'
 import AppNotice from '@/components/AppNotice.vue'
+import NoteStar from '@/components/NoteStar.vue'
 import SegmentedChips from '@/components/SegmentedChips.vue'
 import { anonApi, ApiError, describeError, lookups, type Lookups } from '@/api'
 import { useAuthStore } from '@/stores/auth'
@@ -399,22 +400,7 @@ async function submit() {
       role="status"
       class="card mx-auto mt-6 max-w-xl px-6 py-10 text-center"
     >
-      <svg
-        viewBox="0 0 64 64"
-        class="mx-auto size-24"
-        fill="none"
-        stroke-width="3"
-        stroke-linecap="round"
-        stroke-linejoin="round"
-        aria-hidden="true"
-      >
-        <path
-          class="draw-ring stroke-mask"
-          pathLength="1"
-          d="M33 6C17 5 6 17 6 32s11 27 27 26 26-12 25-27S48 8 30 7"
-        />
-        <path class="draw-check stroke-copper" pathLength="1" d="M19 33l9 9 18-22" />
-      </svg>
+      <NoteStar class="mx-auto size-24" />
       <h1 class="h1 mt-4">{{ t('rateForm.doneTitle') }}</h1>
       <p class="lede mx-auto">{{ t('rateForm.saved') }}</p>
       <div class="mt-6 flex flex-wrap justify-center gap-2">
@@ -723,29 +709,12 @@ async function submit() {
   .step-in {
     animation: step-in 0.26s ease-out;
   }
-
-  .draw-ring,
-  .draw-check {
-    stroke-dasharray: 1;
-    animation: draw 0.6s ease-out both;
-  }
-
-  .draw-check {
-    animation-duration: 0.35s;
-    animation-delay: 0.55s;
-  }
 }
 
 @keyframes step-in {
   from {
     opacity: 0;
     translate: 14px 0;
-  }
-}
-
-@keyframes draw {
-  from {
-    stroke-dashoffset: 1;
   }
 }
 </style>

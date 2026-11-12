@@ -72,7 +72,7 @@ Lucide (`lucide-vue-next`), 20 px in navigation and 16 px inline. Icon-only butt
 
 ## Signature element: the pad and trace
 
-Every page title is introduced by an **eyebrow**: a copper via (ring) soldered to a short copper trace, then a small mono label in uppercase — `○— CURSURI`, `○— CALCULATOARE · AN 1 · SEM. 1`. The same copper trace runs vertically down the timetable's day view, with a pad at every lesson that fills and pulses while the lesson is running; the odd/even week picker is a square-wave clock signal drawn in copper; the brand mark is an IC package with that clock trace inside it. One idea, four places, nothing else decorative.
+Every page title is introduced by an **eyebrow**: a copper via (ring) soldered to a short copper trace, then a small mono label in uppercase — `○— CURSURI`, `○— CALCULATOARE · AN 1 · SEM. 1`. The same copper trace runs vertically down the timetable's day view, with a pad at every lesson that fills and pulses while the lesson is running; the odd/even week picker is a square-wave clock signal drawn in copper; the brand mark (`BrandMark.vue`, favicon, app icons, link-preview cards) is a marker-yellow speech bubble with that square wave inside it, and `NoteStar.vue` (a dog-eared sticky note with a doodle star) is the accent on rating screens. One idea, four places, nothing else decorative.
 
 ## Timetable controls
 
