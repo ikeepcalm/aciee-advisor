@@ -89,26 +89,29 @@ async function signOut() {
       class="sticky top-0 z-30 border-b border-line bg-board/85 backdrop-blur supports-backdrop-filter:bg-board/70"
     >
       <div class="mx-auto flex h-14 max-w-6xl items-center gap-2 px-4 md:px-6">
-        <RouterLink to="/" class="flex min-h-11 items-center gap-2 text-ink no-underline">
+        <RouterLink
+          to="/"
+          class="flex min-h-11 shrink-0 items-center gap-2 whitespace-nowrap text-ink no-underline"
+        >
           <BrandMark class="size-7" />
           <span class="display text-lg leading-none"
             >ACIEE <span class="text-mask">Advisor</span></span
           >
         </RouterLink>
 
-        <nav class="ml-6 hidden items-center gap-1 md:flex" :aria-label="t('nav.menu')">
+        <nav class="ml-2 hidden items-center md:flex lg:ml-6 lg:gap-1" :aria-label="t('nav.menu')">
           <RouterLink
             v-for="tab in tabs"
             :key="tab.to"
             :to="tab.to"
-            class="nav-tab relative flex min-h-11 items-center px-3 text-sm font-medium text-ink no-underline hover:text-mask"
+            class="nav-tab relative flex min-h-11 items-center px-2 text-sm font-medium whitespace-nowrap text-ink no-underline hover:text-mask lg:px-3"
             :class="{
-              'text-mask after:absolute after:inset-x-3 after:bottom-1 after:h-0.5 after:bg-copper':
+              'text-mask after:absolute after:inset-x-2 after:bottom-1 lg:after:inset-x-3 after:h-0.5 after:bg-copper':
                 active(tab.to),
             }"
             :aria-current="active(tab.to) ? 'page' : undefined"
           >
-            {{ tab.label }}
+            <span :class="{ hl: tab.to === '/rate' }">{{ tab.label }}</span>
           </RouterLink>
         </nav>
 
@@ -120,7 +123,7 @@ async function signOut() {
             <select
               v-model="localeModel"
               :aria-label="t('prefs.language')"
-              class="absolute inset-0 cursor-pointer appearance-none opacity-0"
+              class="absolute -inset-px cursor-pointer appearance-none opacity-0"
             >
               <option v-for="l in locales" :key="l.value" :value="l.value" :lang="l.value">
                 {{ l.label }}
@@ -136,12 +139,15 @@ async function signOut() {
             <Moon v-else class="size-5" />
           </button>
           <button
-            class="btn btn-ghost hidden text-ink md:inline-flex"
+            class="btn btn-ghost hidden min-w-11 px-2 text-ink md:inline-flex lg:px-4"
             :aria-expanded="accountOpen"
             @click="accountOpen = true"
           >
             <CircleUser class="size-5" />
-            <span class="max-w-40 truncate">{{
+            <span class="sr-only lg:hidden">{{
+              auth.user ? t('nav.account') : t('auth.signIn')
+            }}</span>
+            <span class="hidden max-w-40 truncate lg:inline">{{
               auth.user ? auth.user.email.split('@')[0] : t('auth.signIn')
             }}</span>
           </button>
@@ -149,7 +155,7 @@ async function signOut() {
       </div>
     </header>
 
-    <RouterView class="flex-1 pb-20 md:pb-0" />
+    <RouterView class="flex-1 pb-[calc(5rem+env(safe-area-inset-bottom))] md:pb-0" />
 
     <nav
       class="fixed inset-x-0 bottom-0 z-30 grid border-t border-line bg-panel pb-[env(safe-area-inset-bottom)] md:hidden"
@@ -167,8 +173,13 @@ async function signOut() {
         }"
         :aria-current="active(tab.to) ? 'page' : undefined"
       >
-        <component :is="tab.icon" class="size-5" />
-        {{ tab.label }}
+        <span
+          class="flex items-center justify-center"
+          :class="{ 'rate-blob bg-mark px-3 py-0.5 text-on-mark': tab.to === '/rate' }"
+        >
+          <component :is="tab.icon" class="size-5" />
+        </span>
+        <span class="max-w-full truncate px-0.5">{{ tab.label }}</span>
       </RouterLink>
       <button
         class="flex min-h-14 flex-col items-center justify-center gap-1 text-[0.6875rem] font-medium text-muted"
@@ -176,7 +187,9 @@ async function signOut() {
         @click="accountOpen = true"
       >
         <CircleUser class="size-5" />
-        {{ auth.user ? t('nav.account') : t('auth.signIn') }}
+        <span class="max-w-full truncate px-0.5">{{
+          auth.user ? t('nav.account') : t('auth.signIn')
+        }}</span>
       </button>
     </nav>
 
@@ -221,3 +234,9 @@ async function signOut() {
     </AppSheet>
   </div>
 </template>
+
+<style scoped>
+.rate-blob {
+  border-radius: 47% 53% 44% 56% / 55% 46% 54% 45%;
+}
+</style>

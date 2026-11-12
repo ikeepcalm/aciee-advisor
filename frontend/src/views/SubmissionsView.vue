@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { Loader2 } from 'lucide-vue-next'
 import AppNotice from '@/components/AppNotice.vue'
 import { anonApi, api, ApiError, describeError, lookups } from '@/api'
 import { useAuthStore } from '@/stores/auth'
@@ -34,6 +35,13 @@ const entries = ref<Entry[] | null>(null)
 const needsRestore = ref(false)
 const threshold = ref(5)
 const error = ref('')
+
+function postTone(post: Post) {
+  if (post.status === 'rejected') {
+    return 'text-danger'
+  }
+  return post.status === 'approved' && post.published ? 'text-mask' : ''
+}
 
 function postStatus(post: Post) {
   if (post.status === 'pending') {
@@ -108,15 +116,19 @@ onMounted(() => load().catch((e) => (error.value = describeError(t, e))))
     <h1 class="h1">{{ t('nav.submissions') }}</h1>
     <p class="lede text-sm">{{ t('submissions.deviceOnly') }}</p>
     <AppNotice v-if="error" kind="error">{{ error }}</AppNotice>
-    <p v-if="needsRestore" class="mt-6 text-sm">
-      {{ t('submissions.restore') }}
-      <RouterLink to="/me/recovery">{{ t('recovery.title') }}</RouterLink>
+    <p v-if="!entries && !error" class="mt-6 flex items-center gap-2 text-sm text-muted">
+      <Loader2 class="size-4 animate-spin" aria-hidden="true" /> {{ t('common.loading') }}
     </p>
-    <p v-else-if="entries && !entries.length" class="mt-6 text-sm">
-      {{ t('submissions.none') }} <RouterLink to="/rate">{{ t('nav.rate') }}</RouterLink>
-    </p>
+    <section v-if="needsRestore" class="card mt-6 grid max-w-md gap-4">
+      <p>{{ t('submissions.restore') }}</p>
+      <RouterLink to="/me/recovery" class="btn btn-primary">{{ t('recovery.title') }}</RouterLink>
+    </section>
+    <section v-else-if="entries && !entries.length" class="card mt-6 grid max-w-md gap-4">
+      <p>{{ t('submissions.none') }}</p>
+      <RouterLink to="/rate" class="btn btn-primary">{{ t('nav.rate') }}</RouterLink>
+    </section>
     <article v-for="entry in entries" :key="entry.offeringId" class="card mt-4">
-      <strong class="block font-semibold">{{ entry.title }}</strong>
+      <strong class="block font-semibold [overflow-wrap:anywhere]">{{ entry.title }}</strong>
       <span class="mono text-xs text-muted">{{ entry.academicYear }}</span>
       <p v-if="entry.posts === null" class="mt-2 text-sm text-muted">
         {{ t('submissions.notFound') }}
@@ -127,12 +139,12 @@ onMounted(() => load().catch((e) => (error.value = describeError(t, e))))
           <li
             v-for="post in entry.posts"
             :key="post.id"
-            class="flex gap-2 border-t border-line py-1.5"
+            class="flex flex-wrap justify-between gap-x-3 border-t border-line py-1.5"
           >
             <span class="text-muted">{{
               post.kind === 'tip' ? t('submissions.tip') : t('submissions.comment')
             }}</span>
-            <span class="ml-auto text-right">{{ postStatus(post) }}</span>
+            <span class="text-right" :class="postTone(post)">{{ postStatus(post) }}</span>
           </li>
         </ul>
         <div class="mt-3 flex flex-wrap gap-2">

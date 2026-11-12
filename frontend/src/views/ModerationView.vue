@@ -34,6 +34,8 @@ const reports = ref<Report[]>([])
 const reasons = ref<Option[]>([])
 const error = ref('')
 const info = ref('')
+const loaded = ref(false)
+const reportsShown = ref(10)
 
 const current = computed(() => queue.value[0])
 const tabs = computed(() => [
@@ -58,6 +60,7 @@ async function load() {
     queue.value = result.items
     total.value = result.total
     reports.value = await api<Report[]>('GET', '/api/moderation/reports')
+    loaded.value = true
   } catch (e) {
     error.value = describeError(t, e)
   }
@@ -112,8 +115,10 @@ onMounted(async () => {
     <AppNotice v-if="info">{{ info }}</AppNotice>
 
     <template v-if="tab === 'texts'">
-      <p v-if="!current" class="mt-8 text-center text-muted">{{ t('moderation.empty') }}</p>
-      <section v-else class="card mt-5 grid gap-4">
+      <p v-if="loaded && !current" class="mt-8 text-center text-muted">
+        {{ t('moderation.empty') }}
+      </p>
+      <section v-else-if="current" class="card mt-5 grid gap-4">
         <div class="flex flex-wrap items-center gap-2 text-sm">
           <span class="tag bg-board text-muted">{{
             current.kind === 'tip' ? t('submissions.tip') : t('submissions.comment')
@@ -123,7 +128,7 @@ onMounted(async () => {
             t('moderation.submitted', { date: d(current.week, 'short') })
           }}</span>
         </div>
-        <blockquote class="quote">{{ current.body }}</blockquote>
+        <blockquote class="quote [overflow-wrap:anywhere]">{{ current.body }}</blockquote>
         <p
           v-for="flag in flags"
           :key="flag"
@@ -132,10 +137,10 @@ onMounted(async () => {
           <Flag class="size-4" aria-hidden="true" /> {{ flag }}
         </p>
         <details v-if="current.previousBody" class="text-sm">
-          <summary class="cursor-pointer font-medium text-mask">
+          <summary class="flex min-h-11 cursor-pointer items-center font-medium text-mask">
             {{ t('moderation.previous') }}
           </summary>
-          <blockquote class="quote mt-2 border-line text-muted">
+          <blockquote class="quote mt-2 border-line text-muted [overflow-wrap:anywhere]">
             {{ current.previousBody }}
           </blockquote>
         </details>
@@ -162,10 +167,14 @@ onMounted(async () => {
     </template>
 
     <template v-else>
-      <p v-if="!reports.length" class="mt-8 text-center text-muted">
+      <p v-if="loaded && !reports.length" class="mt-8 text-center text-muted">
         {{ t('moderation.noReports') }}
       </p>
-      <section v-for="report in reports" :key="report.postId" class="card mt-5 grid gap-4">
+      <section
+        v-for="report in reports.slice(0, reportsShown)"
+        :key="report.postId"
+        class="card mt-5 grid gap-4"
+      >
         <div class="flex flex-wrap items-center gap-2 text-sm">
           <span class="tag bg-board text-muted">{{
             report.kind === 'tip' ? t('submissions.tip') : t('submissions.comment')
@@ -181,7 +190,7 @@ onMounted(async () => {
             })
           }}
         </p>
-        <blockquote class="quote">{{ report.body }}</blockquote>
+        <blockquote class="quote [overflow-wrap:anywhere]">{{ report.body }}</blockquote>
         <button class="btn btn-outline justify-self-start" @click="closeReport(report)">
           {{ t('moderation.dismiss') }}
         </button>
@@ -199,6 +208,13 @@ onMounted(async () => {
           </div>
         </div>
       </section>
+      <button
+        v-if="reports.length > reportsShown"
+        class="btn btn-outline mt-5 w-full"
+        @click="reportsShown += 10"
+      >
+        {{ t('admin.more') }} ({{ reports.length - reportsShown }})
+      </button>
     </template>
   </main>
 </template>

@@ -306,6 +306,7 @@ watch(group, (g) => {
   <main class="page-wide tt-page pt-4 md:pt-8">
     <AppNotice v-if="error" kind="error">{{ error }}</AppNotice>
     <AppNotice v-else-if="timetable && !programs.length">{{ t('timetable.loading') }}</AppNotice>
+    <p v-else-if="!timetable" class="text-muted" role="status">{{ t('common.loading') }}</p>
 
     <template v-if="programs.length">
       <section v-if="!program" class="welcome">
@@ -546,7 +547,7 @@ watch(group, (g) => {
 }
 
 .welcome {
-  max-width: 34rem;
+  max-width: none;
   margin: 0;
   padding-top: 0.5rem;
 }

@@ -55,10 +55,10 @@ onMounted(() => load().catch((e) => (error.value = describeError(t, e))))
     <div
       v-for="c in claims"
       :key="c.id"
-      class="card mb-2 flex flex-wrap items-center gap-3 text-sm"
+      class="card mb-2 flex flex-wrap items-center gap-x-3 gap-y-2 text-sm"
     >
-      <div class="min-w-0 flex-1">
-        <div class="font-semibold break-all">{{ c.email }}</div>
+      <div class="min-w-0 basis-full sm:flex-1 sm:basis-0">
+        <div class="font-semibold [overflow-wrap:anywhere]">{{ c.email }}</div>
         <div class="text-muted">
           <strong class="text-ink">{{ c.groupCode }}</strong> ·
           <span class="mono text-xs">{{ c.academicYear }}</span> ·
@@ -87,11 +87,12 @@ onMounted(() => load().catch((e) => (error.value = describeError(t, e))))
     <p
       v-for="l in leaders"
       :key="l.membershipId"
-      class="flex flex-wrap items-center gap-2 border-t border-line py-1.5 text-sm"
+      class="flex items-center gap-2 border-t border-line py-1 text-sm"
     >
-      <strong>{{ l.groupCode }}</strong> <span class="break-all">{{ l.email }}</span>
+      <strong>{{ l.groupCode }}</strong>
+      <span class="min-w-0 flex-1 [overflow-wrap:anywhere]">{{ l.email }}</span>
       <button
-        class="btn btn-danger btn-sm ml-auto border-transparent"
+        class="btn btn-danger btn-sm border-transparent"
         @click="act('DELETE', `/api/admin/leaders/${l.membershipId}`)"
       >
         {{ t('admin.revoke') }}

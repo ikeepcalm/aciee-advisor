@@ -3,7 +3,6 @@ import { ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { Loader2 } from 'lucide-vue-next'
-import BrandMark from '@/components/BrandMark.vue'
 import AppNotice from '@/components/AppNotice.vue'
 import PasswordField from '@/components/PasswordField.vue'
 import { api, describeError, safeNext } from '@/api'
@@ -25,8 +24,19 @@ if (!email) {
   router.replace({ name: 'signup' })
 }
 
+let autoSubmittedCode = ''
+
 function typeCode(event: Event) {
   code.value = (event.target as HTMLInputElement).value.replace(/\D/g, '').slice(0, 6)
+  if (
+    code.value.length === 6 &&
+    code.value !== autoSubmittedCode &&
+    password.value &&
+    !busy.value
+  ) {
+    autoSubmittedCode = code.value
+    submit()
+  }
 }
 
 async function submit() {
@@ -35,7 +45,7 @@ async function submit() {
   busy.value = true
   try {
     await auth.verify(email, code.value, password.value)
-    await router.push(safeNext(route.query))
+    await router.push(safeNext(route.query, '/rate'))
   } catch (e) {
     error.value = describeError(t, e)
   } finally {
@@ -60,21 +70,21 @@ async function resend() {
 </script>
 
 <template>
-  <main class="page max-w-md">
-    <BrandMark class="size-12" />
-    <span class="eyebrow mt-4">ACIEE Advisor</span>
+  <main class="page-narrow">
+    <span class="eyebrow">{{ t('rateForm.progress', { n: 2, total: 2 }) }}</span>
     <h1 class="h1">{{ t('auth.verifyTitle') }}</h1>
-    <p class="lede text-sm">{{ t('auth.verifySent', { email }) }}</p>
+    <p class="lede text-sm [overflow-wrap:anywhere]">{{ t('auth.verifySent', { email }) }}</p>
     <form class="card mt-6 grid gap-4" @submit.prevent="submit">
       <div class="field">
         <label for="code">{{ t('auth.verifyCode') }}</label>
         <input
           id="code"
           :value="code"
-          class="input mono text-center text-2xl tracking-[0.5em]"
+          class="input mono min-h-14 pl-[0.5em] text-center text-2xl tracking-[0.5em]"
           inputmode="numeric"
           autocomplete="one-time-code"
           maxlength="6"
+          autofocus
           required
           @input="typeCode"
         />
@@ -94,8 +104,13 @@ async function resend() {
         {{ t('auth.verifyAction') }}
       </button>
     </form>
-    <button class="btn btn-ghost mx-auto mt-3 flex" :disabled="busy" @click="resend">
-      {{ t('auth.resend') }}
-    </button>
+    <div class="mt-3 flex flex-wrap items-center justify-center gap-x-2">
+      <button class="btn btn-ghost" :disabled="busy" @click="resend">
+        {{ t('auth.resend') }}
+      </button>
+      <RouterLink :to="{ name: 'signup', query: { next: route.query.next } }" class="btn btn-ghost">
+        {{ t('auth.wrongEmail') }}
+      </RouterLink>
+    </div>
   </main>
 </template>

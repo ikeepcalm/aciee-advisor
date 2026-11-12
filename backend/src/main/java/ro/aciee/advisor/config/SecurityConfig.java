@@ -15,6 +15,7 @@ import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 import org.springframework.security.web.authentication.logout.HttpStatusReturningLogoutSuccessHandler;
 import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
 import org.springframework.security.web.context.SecurityContextRepository;
+import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.session.jdbc.config.annotation.SpringSessionTransactionManager;
 import ro.aciee.advisor.domain.auth.controller.MicrosoftSignInHandler;
 
@@ -34,8 +35,10 @@ public class SecurityConfig {
                     .successHandler(microsoftSignInHandler)
                     .failureHandler(microsoftSignInHandler));
         }
+        CookieCsrfTokenRepository csrfCookies = CookieCsrfTokenRepository.withHttpOnlyFalse();
+        csrfCookies.setCookieName("ACIEE-XSRF");
         return http
-                .csrf(csrf -> csrf.spa().ignoringRequestMatchers("/anon/**"))
+                .csrf(csrf -> csrf.spa().csrfTokenRepository(csrfCookies).ignoringRequestMatchers("/anon/**"))
                 .securityContext(context -> context.securityContextRepository(securityContextRepository))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/signup", "/api/auth/signin", "/api/auth/verify", "/api/auth/verify/resend", "/api/auth/csrf",

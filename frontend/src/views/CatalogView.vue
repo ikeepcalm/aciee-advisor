@@ -6,6 +6,7 @@ import { ChevronRight } from 'lucide-vue-next'
 import { api, describeError } from '@/api'
 import AppNotice from '@/components/AppNotice.vue'
 import SegmentedChips from '@/components/SegmentedChips.vue'
+import RateInvite from '@/components/RateInvite.vue'
 
 interface Plan {
   id: number
@@ -103,7 +104,8 @@ async function loadItems() {
   }
 }
 
-onMounted(async () => {
+async function start() {
+  error.value = ''
   try {
     specializations.value = await api<Specialization[]>('GET', '/api/catalog/specializations')
   } catch (e) {
@@ -115,7 +117,9 @@ onMounted(async () => {
   planId.value = Number(route.query.plan) || (current.value ? defaultPlan(current.value) : null)
   await loadItems()
   ready = true
-})
+}
+
+onMounted(start)
 
 function changeSpec() {
   planId.value = current.value ? defaultPlan(current.value) : null
@@ -132,13 +136,21 @@ watch([spec, planId, year], async ([s, p, y]) => {
 
 <template>
   <main class="page-wide">
-    <header>
-      <span class="eyebrow">{{ t('nav.courses') }}</span>
-      <h1 class="h1">{{ t('catalog.title') }}</h1>
-      <p class="lede text-sm md:text-base">{{ t('catalog.tagline') }}</p>
+    <header class="grid gap-4 lg:grid-cols-[1fr_auto] lg:items-end">
+      <div>
+        <span class="eyebrow">{{ t('nav.courses') }}</span>
+        <h1 class="h1">{{ t('catalog.title') }}</h1>
+        <p class="lede text-sm md:text-base">{{ t('catalog.tagline') }}</p>
+      </div>
+      <RateInvite />
     </header>
 
-    <AppNotice v-if="error" kind="error">{{ error }}</AppNotice>
+    <AppNotice v-if="error" kind="error">
+      {{ error }}
+      <button class="btn btn-outline mt-2 flex" @click="ready ? loadItems() : start()">
+        {{ t('common.retry') }}
+      </button>
+    </AppNotice>
 
     <section class="mt-5 grid gap-3 md:grid-cols-[1fr_auto_auto] md:items-end">
       <label class="field">
@@ -160,7 +172,10 @@ watch([spec, planId, year], async ([s, p, y]) => {
     </section>
 
     <AppNotice v-if="current && !current.plans.length">{{ t('catalog.noPlan') }}</AppNotice>
-    <p v-else-if="items && !items.length" class="mt-8 text-center text-muted">
+    <p v-else-if="!items && !error" class="mt-8 text-muted" role="status">
+      {{ t('common.loading') }}
+    </p>
+    <p v-else-if="items && !items.length" class="mt-8 text-muted">
       {{ t('catalog.noItems') }}
     </p>
 

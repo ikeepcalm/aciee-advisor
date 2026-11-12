@@ -1,15 +1,16 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
-import { Copy, Download, Loader2 } from 'lucide-vue-next'
+import { ArrowLeft, Check, Copy, Download, Loader2 } from 'lucide-vue-next'
 import AppNotice from '@/components/AppNotice.vue'
-import { describeError } from '@/api'
+import { describeError, safeNext } from '@/api'
 import { useAuthStore } from '@/stores/auth'
 import { createMaster, localMaster, restoreMaster, vaultExists } from '@/crypto/tokens'
 import { parseRecoveryCode, recoveryCode } from '@/crypto/vault'
 
 const { t } = useI18n()
+const route = useRoute()
 const router = useRouter()
 const userId = useAuthStore().user!.id
 const mode = ref<'loading' | 'show' | 'create' | 'restore'>('loading')
@@ -18,6 +19,7 @@ const saved = ref(false)
 const input = ref('')
 const error = ref('')
 const busy = ref(false)
+const copied = ref(false)
 let newMaster: Uint8Array<ArrayBuffer> | null = null
 
 onMounted(async () => {
@@ -48,8 +50,14 @@ function download() {
   URL.revokeObjectURL(link.href)
 }
 
-function copy() {
-  navigator.clipboard.writeText(code.value).catch(() => {})
+async function copy() {
+  try {
+    await navigator.clipboard.writeText(code.value)
+    copied.value = true
+    setTimeout(() => (copied.value = false), 2000)
+  } catch {
+    copied.value = false
+  }
 }
 
 async function act(action: () => Promise<void>) {
@@ -64,10 +72,12 @@ async function act(action: () => Promise<void>) {
   }
 }
 
+const afterRecovery = () => router.push(safeNext(route.query, '/rate'))
+
 const confirmCreate = () =>
   act(async () => {
     await createMaster(userId, newMaster!)
-    await router.push({ name: 'rate' })
+    await afterRecovery()
   })
 
 const restore = () =>
@@ -78,34 +88,43 @@ const restore = () =>
     } else if (!(await restoreMaster(userId, master))) {
       error.value = t('recovery.wrongCode')
     } else {
-      await router.push({ name: 'rate' })
+      await afterRecovery()
     }
   })
 </script>
 
 <template>
-  <main class="page max-w-md">
-    <span class="eyebrow">{{ t('rate.title') }}</span>
-    <h1 class="h1">{{ t('recovery.title') }}</h1>
+  <main class="page-narrow">
+    <RouterLink
+      v-if="mode === 'show'"
+      :to="{ name: 'rate' }"
+      class="inline-flex min-h-11 items-center gap-1 self-start text-sm no-underline hover:underline"
+    >
+      <ArrowLeft class="size-4" aria-hidden="true" /> {{ t('rate.title') }}
+    </RouterLink>
+    <h1 class="h1">{{ mode === 'create' ? t('recovery.saveTitle') : t('recovery.title') }}</h1>
     <AppNotice v-if="error" kind="error">{{ error }}</AppNotice>
+    <p v-if="mode === 'loading' && !error" class="lede flex items-center gap-2 text-sm">
+      <Loader2 class="size-4 animate-spin" aria-hidden="true" /> {{ t('common.loading') }}
+    </p>
     <template v-if="mode === 'show' || mode === 'create'">
-      <p class="lede text-sm">{{ t('recovery.yourCode') }}</p>
+      <p class="lede text-sm">{{ t('recovery.why') }}</p>
       <p
         class="mono mt-4 rounded-lg border border-dashed border-copper bg-panel p-4 text-center text-lg leading-relaxed font-medium [overflow-wrap:anywhere] select-all"
       >
         {{ code }}
       </p>
       <div class="mt-3 flex flex-wrap gap-2">
-        <button class="btn btn-outline" @click="download">
-          <Download class="size-4" aria-hidden="true" /> {{ t('recovery.download') }}
+        <button class="btn btn-outline flex-1 whitespace-nowrap" @click="download">
+          <Download class="size-4 shrink-0" aria-hidden="true" /> {{ t('recovery.download') }}
         </button>
-        <button class="btn btn-ghost" @click="copy">
-          <Copy class="size-4" aria-hidden="true" /> {{ t('recovery.copy') }}
+        <button class="btn btn-outline flex-1 whitespace-nowrap" @click="copy">
+          <component :is="copied ? Check : Copy" class="size-4 shrink-0" aria-hidden="true" />
+          <span aria-live="polite">{{ copied ? t('recovery.copied') : t('recovery.copy') }}</span>
         </button>
       </div>
-      <p class="mt-5 text-sm text-muted">{{ t('recovery.explain') }}</p>
-      <div v-if="mode === 'create'" class="card mt-6 grid gap-4">
-        <label class="inline-flex items-center gap-3 text-sm font-medium">
+      <div v-if="mode === 'create'" class="mt-6 grid gap-3">
+        <label class="card flex min-h-14 cursor-pointer items-center gap-3 text-sm font-medium">
           <input v-model="saved" type="checkbox" class="check" />
           {{ t('recovery.savedIt') }}
         </label>
@@ -115,26 +134,32 @@ const restore = () =>
         </button>
       </div>
     </template>
-    <form v-if="mode === 'restore'" class="card mt-6 grid gap-4" @submit.prevent="restore">
-      <label class="field">
-        {{ t('recovery.enterCode') }}
-        <input
-          v-model="input"
-          class="input mono text-sm"
-          placeholder="____-____-____-____-____-____-__"
-          autocomplete="off"
-        />
-      </label>
-      <button type="submit" class="btn btn-primary w-full" :disabled="busy">
-        <Loader2 v-if="busy" class="size-4 animate-spin" aria-hidden="true" />
-        {{ t('recovery.restore') }}
-      </button>
-      <details class="text-sm">
-        <summary class="cursor-pointer font-medium text-mask">
-          {{ t('recovery.lostTitle') }}
-        </summary>
-        <p class="mt-2 text-muted">{{ t('recovery.lostBody') }}</p>
-      </details>
-    </form>
+    <template v-if="mode === 'restore'">
+      <p class="lede text-sm">{{ t('recovery.restoreWhy') }}</p>
+      <form class="card mt-6 grid gap-4" @submit.prevent="restore">
+        <label class="field">
+          {{ t('recovery.yourCode') }}
+          <input
+            v-model="input"
+            class="input mono text-sm"
+            placeholder="____-____-____-____-____-____-__"
+            autocomplete="off"
+            autocapitalize="characters"
+            spellcheck="false"
+            required
+          />
+        </label>
+        <button type="submit" class="btn btn-primary w-full" :disabled="busy">
+          <Loader2 v-if="busy" class="size-4 animate-spin" aria-hidden="true" />
+          {{ t('recovery.restore') }}
+        </button>
+        <details class="text-sm">
+          <summary class="flex min-h-11 cursor-pointer items-center font-medium text-mask">
+            {{ t('recovery.lostTitle') }}
+          </summary>
+          <p class="text-muted">{{ t('recovery.lostBody') }}</p>
+        </details>
+      </form>
+    </template>
   </main>
 </template>

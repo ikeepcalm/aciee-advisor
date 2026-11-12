@@ -22,6 +22,7 @@ const rowId = ref('')
 const entries = ref<Entry[]>([])
 const more = ref(false)
 const error = ref('')
+const loaded = ref(false)
 
 async function load(append = false) {
   error.value = ''
@@ -33,6 +34,7 @@ async function load(append = false) {
     const page = await api<Entry[]>('GET', `/api/admin/audit?${query}`)
     entries.value = append ? [...entries.value, ...page] : page
     more.value = page.length === 50
+    loaded.value = true
   } catch (e) {
     error.value = describeError(t, e)
   }
@@ -63,23 +65,31 @@ onMounted(() => load())
       <button type="submit" class="btn btn-primary">{{ t('admin.search') }}</button>
     </form>
     <AppNotice v-if="error" kind="error">{{ error }}</AppNotice>
-    <details v-for="e in entries" :key="e.id" class="border-t border-line pb-2 text-sm">
-      <summary class="mono cursor-pointer pt-3 pb-1 text-xs">
-        {{ d(new Date(e.createdAt), 'short') }} · <strong>{{ e.op }}</strong> {{ e.tableName }} #{{
-          e.rowId
-        }}
-        · {{ e.actor ?? t('admin.system') }}
+    <p v-if="loaded && !entries.length" class="mt-6 text-sm text-muted">
+      {{ t('common.noResults') }}
+    </p>
+    <details
+      v-for="e in entries"
+      :key="e.id"
+      class="border-t border-line text-sm first-of-type:mt-4 open:pb-3"
+    >
+      <summary class="flex min-h-11 cursor-pointer flex-wrap items-center gap-x-2 py-2 text-xs">
+        <span class="tag bg-board text-muted">{{ e.op }}</span>
+        <strong class="mono [overflow-wrap:anywhere]">{{ e.tableName }} #{{ e.rowId }}</strong>
+        <span class="ml-auto text-muted [overflow-wrap:anywhere]">
+          {{ d(new Date(e.createdAt), 'short') }} · {{ e.actor ?? t('admin.system') }}
+        </span>
       </summary>
       <pre
         v-if="e.old"
-        class="mono mt-2 rounded-md bg-board p-2 text-xs break-all whitespace-pre-wrap text-muted"
+        class="mono mt-1 rounded-md bg-board p-2 text-xs break-all whitespace-pre-wrap text-muted"
         >{{ e.old }}</pre>
       <pre
         v-if="e.current"
         class="mono mt-2 rounded-md bg-board p-2 text-xs break-all whitespace-pre-wrap"
         >{{ e.current }}</pre>
     </details>
-    <button v-if="more" class="btn btn-ghost mt-4" @click="load(true)">
+    <button v-if="more" class="btn btn-outline mt-4 w-full" @click="load(true)">
       {{ t('admin.more') }}
     </button>
   </main>

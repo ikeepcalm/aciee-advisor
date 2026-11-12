@@ -131,7 +131,7 @@ class AuthFlowTests {
     private ResultActions send(String path, String body) throws Exception {
         Cookie token = mvc.perform(get("/api/auth/csrf"))
                 .andExpect(status().isNoContent())
-                .andReturn().getResponse().getCookie("XSRF-TOKEN");
+                .andReturn().getResponse().getCookie("ACIEE-XSRF");
         assertThat(token).isNotNull();
         clearInvocations(mailSender);
         return mvc.perform(post(path)

@@ -30,7 +30,7 @@ The SPA and `/api` are served from the same origin, so there is no CORS.
 - **Email normalisation**: lowercase, strip `+tag`, unique index on the normalised value.
 - **Sessions**: server-side, Spring Session JDBC.
   - Cookie: `HttpOnly; Secure; SameSite=Lax`.
-  - CSRF: `csrf.spa()` (Spring Security 7), i.e. `CookieCsrfTokenRepository.withHttpOnlyFalse()`; the SPA echoes the `XSRF-TOKEN` cookie in `X-XSRF-TOKEN`.
+  - CSRF: `csrf.spa()` (Spring Security 7), i.e. `CookieCsrfTokenRepository.withHttpOnlyFalse()` with the cookie renamed to `ACIEE-XSRF` so it cannot collide with another app's `XSRF-TOKEN` on the same host; the SPA echoes it in `X-XSRF-TOKEN`.
 - **Mail**: sent from our own domain with SPF, DKIM and DMARC. Plain text, code only, no links.
 
 ## 3. Anonymity protocol

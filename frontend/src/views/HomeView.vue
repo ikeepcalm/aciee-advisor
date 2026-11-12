@@ -76,7 +76,7 @@ watch(
         </h1>
         <p class="lede text-base md:text-lg">{{ t('home.lede') }}</p>
 
-        <div class="mt-6 min-h-36 sm:min-h-24">
+        <div class="mt-6 min-h-24">
           <template v-if="auth.loaded">
             <section v-if="auth.user && pending" class="pending card mb-4">
               <div class="flex items-start gap-3">
@@ -100,10 +100,14 @@ watch(
                 {{ t('auth.signUp') }}
               </RouterLink>
               <RouterLink
-                :to="{ name: 'catalog' }"
-                class="btn"
-                :class="auth.user && !pending ? 'btn-primary' : 'btn-outline'"
+                v-else-if="!pending"
+                :to="{ name: 'rate' }"
+                class="btn btn-primary col-span-2"
               >
+                <Star class="size-4" aria-hidden="true" />
+                {{ t('nav.rate') }}
+              </RouterLink>
+              <RouterLink :to="{ name: 'catalog' }" class="btn btn-outline">
                 <BookOpen class="size-4" aria-hidden="true" />
                 {{ t('home.browse') }}
               </RouterLink>
@@ -153,8 +157,10 @@ watch(
       <h2 class="display text-2xl md:text-3xl">{{ t('home.featuresTitle') }}</h2>
       <ul class="m-0 mt-5 grid list-none gap-3 p-0 sm:grid-cols-2 lg:grid-cols-3">
         <li v-for="feature in features" :key="feature.key" class="card flex flex-col">
-          <component :is="feature.icon" class="size-6 text-copper" aria-hidden="true" />
-          <h3 class="h2 mt-3">{{ t(`home.features.${feature.key}.title`) }}</h3>
+          <h3 class="h2 flex items-center gap-2.5">
+            <component :is="feature.icon" class="size-6 shrink-0 text-copper" aria-hidden="true" />
+            {{ t(`home.features.${feature.key}.title`) }}
+          </h3>
           <p class="mt-1.5 text-sm text-muted">{{ t(`home.features.${feature.key}.body`) }}</p>
           <RouterLink
             v-if="feature.to && (!feature.signedIn || auth.user)"

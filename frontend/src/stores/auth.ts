@@ -1,6 +1,7 @@
 import { ref } from 'vue'
 import { defineStore } from 'pinia'
 import { api } from '@/api'
+import { rateDraftPrefix, removeStoredStartingWith } from '@/storage'
 
 export interface Account {
   id: number
@@ -42,6 +43,7 @@ export const useAuthStore = defineStore('auth', () => {
 
   async function signOut() {
     await api('POST', '/api/auth/signout')
+    removeStoredStartingWith(rateDraftPrefix)
     user.value = null
   }
 

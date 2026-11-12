@@ -42,14 +42,19 @@ async function submit() {
 </script>
 
 <template>
-  <main class="page max-w-md">
+  <main class="page-narrow">
     <span class="eyebrow">{{ t('nav.groups') }}</span>
     <h1 class="h1">{{ t('group.joinTitle') }}</h1>
     <AppNotice v-if="error" kind="error">{{ error }}</AppNotice>
+    <Loader2
+      v-if="!preview && !error"
+      class="mt-6 size-5 animate-spin text-muted"
+      aria-hidden="true"
+    />
     <form v-if="preview && !sent" class="card mt-6 grid gap-5" @submit.prevent="submit">
       <div>
         <p class="display text-2xl">{{ preview.group.code }}</p>
-        <p class="text-sm text-muted">
+        <p class="text-sm text-muted [overflow-wrap:anywhere]">
           {{ preview.group.specialization }} ·
           {{ t('catalog.year', { n: preview.group.studyYear }) }} ·
           <span class="mono text-xs">{{ preview.group.academicYear }}</span>
@@ -61,7 +66,7 @@ async function submit() {
           <label
             v-for="s in preview.subgroups"
             :key="s.id"
-            class="inline-flex min-h-11 items-center gap-2 text-sm"
+            class="inline-flex min-h-11 cursor-pointer items-center gap-2 text-sm"
           >
             <input v-model="subgroupId" type="radio" :value="s.id" class="check" required />
             {{ s.label }}
@@ -74,6 +79,17 @@ async function submit() {
       </button>
       <p class="text-center text-xs text-muted">{{ t('group.joinHint') }}</p>
     </form>
-    <AppNotice v-if="sent" kind="success">{{ t('group.joinSent') }}</AppNotice>
+    <template v-if="sent">
+      <AppNotice kind="success">{{ t('group.joinSent') }} {{ t('group.joinHint') }}</AppNotice>
+      <RouterLink :to="{ name: 'group' }" class="btn btn-primary mt-2 w-full">{{
+        t('nav.groups')
+      }}</RouterLink>
+    </template>
+    <RouterLink
+      v-else-if="!preview && error"
+      :to="{ name: 'group' }"
+      class="btn btn-outline mt-2"
+      >{{ t('nav.groups') }}</RouterLink
+    >
   </main>
 </template>

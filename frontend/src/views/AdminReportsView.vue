@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { Loader2 } from 'lucide-vue-next'
 import AdminSections from '@/components/AdminSections.vue'
 import AppNotice from '@/components/AppNotice.vue'
 import SegmentedChips from '@/components/SegmentedChips.vue'
@@ -121,21 +122,43 @@ onMounted(async () => {
     </form>
     <AppNotice v-if="error" kind="error">{{ error }}</AppNotice>
     <div class="mt-4 flex flex-wrap gap-2">
-      <button class="btn btn-outline" @click="download('csv')">{{ t('reports.csv') }}</button>
-      <button class="btn btn-outline" @click="download('xlsx')">{{ t('reports.xlsx') }}</button>
-      <button class="btn btn-outline" @click="download('pdf')">{{ t('reports.pdf') }}</button>
+      <button
+        class="btn btn-outline flex-1 px-2 text-xs whitespace-nowrap sm:flex-none sm:px-4 sm:text-sm"
+        @click="download('csv')"
+      >
+        {{ t('reports.csv') }}
+      </button>
+      <button
+        class="btn btn-outline flex-1 px-2 text-xs whitespace-nowrap sm:flex-none sm:px-4 sm:text-sm"
+        @click="download('xlsx')"
+      >
+        {{ t('reports.xlsx') }}
+      </button>
+      <button
+        class="btn btn-outline flex-1 px-2 text-xs whitespace-nowrap sm:flex-none sm:px-4 sm:text-sm"
+        @click="download('pdf')"
+      >
+        {{ t('reports.pdf') }}
+      </button>
     </div>
+    <p v-if="loading" class="mt-8 flex items-center gap-2 text-sm text-muted">
+      <Loader2 class="size-4 animate-spin" aria-hidden="true" /> {{ t('common.loading') }}
+    </p>
     <template v-if="table && !loading">
       <h2 class="eyebrow mt-8 mb-3">{{ t('reports.preview', { n: table.rows.length }) }}</h2>
       <p v-if="!table.rows.length" class="text-sm text-muted">{{ t('reports.empty') }}</p>
-      <div v-else class="overflow-x-auto rounded-lg border border-line bg-panel">
+      <div
+        v-else
+        class="max-h-[70dvh] overflow-auto overscroll-x-contain rounded-lg border border-line bg-panel [background:linear-gradient(to_right,var(--panel)_30%,transparent)_left/3rem_100%_no-repeat_local,linear-gradient(to_left,var(--panel)_30%,transparent)_right/3rem_100%_no-repeat_local,linear-gradient(to_right,color-mix(in_srgb,var(--ink)_22%,transparent),transparent)_left/0.75rem_100%_no-repeat_scroll,linear-gradient(to_left,color-mix(in_srgb,var(--ink)_22%,transparent),transparent)_right/0.75rem_100%_no-repeat_scroll,var(--panel)]"
+        tabindex="0"
+      >
         <table class="w-full border-collapse text-xs">
           <thead>
             <tr>
               <th
                 v-for="column in table.columns"
                 :key="column"
-                class="mono min-w-24 border-b border-line px-3 py-2 text-left font-medium text-muted uppercase"
+                class="mono sticky top-0 min-w-24 border-b border-line bg-board px-3 py-2 text-left font-medium text-muted uppercase"
               >
                 {{ column }}
               </th>

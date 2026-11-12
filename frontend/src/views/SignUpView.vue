@@ -1,9 +1,8 @@
 <script setup lang="ts">
 import { ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { Loader2 } from 'lucide-vue-next'
-import BrandMark from '@/components/BrandMark.vue'
 import MicrosoftSignIn from '@/components/MicrosoftSignIn.vue'
 import AppNotice from '@/components/AppNotice.vue'
 import PasswordField from '@/components/PasswordField.vue'
@@ -11,6 +10,7 @@ import { describeError } from '@/api'
 import { useAuthStore } from '@/stores/auth'
 
 const { t } = useI18n()
+const route = useRoute()
 const router = useRouter()
 const auth = useAuthStore()
 const email = ref('')
@@ -42,14 +42,13 @@ async function submit() {
   } finally {
     busy.value = false
   }
-  await router.push({ name: 'verify', query: { email: email.value } })
+  await router.push({ name: 'verify', query: { email: email.value, next: route.query.next } })
 }
 </script>
 
 <template>
-  <main class="page max-w-md">
-    <BrandMark class="size-12" />
-    <span class="eyebrow mt-4">ACIEE Advisor</span>
+  <main class="page-narrow">
+    <span class="eyebrow">{{ t('rateForm.progress', { n: 1, total: 2 }) }}</span>
     <h1 class="h1">{{ t('auth.signUp') }}</h1>
     <p class="lede text-sm">{{ t('errors.domain') }}</p>
     <form class="card mt-6 grid gap-4" @submit.prevent="submit">
@@ -68,7 +67,7 @@ async function submit() {
       <div class="field">
         <label for="password">{{ t('auth.password') }}</label>
         <PasswordField id="password" v-model="password" autocomplete="new-password" />
-        <span class="text-xs font-normal text-muted">{{ t('errors.passwordLength') }}</span>
+        <span class="text-xs font-normal text-muted">{{ t('auth.passwordHint') }}</span>
       </div>
       <div class="field">
         <label for="confirm">{{ t('auth.confirmPassword') }}</label>
@@ -81,9 +80,13 @@ async function submit() {
       </button>
       <MicrosoftSignIn />
     </form>
-    <p class="mt-5 text-center text-sm text-muted">
+    <p class="mt-3 text-center text-sm text-muted">
       {{ t('auth.haveAccount') }}
-      <RouterLink :to="{ name: 'signin' }">{{ t('auth.signInAction') }}</RouterLink>
+      <RouterLink
+        :to="{ name: 'signin', query: { next: route.query.next } }"
+        class="inline-flex min-h-11 min-w-11 items-center justify-center"
+        >{{ t('auth.signInAction') }}</RouterLink
+      >
     </p>
   </main>
 </template>

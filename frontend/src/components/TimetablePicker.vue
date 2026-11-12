@@ -122,6 +122,7 @@ function chooseProgram(p: TimetableProgram) {
 .programs {
   display: grid;
   gap: 0.5rem;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 17rem), 1fr));
 }
 
 .program {

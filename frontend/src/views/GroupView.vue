@@ -2,6 +2,7 @@
 import { computed, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { TabsContent, TabsList, TabsRoot, TabsTrigger } from 'reka-ui'
+import { Check, Copy } from 'lucide-vue-next'
 import ComboSelect from '@/components/ComboSelect.vue'
 import AppNotice from '@/components/AppNotice.vue'
 import { api, describeError } from '@/api'
@@ -76,6 +77,8 @@ const inviteUses = ref(30)
 const newInviteLink = ref('')
 const error = ref('')
 const notice = ref('')
+const loaded = ref(false)
+const linkCopied = ref(false)
 
 const today = new Date().toISOString().slice(0, 10)
 const current = computed(() =>
@@ -95,6 +98,16 @@ const isNewCourse = (index: number) =>
   index === 0 ||
   teaching.value.slots[index - 1]!.offeringId !== teaching.value.slots[index]!.offeringId ||
   teaching.value.slots[index - 1]!.component !== teaching.value.slots[index]!.component
+
+async function copyInviteLink() {
+  try {
+    await navigator.clipboard.writeText(newInviteLink.value)
+    linkCopied.value = true
+    setTimeout(() => (linkCopied.value = false), 2000)
+  } catch {
+    linkCopied.value = false
+  }
+}
 
 function date(value: string) {
   return d(new Date(value), 'short')
@@ -118,6 +131,7 @@ async function load() {
   )
   memberships.value = mine.memberships
   requests.value = mine.requests
+  loaded.value = true
   if (!current.value) {
     groups.value = await api<GroupSummary[]>('GET', '/api/groups')
   } else if (leads.value) {
@@ -159,6 +173,7 @@ function createInvite(groupId: number) {
       maxUses: inviteUses.value,
     })
     newInviteLink.value = `${location.origin}/join/${created.token}`
+    linkCopied.value = false
     invites.value = await api<Invite[]>('GET', `/api/groups/${groupId}/invites`)
   })
 }
@@ -188,8 +203,8 @@ onMounted(() => run(load))
     <AppNotice v-if="notice" kind="success">{{ notice }}</AppNotice>
 
     <section v-if="current" class="card mt-6 flex flex-wrap items-center justify-between gap-4">
-      <div>
-        <p class="font-semibold">
+      <div class="min-w-0">
+        <p class="font-semibold [overflow-wrap:anywhere]">
           {{ current.specialization }} · {{ t('catalog.year', { n: current.studyYear }) }}
           <span class="mono ml-1 text-xs whitespace-nowrap font-normal text-muted">{{
             current.academicYear
@@ -203,29 +218,42 @@ onMounted(() => run(load))
           }}
         </p>
       </div>
-      <button v-if="!leads" class="btn btn-outline" @click="claim(current.groupId)">
-        {{ t('group.claim') }}
-      </button>
-      <span v-else class="tag bg-mask text-on-mask">{{ t('group.leader') }}</span>
-    </section>
-    <section v-else class="card mt-6 grid gap-4">
-      <p class="text-sm text-muted">{{ t('group.noGroup') }}</p>
-      <div class="field">
-        <label for="claim-group">{{ t('group.claimOther') }}</label>
-        <ComboSelect
-          id="claim-group"
-          v-model="claimGroupId"
-          :options="groupOptions"
-          :placeholder="t('group.pickGroup')"
-        />
+      <span v-if="leads" class="tag bg-mask text-on-mask">{{ t('group.leader') }}</span>
+      <div class="grid basis-full gap-2 sm:flex sm:flex-wrap">
+        <RouterLink
+          :to="{ name: 'rate' }"
+          class="btn"
+          :class="leads ? 'btn-outline' : 'btn-primary'"
+          >{{ t('rate.title') }}</RouterLink
+        >
+        <button v-if="!leads" class="btn btn-ghost" @click="claim(current.groupId)">
+          {{ t('group.claim') }}
+        </button>
       </div>
-      <button
-        class="btn btn-outline justify-self-start"
-        :disabled="!claimGroupId"
-        @click="claim(claimGroupId!)"
-      >
-        {{ t('group.claimOther') }}
-      </button>
+    </section>
+    <section v-else-if="loaded" class="card mt-6 grid gap-2">
+      <p>{{ t('group.noGroup') }}</p>
+      <details>
+        <summary class="flex min-h-11 cursor-pointer items-center text-sm font-medium text-mask">
+          {{ t('group.claimOther') }}
+        </summary>
+        <div class="grid gap-3 pt-1">
+          <ComboSelect
+            id="claim-group"
+            v-model="claimGroupId"
+            :options="groupOptions"
+            :placeholder="t('group.pickGroup')"
+            :aria-label="t('group.pickGroup')"
+          />
+          <button
+            class="btn btn-outline justify-self-start"
+            :disabled="!claimGroupId"
+            @click="claim(claimGroupId!)"
+          >
+            {{ t('group.sendRequest') }}
+          </button>
+        </div>
+      </details>
     </section>
 
     <section v-if="requests.length" class="mt-8">
@@ -263,7 +291,7 @@ onMounted(() => run(load))
           :key="m.email"
           class="flex flex-wrap items-center gap-2 border-b border-line py-2 text-sm"
         >
-          <span class="break-all">{{ m.email }}</span>
+          <span class="[overflow-wrap:anywhere]">{{ m.email }}</span>
           <span v-if="m.subgroup" class="mono text-xs text-muted">{{ m.subgroup }}</span>
           <span v-if="m.leader" class="tag bg-mask text-on-mask">{{ t('group.leader') }}</span>
         </p>
@@ -276,10 +304,10 @@ onMounted(() => run(load))
         <div
           v-for="r in pending.requests"
           :key="r.id"
-          class="card mb-2 flex flex-wrap items-center gap-3"
+          class="card mb-2 flex flex-wrap items-center gap-x-3 gap-y-2"
         >
-          <div class="min-w-0 flex-1 text-sm">
-            <div class="font-semibold break-all">{{ r.email }}</div>
+          <div class="min-w-0 basis-full text-sm sm:flex-1 sm:basis-0">
+            <div class="font-semibold [overflow-wrap:anywhere]">{{ r.email }}</div>
             <div class="text-muted">
               {{ t(`group.kind.${r.kind}`)
               }}<span v-if="r.subgroup"> · {{ t('group.subgroup') }} {{ r.subgroup }}</span>
@@ -333,6 +361,12 @@ onMounted(() => run(load))
           <AppNotice v-if="newInviteLink" kind="warn" class="my-0">
             {{ t('group.inviteOnce') }}
             <code class="mono mt-1 block text-xs break-all select-all">{{ newInviteLink }}</code>
+            <button class="btn btn-outline mt-2" @click="copyInviteLink">
+              <component :is="linkCopied ? Check : Copy" class="size-4" aria-hidden="true" />
+              <span aria-live="polite">{{
+                linkCopied ? t('recovery.copied') : t('recovery.copy')
+              }}</span>
+            </button>
           </AppNotice>
         </div>
         <h3 class="eyebrow">{{ t('group.activeInvites') }}</h3>
@@ -354,7 +388,7 @@ onMounted(() => run(load))
           v-for="(slot, index) in teaching.slots"
           :key="`${slot.offeringId}-${slot.component}-${slot.subgroupId}`"
         >
-          <h3 v-if="isNewCourse(index)" class="h2 mt-5 text-base">
+          <h3 v-if="isNewCourse(index)" class="h2 mt-6 text-lg first:mt-0">
             {{ slot.title }}
             <span class="tag ml-1 bg-board text-muted">{{
               t(`group.component.${slot.component}`)
@@ -375,13 +409,11 @@ onMounted(() => run(load))
             />
           </div>
         </template>
-        <button
-          v-if="teaching.slots.length"
-          class="btn btn-primary mt-6"
-          @click="saveTeaching(current!.groupId)"
-        >
-          {{ t('admin.save') }}
-        </button>
+        <div v-if="teaching.slots.length" class="card action-bar mt-6 flex justify-end">
+          <button class="btn btn-primary w-full sm:w-auto" @click="saveTeaching(current!.groupId)">
+            {{ t('admin.save') }}
+          </button>
+        </div>
       </TabsContent>
     </TabsRoot>
   </main>

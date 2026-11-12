@@ -13,3 +13,23 @@ export function writeStored(key: string, value: string) {
     // storage blocked: the choice lasts until the tab closes
   }
 }
+
+export const rateDraftPrefix = 'rate-draft:'
+
+export function removeStoredStartingWith(prefix: string) {
+  try {
+    Object.keys(localStorage)
+      .filter((key) => key.startsWith(prefix))
+      .forEach((key) => localStorage.removeItem(key))
+  } catch {
+    return
+  }
+}
+
+export function removeStored(key: string) {
+  try {
+    localStorage.removeItem(key)
+  } catch {
+    return
+  }
+}

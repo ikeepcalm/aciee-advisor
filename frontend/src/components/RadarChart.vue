@@ -1,8 +1,12 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+import { useI18n } from 'vue-i18n'
+import { ChevronRight } from 'lucide-vue-next'
 import type { Option } from '@/api'
 
 const props = defineProps<{ scores: (number | null)[]; axes: Option[]; pillars: Option[] }>()
+
+const { t } = useI18n()
 
 const size = 300
 const center = size / 2
@@ -32,6 +36,11 @@ const marks = computed(() =>
     .filter((m) => m !== null),
 )
 const shape = computed(() => marks.value.map((m) => `${m.x},${m.y}`).join(' '))
+const criteria = computed(() =>
+  props.axes
+    .map((axis, i) => ({ n: i + 1, label: axis.label, score: props.scores[i] ?? null }))
+    .filter((criterion) => criterion.label),
+)
 const pillarAverages = computed(() =>
   props.pillars.map((pillar) => {
     const values = props.axes
@@ -47,55 +56,114 @@ const pillarAverages = computed(() =>
 
 <template>
   <figure class="radar">
-    <svg
-      :viewBox="`0 0 ${size} ${size}`"
-      role="img"
-      :aria-label="
-        pillarAverages.map((p) => `${p.label}: ${p.value?.toFixed(1) ?? '—'}`).join('; ')
-      "
-    >
-      <polygon v-for="(ring, i) in rings" :key="i" :points="ring" class="grid" />
-      <line
-        v-for="(s, i) in spokes"
-        :key="i"
-        :x1="center"
-        :y1="center"
-        :x2="s.x"
-        :y2="s.y"
-        class="grid"
-      />
-      <text
-        v-for="l in labels"
-        :key="l.n"
-        :x="l.x"
-        :y="l.y"
-        class="axis"
-        text-anchor="middle"
-        dominant-baseline="middle"
+    <div class="layout">
+      <svg
+        :viewBox="`0 0 ${size} ${size}`"
+        role="img"
+        :aria-label="
+          pillarAverages.map((p) => `${p.label}: ${p.value?.toFixed(1) ?? '—'}`).join('; ')
+        "
       >
-        {{ l.n }}
-        <title>{{ l.label }}</title>
-      </text>
-      <polygon v-if="marks.length > 2" :points="shape" class="area" />
-      <circle v-for="m in marks" :key="`${m.x}-${m.y}`" :cx="m.x" :cy="m.y" r="4" class="mark">
-        <title>{{ m.label }}: {{ m.score.toFixed(1) }}</title>
-      </circle>
-    </svg>
-    <figcaption>
-      <div v-for="p in pillarAverages" :key="p.label" class="pillar">
-        <span>{{ p.label }}</span>
-        <strong>{{ p.value === null ? '—' : p.value.toFixed(1) }}</strong>
-      </div>
-    </figcaption>
+        <polygon v-for="(ring, i) in rings" :key="i" :points="ring" class="grid" />
+        <line
+          v-for="(s, i) in spokes"
+          :key="i"
+          :x1="center"
+          :y1="center"
+          :x2="s.x"
+          :y2="s.y"
+          class="grid"
+        />
+        <text
+          v-for="l in labels"
+          :key="l.n"
+          :x="l.x"
+          :y="l.y"
+          class="axis"
+          text-anchor="middle"
+          dominant-baseline="middle"
+        >
+          {{ l.n }}
+          <title>{{ l.label }}</title>
+        </text>
+        <polygon v-if="marks.length > 2" :points="shape" class="area" />
+        <circle v-for="m in marks" :key="`${m.x}-${m.y}`" :cx="m.x" :cy="m.y" r="4" class="mark">
+          <title>{{ m.label }}: {{ m.score.toFixed(1) }}</title>
+        </circle>
+      </svg>
+      <figcaption>
+        <div v-for="p in pillarAverages" :key="p.label" class="pillar">
+          <span>{{ p.label }}</span>
+          <strong>{{ p.value === null ? '—' : p.value.toFixed(1) }}</strong>
+        </div>
+        <details v-if="criteria.length" class="group criteria">
+          <summary
+            class="flex min-h-11 cursor-pointer list-none items-center gap-1 text-sm font-medium text-mask [&::-webkit-details-marker]:hidden"
+          >
+            <ChevronRight
+              class="size-4 transition-transform group-open:rotate-90"
+              aria-hidden="true"
+            />
+            {{ t('course.criteria') }}
+          </summary>
+          <ol class="m-0 list-none p-0 pb-2">
+            <li v-for="criterion in criteria" :key="criterion.n" class="criterion">
+              <span class="number">{{ criterion.n }}</span>
+              <span class="min-w-0 flex-1">{{ criterion.label }}</span>
+              <strong>{{ criterion.score === null ? '—' : criterion.score.toFixed(1) }}</strong>
+            </li>
+          </ol>
+        </details>
+      </figcaption>
+    </div>
   </figure>
 </template>
 
 <style scoped>
 .radar {
-  margin: 0.5rem 0;
+  margin: 0.5rem 0 0;
+  container-type: inline-size;
 }
 
-svg {
+.layout {
+  display: grid;
+  gap: 0.5rem;
+}
+
+@container (min-width: 36rem) {
+  .layout {
+    grid-template-columns: 18rem minmax(0, 1fr);
+    align-items: center;
+    gap: 2rem;
+  }
+}
+
+.criteria {
+  border-top: 1px solid var(--line);
+}
+
+.criterion {
+  display: flex;
+  gap: 0.75rem;
+  padding: 0.3rem 0;
+  font-size: 0.8125rem;
+}
+
+.number {
+  width: 1.25rem;
+  flex-shrink: 0;
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  line-height: 1.25rem;
+  color: var(--muted);
+}
+
+.criterion strong {
+  font-family: var(--font-mono);
+  font-weight: 500;
+}
+
+.layout > svg {
   width: 100%;
   max-width: 18rem;
   display: block;

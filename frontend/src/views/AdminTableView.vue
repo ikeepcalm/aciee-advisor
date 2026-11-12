@@ -43,6 +43,7 @@ const editing = ref<Row | null>(null)
 const editingId = ref<string | null>(null)
 const formError = ref('')
 const options = ref<Record<string, Option[]>>({})
+const loaded = ref(false)
 
 const key = computed(() => route.params.table as string)
 const table = computed(() => tables.value.find((candidate) => candidate.key === key.value))
@@ -66,6 +67,7 @@ async function load(append = false) {
     const page = await api<Row[]>('GET', `/api/admin/tables/${key.value}?${query}`)
     rows.value = append ? [...rows.value, ...page] : page
     more.value = page.length === 50
+    loaded.value = true
   } catch (e) {
     error.value = describeError(t, e)
   }
@@ -136,14 +138,16 @@ watch(
 </script>
 
 <template>
-  <main class="page">
+  <main class="page lg:max-w-6xl">
     <span class="eyebrow">{{ t('nav.admin') }}</span>
     <h1 class="h1">{{ t(`admin.sections.${key}`) }}</h1>
-    <AdminSections />
-    <form class="mt-4 flex flex-wrap gap-2" @submit.prevent="load()">
+    <div class="max-w-3xl">
+      <AdminSections />
+    </div>
+    <form class="mt-4 flex max-w-3xl flex-wrap gap-2" @submit.prevent="load()">
       <input
         v-model.trim="search"
-        class="input flex-1"
+        class="input min-w-40 flex-1"
         :placeholder="t('admin.search')"
         :aria-label="t('admin.search')"
       />
@@ -155,54 +159,65 @@ watch(
     <AppNotice v-if="error" kind="error">{{ error }}</AppNotice>
     <AppNotice v-if="notice" kind="success">{{ notice }}</AppNotice>
 
-    <div v-for="row in rows" :key="row.id!" class="border-t border-line py-3">
-      <strong class="block font-semibold">{{ row.label }}</strong>
-      <dl class="mt-1 grid grid-cols-[auto_1fr] gap-x-3 gap-y-0.5 text-xs">
-        <template v-for="column in table?.columns" :key="column.name">
-          <dt class="text-muted">{{ t(`admin.columns.${column.name}`) }}</dt>
-          <dd class="m-0 [overflow-wrap:anywhere]">{{ shown(row, column) ?? '—' }}</dd>
-        </template>
-      </dl>
-      <div class="mt-2 flex flex-wrap gap-1">
-        <button class="btn btn-ghost btn-sm" @click="openForm(row)">{{ t('admin.edit') }}</button>
-        <button
-          class="btn btn-danger btn-sm border-transparent"
-          @click="act('DELETE', `/api/admin/tables/${key}/${row.id}`)"
-        >
-          {{ t('admin.delete') }}
-        </button>
-        <button
-          v-if="key === 'professor' && !row.archived_at"
-          class="btn btn-ghost btn-sm text-muted"
-          @click="act('POST', `/api/admin/tables/professor/${row.id}/archive`)"
-        >
-          {{ t('admin.archive') }}
-        </button>
-        <button
-          v-if="key === 'study_group'"
-          class="btn btn-ghost btn-sm text-muted"
-          @click="
-            act(
-              'POST',
-              `/api/admin/tables/study_group/${row.id}/offerings`,
-              'admin.offeringsCreated',
-            )
-          "
-        >
-          {{ t('admin.createOfferings') }}
-        </button>
-        <button
-          v-if="key === 'academic_year'"
-          class="btn btn-ghost btn-sm text-muted"
-          @click="
-            act('POST', `/api/admin/tables/academic_year/${row.id}/rollover`, 'admin.rolloverDone')
-          "
-        >
-          {{ t('admin.rollover') }}
-        </button>
+    <p v-if="loaded && !rows.length" class="mt-6 text-sm text-muted">
+      {{ t('common.noResults') }}
+    </p>
+    <div class="mt-4 grid gap-x-10 lg:grid-cols-2">
+      <div v-for="row in rows" :key="row.id!" class="border-t border-line py-3">
+        <strong class="block font-semibold [overflow-wrap:anywhere]">{{ row.label }}</strong>
+        <dl class="mt-1 grid grid-cols-[auto_1fr] gap-x-3 gap-y-0.5 text-xs">
+          <template v-for="column in table?.columns" :key="column.name">
+            <dt class="text-muted">{{ t(`admin.columns.${column.name}`) }}</dt>
+            <dd class="m-0 [overflow-wrap:anywhere]">{{ shown(row, column) ?? '—' }}</dd>
+          </template>
+        </dl>
+        <div class="mt-2 flex flex-wrap gap-1">
+          <button class="btn btn-ghost btn-sm" @click="openForm(row)">
+            {{ t('admin.edit') }}
+          </button>
+          <button
+            class="btn btn-danger btn-sm border-transparent"
+            @click="act('DELETE', `/api/admin/tables/${key}/${row.id}`)"
+          >
+            {{ t('admin.delete') }}
+          </button>
+          <button
+            v-if="key === 'professor' && !row.archived_at"
+            class="btn btn-ghost btn-sm text-muted"
+            @click="act('POST', `/api/admin/tables/professor/${row.id}/archive`)"
+          >
+            {{ t('admin.archive') }}
+          </button>
+          <button
+            v-if="key === 'study_group'"
+            class="btn btn-ghost btn-sm text-muted"
+            @click="
+              act(
+                'POST',
+                `/api/admin/tables/study_group/${row.id}/offerings`,
+                'admin.offeringsCreated',
+              )
+            "
+          >
+            {{ t('admin.createOfferings') }}
+          </button>
+          <button
+            v-if="key === 'academic_year'"
+            class="btn btn-ghost btn-sm text-muted"
+            @click="
+              act(
+                'POST',
+                `/api/admin/tables/academic_year/${row.id}/rollover`,
+                'admin.rolloverDone',
+              )
+            "
+          >
+            {{ t('admin.rollover') }}
+          </button>
+        </div>
       </div>
     </div>
-    <button v-if="more" class="btn btn-ghost mt-4" @click="load(true)">
+    <button v-if="more" class="btn btn-outline mt-4 w-full max-w-3xl" @click="load(true)">
       {{ t('admin.more') }}
     </button>
 
@@ -230,7 +245,7 @@ watch(
           />
         </div>
         <AppNotice v-if="formError" kind="error" class="my-0">{{ formError }}</AppNotice>
-        <button type="submit" class="btn btn-primary">{{ t('admin.save') }}</button>
+        <button type="submit" class="btn btn-primary w-full">{{ t('admin.save') }}</button>
       </form>
     </AppSheet>
   </main>

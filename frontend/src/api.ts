@@ -13,7 +13,7 @@ export class ApiError extends Error {
 }
 
 function xsrfToken(): string | undefined {
-  const match = document.cookie.match(/(?:^|; )XSRF-TOKEN=([^;]*)/)
+  const match = document.cookie.match(/(?:^|; )ACIEE-XSRF=([^;]*)/)
   return match?.[1] && decodeURIComponent(match[1])
 }
 
@@ -73,7 +73,10 @@ export interface Lookups {
 let lookupsRequest: Promise<Lookups> | null = null
 
 export function lookups(): Promise<Lookups> {
-  lookupsRequest ??= api<Lookups>('GET', '/api/catalog/lookups')
+  lookupsRequest ??= api<Lookups>('GET', '/api/catalog/lookups').catch((e) => {
+    lookupsRequest = null
+    throw e
+  })
   return lookupsRequest
 }
 
@@ -86,9 +89,11 @@ export function describeError(t: Translate, error: unknown): string {
     : t('errors.generic', {})
 }
 
-export function safeNext(query: LocationQuery): string {
+export function safeNext(query: LocationQuery, fallback = '/'): string {
   const next = query.next
-  return typeof next === 'string' && next.startsWith('/') && !next.startsWith('//') ? next : '/'
+  return typeof next === 'string' && next.startsWith('/') && !next.startsWith('//')
+    ? next
+    : fallback
 }
 
 export type WeekParity = 'ALL' | 'ODD' | 'EVEN'

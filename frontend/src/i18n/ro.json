@@ -20,23 +20,23 @@
     "features": {
       "catalog": {
         "title": "Toate cursurile din planul tău",
-        "body": "Alegi specializarea, planul de învățământ și anul. Fiecare semestru își arată cursurile, cu orele săptămânale de curs, seminar, laborator și proiect."
+        "body": "Alegi specializarea și anul și vezi cursurile fiecărui semestru, cu orele lor."
       },
       "survival": {
         "title": "Cum se trece",
-        "body": "Dificultatea examenului, cât ajută laboratorul, cât de strictă e prezența, orele pe săptămână și formatul examenului, plus sfaturi de la colegi."
+        "body": "Cât de greu e examenul, cât ajută laboratorul, cât de strictă e prezența. Plus sfaturi de la colegi."
       },
       "professors": {
         "title": "Profesorii, criteriu cu criteriu",
-        "body": "Fiecare profesor are câte o diagramă radar pentru fiecare disciplină predată, construită din evaluările studenților, cu comentarii dedesubt."
+        "body": "O diagramă radar pentru fiecare disciplină predată, din evaluările studenților."
       },
       "timetable": {
         "title": "Orarul grupei tale",
-        "body": "Luat din PDF-ul oficial al facultății și așezat pe zile, cu săptămânile pare și impare deja descurcate. Nu ai nevoie de cont."
+        "body": "Din PDF-ul oficial, așezat pe zile, cu săptămânile pare și impare descurcate. Fără cont."
       },
       "groups": {
         "title": "Grupa ta",
-        "body": "Intri cu linkul de invitație de la șeful de grupă. Fiind în grupă, poți evalua cursurile pe care le urmezi."
+        "body": "Intri cu linkul de la șeful de grupă și poți evalua cursurile pe care le urmezi."
       },
       "control": {
         "title": "Evaluările rămân ale tale",
@@ -68,6 +68,8 @@
     "closingBody": "Ai nevoie doar de un cont cu adresa de la universitate."
   },
   "auth": {
+    "wrongEmail": "Altă adresă",
+    "passwordHint": "Minimum 10 caractere.",
     "email": "E-mail instituțional",
     "emailPlaceholder": "prenume.nume{'@'}student.ugal.ro",
     "password": "Parolă",
@@ -146,7 +148,8 @@
     "moderation": "Moderare",
     "menu": "Meniu",
     "timetable": "Orar",
-    "account": "Cont"
+    "account": "Cont",
+    "rateInvite": "Ai trecut un curs? Spune cum a fost."
   },
   "prefs": {
     "language": "Limbă",
@@ -292,33 +295,37 @@
     "system": "sistem"
   },
   "rate": {
+    "allDone": "Gata, mulțumim!",
+    "locked": "Încă nedeschise ({n})",
+    "done": "Evaluate",
+    "toRate": "De evaluat",
+    "nextUp": "Urmează",
+    "progress": "{done} din {total} evaluate",
     "title": "Evaluează",
-    "intro": "Cursurile pe care le poți evalua",
     "loading": "Pregătim tokenurile…",
     "term": "{year} · Semestrul {semester}",
     "opensOn": "Se deschide pe {date}",
     "opensLater": "Se deschide în curând",
-    "ready": "Gata de evaluat",
     "otherDevice": "Tokenul a fost obținut pe alt dispozitiv. Restaurează codul de recuperare pe acesta.",
     "noGroup": "Nu faci parte din nicio grupă. Alătură-te grupei tale ca să poți evalua.",
     "pastYears": "Lipsesc cursuri din anii trecuți? Cere acces la grupa de atunci:",
     "pastYearsLink": "Grupa mea",
     "issueFailed": "Nu am putut obține tokenurile. Reîncearcă.",
-    "retry": "Reîncearcă",
     "unknownKey": "Cheie de semnare necunoscută. Nu trimite evaluarea și anunță administratorul.",
     "semester": "Semestrul {n}",
-    "submitted": "Trimis",
     "action": "Evaluează"
   },
   "recovery": {
+    "restoreWhy": "Ai deja un cod de pe alt dispozitiv. Introdu-l ca să continui aici.",
+    "copied": "Copiat",
+    "why": "Cu el îți editezi evaluările de pe alt dispozitiv. Noi nu îl putem recupera.",
+    "saveTitle": "Salvează codul de recuperare",
     "title": "Cod de recuperare",
     "yourCode": "Codul tău de recuperare",
-    "explain": "Notează-l. Cu el îți poți edita evaluările de pe alt dispozitiv. Nu îl putem recupera: dacă îl pierzi, evaluările rămân, dar nu le mai poți modifica.",
     "download": "Descarcă (.txt)",
     "copy": "Copiază",
     "savedIt": "L-am salvat într-un loc sigur",
     "continue": "Continuă",
-    "enterCode": "Ai deja un cod? Introdu-l:",
     "restore": "Restaurează",
     "badFormat": "Codul are un format greșit.",
     "wrongCode": "Cod incorect.",
@@ -331,7 +338,9 @@
     "close": "Închide",
     "noResults": "Niciun rezultat",
     "showPassword": "Arată parola",
-    "hidePassword": "Ascunde parola"
+    "hidePassword": "Ascunde parola",
+    "loading": "Se încarcă…",
+    "retry": "Reîncearcă"
   },
   "catalog": {
     "title": "Ghidul cursurilor ACIEE",
@@ -366,7 +375,9 @@
     "noTips": "Încă nu există sfaturi publicate.",
     "week": "Săpt. {date}",
     "rateThis": "Evaluează acest curs",
-    "updated": "Rezultatele se actualizează în fiecare oră."
+    "updated": "Rezultatele se actualizează în fiecare oră.",
+    "showAllTips": "Arată toate ({n})",
+    "criteria": "Toate criteriile"
   },
   "professor": {
     "subjects": "Discipline predate",
@@ -382,8 +393,6 @@
     "weeklyHours": "Ore pe săptămână",
     "examFormat": "Format examen",
     "attendanceStrictness": "Strictețe prezență",
-    "teachers": "Profesori",
-    "teachersHint": "Deschide doar profesorii pe care i-ai avut. Un criteriu neatins rămâne N/A.",
     "noTeachers": "Profesorii acestui curs nu au fost încă introduși de șeful de grupă.",
     "subgroup": "gr. {label}",
     "comment": "Comentariu (opțional)",
@@ -393,7 +402,25 @@
     "save": "Salvează modificările",
     "edit": "Editează",
     "noToken": "Nu ai un token pentru acest curs pe acest dispozitiv.",
-    "saved": "Evaluarea a fost trimisă anonim. Textele apar după moderare; rezultatele apar când există cel puțin 5 evaluări."
+    "saved": "Evaluarea a fost trimisă anonim. Textele apar după moderare; rezultatele apar când există cel puțin 5 evaluări.",
+    "hadTeacher": "L-ai avut pe acest profesor anul acesta și îl poți evalua?",
+    "yes": "Da",
+    "no": "Nu",
+    "dontKnow": "Nu știu",
+    "na": "N/A",
+    "progress": "Pasul {n} din {total}",
+    "next": "Înainte",
+    "finish": "Final",
+    "optionalHint": "Totul e opțional. Poți trimite oricând.",
+    "scored": "{n} din {total} notate",
+    "skippedTeacher": "În regulă, trecem mai departe.",
+    "summary": "Profesori evaluați: {n} din {total}",
+    "draftRestored": "Am păstrat ce ai completat data trecută.",
+    "doneTitle": "Gata, mulțumim!",
+    "rateAnother": "Evaluează alt curs",
+    "quickHint": "4 întrebări rapide. Restul e opțional.",
+    "allCriteria": "Toate cele 14 criterii",
+    "quickOnly": "Doar cele 4 rapide"
   },
   "submissions": {
     "deviceOnly": "Vizibile doar pe acest dispozitiv (sau după restaurarea codului).",

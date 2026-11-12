@@ -20,23 +20,23 @@
     "features": {
       "catalog": {
         "title": "Every course in your plan",
-        "body": "Pick your specialization, study plan and year. Each semester lists its courses with the weekly hours of lectures, seminars, labs and projects."
+        "body": "Pick your specialization and year to see each semester’s courses and their hours."
       },
       "survival": {
         "title": "How to pass",
-        "body": "Exam difficulty, how much the lab helps, how strict attendance is, hours per week and the exam format, plus tips from classmates."
+        "body": "How hard the exam is, how much the lab helps, how strict attendance is. Plus tips from classmates."
       },
       "professors": {
         "title": "Professors, criterion by criterion",
-        "body": "Every professor has a radar chart for each subject they teach, drawn from student ratings, with comments underneath."
+        "body": "A radar chart for each subject they teach, drawn from student ratings."
       },
       "timetable": {
         "title": "Your group's timetable",
-        "body": "Taken from the faculty's official PDF and laid out by day, with odd and even weeks sorted out. No account needed."
+        "body": "From the official PDF, laid out by day, odd and even weeks sorted out. No account needed."
       },
       "groups": {
         "title": "Your group",
-        "body": "Join with the invitation link from your group leader. Being in a group is what lets you rate the courses you take."
+        "body": "Join with your group leader’s link and you can rate the courses you take."
       },
       "control": {
         "title": "Your ratings stay yours",
@@ -68,6 +68,8 @@
     "closingBody": "All it takes is an account with your university address."
   },
   "auth": {
+    "wrongEmail": "Different address",
+    "passwordHint": "At least 10 characters.",
     "email": "University e-mail",
     "emailPlaceholder": "first.last{'@'}student.ugal.ro",
     "password": "Password",
@@ -146,7 +148,8 @@
     "moderation": "Moderation",
     "menu": "Menu",
     "timetable": "Timetable",
-    "account": "Account"
+    "account": "Account",
+    "rateInvite": "Passed a course? Say what it was like."
   },
   "prefs": {
     "language": "Language",
@@ -292,33 +295,37 @@
     "system": "system"
   },
   "rate": {
+    "allDone": "All done, thank you!",
+    "locked": "Not open yet ({n})",
+    "done": "Rated",
+    "toRate": "To rate",
+    "nextUp": "Up next",
+    "progress": "{done} of {total} rated",
     "title": "Rate",
-    "intro": "Courses you can rate",
     "loading": "Preparing your tokens…",
     "term": "{year} · Semester {semester}",
     "opensOn": "Opens on {date}",
     "opensLater": "Opens soon",
-    "ready": "Ready to rate",
     "otherDevice": "The token was issued on another device. Restore your recovery code on this one.",
     "noGroup": "You are not in any group. Join your group to be able to rate.",
     "pastYears": "Missing courses from past years? Ask for access to that year's group:",
     "pastYearsLink": "My group",
     "issueFailed": "We could not get the tokens. Try again.",
-    "retry": "Try again",
     "unknownKey": "Unknown signing key. Do not submit the rating and tell the administrator.",
     "semester": "Semester {n}",
-    "submitted": "Submitted",
     "action": "Rate"
   },
   "recovery": {
+    "restoreWhy": "You already have a code from another device. Enter it to continue here.",
+    "copied": "Copied",
+    "why": "It lets you edit your ratings from another device. We can't recover it for you.",
+    "saveTitle": "Save your recovery code",
     "title": "Recovery code",
     "yourCode": "Your recovery code",
-    "explain": "Write it down. With it you can edit your ratings from another device. We cannot recover it: if you lose it, your ratings stay, but you can no longer change them.",
     "download": "Download (.txt)",
     "copy": "Copy",
     "savedIt": "I saved it somewhere safe",
     "continue": "Continue",
-    "enterCode": "Already have a code? Enter it:",
     "restore": "Restore",
     "badFormat": "The code is in the wrong format.",
     "wrongCode": "Wrong code.",
@@ -331,7 +338,9 @@
     "close": "Close",
     "noResults": "No results",
     "showPassword": "Show password",
-    "hidePassword": "Hide password"
+    "hidePassword": "Hide password",
+    "loading": "Loading…",
+    "retry": "Try again"
   },
   "catalog": {
     "title": "The ACIEE course guide",
@@ -366,7 +375,9 @@
     "noTips": "No tips published yet.",
     "week": "Week of {date}",
     "rateThis": "Rate this course",
-    "updated": "Results refresh every hour."
+    "updated": "Results refresh every hour.",
+    "showAllTips": "Show all ({n})",
+    "criteria": "All criteria"
   },
   "professor": {
     "subjects": "Subjects taught",
@@ -382,8 +393,6 @@
     "weeklyHours": "Hours per week",
     "examFormat": "Exam format",
     "attendanceStrictness": "Attendance strictness",
-    "teachers": "Professors",
-    "teachersHint": "Open only the professors you had. An untouched criterion stays N/A.",
     "noTeachers": "This course's professors have not been entered by the group leader yet.",
     "subgroup": "subgr. {label}",
     "comment": "Comment (optional)",
@@ -393,7 +402,25 @@
     "save": "Save changes",
     "edit": "Edit",
     "noToken": "You have no token for this course on this device.",
-    "saved": "The rating was submitted anonymously. Texts appear after moderation; results appear once there are at least 5 ratings."
+    "saved": "The rating was submitted anonymously. Texts appear after moderation; results appear once there are at least 5 ratings.",
+    "hadTeacher": "Did you have this professor this year, and can you rate them?",
+    "yes": "Yes",
+    "no": "No",
+    "dontKnow": "Not sure",
+    "na": "N/A",
+    "progress": "Step {n} of {total}",
+    "next": "Next",
+    "finish": "Finish",
+    "optionalHint": "Everything is optional. You can submit at any time.",
+    "scored": "{n} of {total} scored",
+    "skippedTeacher": "No problem, moving on.",
+    "summary": "Professors rated: {n} of {total}",
+    "draftRestored": "We kept what you filled in last time.",
+    "doneTitle": "Done, thank you!",
+    "rateAnother": "Rate another course",
+    "quickHint": "4 quick questions. The rest is optional.",
+    "allCriteria": "All 14 criteria",
+    "quickOnly": "Just the quick 4"
   },
   "submissions": {
     "deviceOnly": "Visible only on this device (or after restoring your code).",
