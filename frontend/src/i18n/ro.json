@@ -385,6 +385,7 @@
     "noSubjects": "Acest profesor nu are discipline înregistrate.",
     "archived": "Profesorul nu mai predă la facultate.",
     "score": "Scor general",
+    "radar": "Media pe toate disciplinele",
     "basis": "din {ratings} evaluări la {subjects} discipline",
     "fewRatings": "Încă prea puține evaluări",
     "fewRatingsBody": "Scorul apare când se strâng destule evaluări. Ai avut ore cu acest profesor?",

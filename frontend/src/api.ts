@@ -128,6 +128,7 @@ export interface ProfessorPage {
   bioEn: string | null
   photo: string | null
   cvUrl: string | null
+  radar: { n: number; scores: (number | null)[] } | null
   subjects: ProfessorSubject[]
 }
 

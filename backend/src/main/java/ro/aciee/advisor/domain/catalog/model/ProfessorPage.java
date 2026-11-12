@@ -21,6 +21,7 @@ public class ProfessorPage {
     private Double teaching;
     private Double practice;
     private Double grading;
+    private Radar radar;
     private String bioRo;
     private String bioEn;
     private String photo;

@@ -385,6 +385,7 @@
     "noSubjects": "This professor has no recorded subjects.",
     "archived": "This professor no longer teaches at the faculty.",
     "score": "Overall score",
+    "radar": "Average across all subjects",
     "basis": "from {ratings} ratings across {subjects} subjects",
     "fewRatings": "Not enough ratings yet",
     "fewRatingsBody": "The score appears once enough students have rated. Had classes with this professor?",

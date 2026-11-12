@@ -233,6 +233,21 @@ public class CatalogService {
             subject.setRadar(radars.get(subject.getSubjectId()));
             subject.setComments(comments.getOrDefault(subject.getSubjectId(), List.of()));
         });
+        if (page.getOverall() != null) {
+            var radar = new Radar();
+            radar.setN(page.getRatings());
+            radar.setScores(jdbc.sql("""
+                            SELECT sum(r.n * u.score) / nullif(sum(r.n) FILTER (WHERE u.score IS NOT NULL), 0)
+                            FROM anon.prof_subject_radar r
+                            CROSS JOIN LATERAL unnest(ARRAY[%s]) WITH ORDINALITY u(score, no)
+                            WHERE r.professor_id = :professor
+                            GROUP BY u.no
+                            ORDER BY u.no""".formatted(AXES))
+                    .param("professor", page.getId())
+                    .query((rs, row) -> rs.getObject(1) == null ? null : rs.getDouble(1))
+                    .list());
+            page.setRadar(radar);
+        }
         return page;
     }
 

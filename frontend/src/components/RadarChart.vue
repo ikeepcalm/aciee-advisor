@@ -3,8 +3,14 @@ import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { ChevronRight } from 'lucide-vue-next'
 import type { Option } from '@/api'
+import { pillarAverages as averagePillars } from '@/professors'
 
-const props = defineProps<{ scores: (number | null)[]; axes: Option[]; pillars: Option[] }>()
+const props = defineProps<{
+  scores: (number | null)[]
+  axes: Option[]
+  pillars: Option[]
+  open?: boolean
+}>()
 
 const { t } = useI18n()
 
@@ -41,17 +47,7 @@ const criteria = computed(() =>
     .map((axis, i) => ({ n: i + 1, label: axis.label, score: props.scores[i] ?? null }))
     .filter((criterion) => criterion.label),
 )
-const pillarAverages = computed(() =>
-  props.pillars.map((pillar) => {
-    const values = props.axes
-      .map((axis, i) => (axis.group === pillar.code ? props.scores[i] : null))
-      .filter((v): v is number => v !== null)
-    return {
-      label: pillar.label,
-      value: values.length ? values.reduce((a, b) => a + b, 0) / values.length : null,
-    }
-  }),
-)
+const pillarAverages = computed(() => averagePillars(props.axes, props.pillars, props.scores))
 </script>
 
 <template>
@@ -61,7 +57,8 @@ const pillarAverages = computed(() =>
         :viewBox="`0 0 ${size} ${size}`"
         role="img"
         :aria-label="
-          pillarAverages.map((p) => `${p.label}: ${p.value?.toFixed(1) ?? '—'}`).join('; ')
+          pillarAverages.map((p) => `${p.label}: ${p.value?.toFixed(1) ?? '—'}`).join('; ') ||
+          t('course.criteria')
         "
       >
         <polygon v-for="(ring, i) in rings" :key="i" :points="ring" class="grid" />
@@ -96,7 +93,7 @@ const pillarAverages = computed(() =>
           <span>{{ p.label }}</span>
           <strong>{{ p.value === null ? '—' : p.value.toFixed(1) }}</strong>
         </div>
-        <details v-if="criteria.length" class="group criteria">
+        <details v-if="criteria.length" :open="open" class="group criteria">
           <summary
             class="flex min-h-11 cursor-pointer list-none items-center gap-1 text-sm font-medium text-mask [&::-webkit-details-marker]:hidden"
           >
