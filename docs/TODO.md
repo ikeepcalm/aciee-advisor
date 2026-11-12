@@ -4,7 +4,6 @@ What is left for a person to do: things code cannot do, decisions only you can m
 
 ## Now
 
-- [ ] Push the local commits (`6366943` reports, `150fc2a` Stage 4, `3ed0140` Microsoft sign-in). The remote is reachable only with the `ikeepcalm` gh account.
 - [ ] Open `/admin/reports` and the sign-in / sign-up pages in a browser, including at 360 px. They were tested through the API and the build only, never looked at.
 - [ ] Free local resources: `dropdb -h localhost -U aciee aciee_large` (full-volume Stage 4 data, several GB) and stop `infra` compose (`docker compose down`) when not developing.
 
@@ -25,9 +24,9 @@ Public tools that need no account and lead into ratings with one small link each
 - [x] Calendar subscription: an ICS feed per group/subgroup; each event links to its course page, and a "rate your courses" event in the exam session.
 - [x] Catch-up finder: for one of my classes, the other groups' slots with the same teacher, same class type and same course this and next week, with clashes greyed out; "show all groups" toggle.
 - [x] Add to home screen (PWA) with the timetable available offline. Still to do: an install hint in the UI (Android install prompt, iOS "Share → Add to Home Screen" note).
-- [ ] Timetable change alerts: backend done (`core.timetable_change`, `GET /api/timetable/changes`); the "Orarul s-a schimbat" note on the timetable page is still to build.
-- [ ] Share my week as an image, from a "…" → Share menu (not a headline feature); the image names the site and the timetable's last change.
-- [ ] First-year guide (restanță, credite, bursă, sesiune, attendance marks), after everything above.
+- [x] Timetable change alerts: a dismissible "Orarul s-a schimbat" note on the timetable page, with a sheet that pairs removed and added slots into "modified" lines. Seen state is per device (localStorage).
+- [x] Share my week as an image from the timetable "…" menu (canvas PNG, native share sheet or download). The native share sheet and Cyrillic text in the image are untested on a real phone.
+- [x] First-year guide at `/guide`, content in `frontend/src/guide/content.ts` (ro, en, uk, ru), checked 2026-11-12 against RAUS 2024, the 2026 scholarship rules, the 2026-2027 fees and calendar. Re-check every autumn; unconfirmed: free re-attempts, grade-improvement fee, scholarship amounts, reclassification criteria, student representatives.
 
 Week parity comes from the semester row: the week holding the first day is week 1 (odd), weeks that are a break on all five weekdays are skipped (`core.semester.breaks`, a `datemultirange` such as `{[2026-12-22,2027-01-05)}`, edited in Admin → semester), and classes end the day before `rating_opens_at`. **Enter the real breaks for every semester**, or parity flips after the winter holiday. Without a semester row the timetable falls back to the old one-tap calibration and the calendar feed is unavailable. Known limits: a break that starts mid-week still lists that week's remaining classes. A timetable cell holding two courses by weeks ("SO S1-7 / POO S8-14") stays one class. Test real subscriptions in Google/Apple/Outlook and the WhatsApp/Telegram preview once deployed (needs public https; set `PUBLIC_URL`).
 
