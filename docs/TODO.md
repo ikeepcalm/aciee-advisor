@@ -4,6 +4,8 @@ What is left for a person to do: things code cannot do, decisions only you can m
 
 ## Now
 
+- [ ] **Resume here (2026-11-12): redo the first-year guide (`/guide`) as an immersive scrolling page.** The current card grid looks bad. Wanted: the page first greets the student full-screen, then each scroll step explains one thing in simple words, ordered from most to least important (attendance and exam rights, credits for year 2, sessions and resits, scholarships, budget/fee, calendar, secretariat), with the official source under each step. Keep the fact-checked text in `frontend/src/guide/content.ts` (rewrite into simpler, step-sized wording if needed, same facts) and rebuild `views/GuideView.vue` with Fable. Mobile-first, respects `prefers-reduced-motion`, deep links like `/guide#attendance` still land on their step.
+- [ ] Check the "Orarul s-a schimbat" note yourself: insert two rows into `core.timetable_change` for your group (one `removed`, one `added` with another room), open `/timetable`, then delete them.
 - [ ] Open `/admin/reports` and the sign-in / sign-up pages in a browser, including at 360 px. They were tested through the API and the build only, never looked at.
 - [ ] Free local resources: `dropdb -h localhost -U aciee aciee_large` (full-volume Stage 4 data, several GB) and stop `infra` compose (`docker compose down`) when not developing.
 
