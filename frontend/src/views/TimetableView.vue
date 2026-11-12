@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
+import { computed, defineAsyncComponent, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import {
@@ -8,14 +8,27 @@ import {
   ChevronDown,
   ChevronLeft,
   ChevronRight,
+  Compass,
+  Ellipsis,
+  Share2,
+  StickyNote,
+  X,
 } from 'lucide-vue-next'
-import { api, describeError, type Lesson, type Timetable } from '@/api'
+import {
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuPortal,
+  DropdownMenuRoot,
+  DropdownMenuTrigger,
+} from 'reka-ui'
+import { api, describeError, type Lesson, type Timetable, type TimetableChange } from '@/api'
 import LessonCard from '@/components/LessonCard.vue'
 import AppNotice from '@/components/AppNotice.vue'
 import AppSheet from '@/components/AppSheet.vue'
 import TimetablePicker from '@/components/TimetablePicker.vue'
 import CalendarOptions from '@/components/CalendarOptions.vue'
 import CatchUpList from '@/components/CatchUpList.vue'
+import TimetableChangeList from '@/components/TimetableChangeList.vue'
 import {
   calendarFeedUrl,
   isoDate,
@@ -26,6 +39,11 @@ import {
   type Parity,
 } from '@/timetable/calendar'
 import { catchUpSlots, minutes, ownLessonsOf } from '@/timetable/catchUp'
+import { changeLines, newerThan, newestDetectedAt } from '@/timetable/changes'
+
+const ShareWeek = defineAsyncComponent(() => import('@/components/ShareWeek.vue'))
+const MENU_ITEM =
+  'flex min-h-11 cursor-pointer items-center gap-3 rounded-md px-3 text-sm font-semibold outline-none data-[highlighted]:bg-mark data-[highlighted]:text-on-mark'
 const DAYS = [1, 2, 3, 4, 5]
 const WINDOW = 3
 const ORDER = { ALL: 0, ODD: 1, EVEN: 2 }
@@ -42,6 +60,10 @@ const error = ref('')
 const group = ref<string | null>(null)
 const pickerOpen = ref(false)
 const calendarOpen = ref(false)
+const shareOpen = ref(false)
+const changesOpen = ref(false)
+const changes = ref<TimetableChange[]>([])
+const changesSeenAt = ref<string | null>(null)
 const missedLesson = ref<Lesson | null>(null)
 const calibration = ref<Calibration | null>(readJson('timetable.calibration'))
 // The week signal stays folded unless the parity is still unknown and needs an answer.
@@ -171,6 +193,45 @@ const lessons = computed(() =>
       (l.weeks === 'ALL' || !selectedParity.value || l.weeks === selectedParity.value),
   ),
 )
+
+const changesKey = computed(() => `timetable.changesSeen.${program.value?.code}.${group.value}`)
+const freshChanges = computed(() => changeLines(newerThan(changes.value, changesSeenAt.value)))
+const latestChange = computed(() => newestDetectedAt(changes.value))
+
+watch(
+  () => [program.value?.code, group.value],
+  async ([code, g]) => {
+    changes.value = []
+    if (!code || !g) {
+      return
+    }
+    try {
+      const query = new URLSearchParams({ program: code, group: g })
+      const list = await api<TimetableChange[]>('GET', `/api/timetable/changes?${query}`)
+      if (program.value?.code === code && group.value === g) {
+        changesSeenAt.value = readJson<string>(changesKey.value)
+        changes.value = list
+      }
+    } catch {
+      changes.value = []
+    }
+  },
+)
+
+function afterMenu(open: () => void) {
+  setTimeout(open, 50)
+}
+
+function markChangesSeen() {
+  changesSeenAt.value = latestChange.value
+  writeJson(changesKey.value, latestChange.value)
+}
+
+watch(changesOpen, (open) => {
+  if (!open) {
+    markChangesSeen()
+  }
+})
 
 const calendarFeed = computed(() =>
   parityFromSemester.value && program.value && group.value
@@ -430,6 +491,41 @@ watch(group, (g) => {
               <CalendarPlus class="icon" aria-hidden="true" />
               {{ t('timetable.calendar.add') }}
             </button>
+            <DropdownMenuRoot>
+              <DropdownMenuTrigger as-child>
+                <button class="more" :aria-label="t('timetable.more')">
+                  <Ellipsis aria-hidden="true" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuPortal>
+                <DropdownMenuContent
+                  align="end"
+                  :side-offset="6"
+                  class="z-30 flex min-w-56 flex-col rounded-lg border border-line bg-panel p-1 text-ink shadow-modal"
+                >
+                  <DropdownMenuItem
+                    :class="[MENU_ITEM, 'min-[52rem]:hidden']"
+                    @select="afterMenu(() => (calendarOpen = true))"
+                  >
+                    <CalendarPlus class="size-4" aria-hidden="true" />
+                    {{ t('timetable.calendar.add') }}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    :class="MENU_ITEM"
+                    @select="afterMenu(() => (shareOpen = true))"
+                  >
+                    <Share2 class="size-4" aria-hidden="true" />
+                    {{ t('timetable.share.action') }}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem as-child>
+                    <RouterLink to="/guide" :class="[MENU_ITEM, 'text-ink no-underline']">
+                      <Compass class="size-4" aria-hidden="true" />
+                      {{ t('guide.nav') }}
+                    </RouterLink>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenuPortal>
+            </DropdownMenuRoot>
           </div>
 
           <section v-if="weekOpen" class="clock" :aria-label="t('timetable.weekPicker')">
@@ -497,6 +593,31 @@ watch(group, (g) => {
           </button>
         </nav>
 
+        <div v-if="freshChanges.length && latestChange" class="changed">
+          <button class="open" @click="changesOpen = true">
+            <StickyNote class="icon" aria-hidden="true" />
+            <span class="what">
+              <strong>{{ t('timetable.changes.title') }}</strong>
+              <span class="sub">
+                {{
+                  t('timetable.changes.summary', {
+                    n: freshChanges.length,
+                    date: dayMonth.format(new Date(latestChange)),
+                  })
+                }}
+              </span>
+            </span>
+            <ChevronRight class="icon" aria-hidden="true" />
+          </button>
+          <button
+            class="dismiss"
+            :aria-label="t('timetable.changes.dismiss')"
+            @click="markChangesSeen"
+          >
+            <X class="icon" aria-hidden="true" />
+          </button>
+        </div>
+
         <p v-if="!blocks.length" class="empty">{{ t('timetable.free') }}</p>
         <div v-else class="axis" :style="{ minHeight: `${((span.to - span.from) / 60) * 3.4}rem` }">
           <span v-for="h in hours" :key="h" class="tick" :style="{ top: `${y(h)}%` }">
@@ -546,10 +667,6 @@ watch(group, (g) => {
             <span>{{ clockLabel(nowMinutes) }}</span>
           </div>
         </div>
-        <button class="btn btn-outline cal-narrow" @click="calendarOpen = true">
-          <CalendarPlus class="icon" aria-hidden="true" />
-          {{ t('timetable.calendar.add') }}
-        </button>
 
         <div class="grid" role="table" :aria-label="t('timetable.title')">
           <div role="row" class="row">
@@ -603,6 +720,18 @@ watch(group, (g) => {
         </AppSheet>
         <AppSheet v-model="calendarOpen" :title="t('timetable.calendar.add')">
           <CalendarOptions :feed-url="calendarFeed" :group="group!" />
+        </AppSheet>
+        <AppSheet v-model="shareOpen" :title="t('timetable.share.action')">
+          <ShareWeek
+            :group="group!"
+            :program="program"
+            :monday="selectedMonday"
+            :parity="selectedParity"
+            :lessons="lessons"
+          />
+        </AppSheet>
+        <AppSheet v-model="changesOpen" :title="t('timetable.changes.title')">
+          <TimetableChangeList :lines="freshChanges" :group="group!" />
         </AppSheet>
         <AppSheet v-model="catchUpOpen" :title="t('timetable.catchUp.action')">
           <CatchUpList
@@ -794,8 +923,85 @@ watch(group, (g) => {
   margin-left: auto;
 }
 
-.cal-narrow {
-  margin-bottom: 0.75rem;
+.more {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--panel);
+}
+
+.more svg {
+  width: 1.15rem;
+  height: 1.15rem;
+}
+
+.more:hover,
+.more[data-state='open'] {
+  border-color: var(--mask);
+  color: var(--mask);
+}
+
+.changed {
+  display: flex;
+  align-items: stretch;
+  margin: 0.5rem 0 0.25rem;
+  border-radius: var(--wobble-alt);
+  background: var(--mark);
+  color: var(--on-mark);
+  box-shadow: 2px 3px 0 color-mix(in srgb, var(--ink) 22%, transparent);
+  rotate: -0.3deg;
+}
+
+.changed button {
+  display: flex;
+  align-items: center;
+  min-height: 2.75rem;
+  border: 0;
+  background: none;
+  color: inherit;
+}
+
+.changed .open {
+  flex: 1 1 auto;
+  gap: 0.6rem;
+  min-width: 0;
+  padding: 0.45rem 0.25rem 0.45rem 0.9rem;
+  text-align: left;
+}
+
+.changed .what {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-width: 0;
+  line-height: 1.25;
+}
+
+.changed strong {
+  font-family: var(--font-display);
+  font-size: 1.125rem;
+}
+
+.changed .sub {
+  font-size: 0.8125rem;
+  opacity: 0.85;
+}
+
+.changed .dismiss {
+  flex: none;
+  justify-content: center;
+  width: 2.75rem;
+  border-left: 1px dashed color-mix(in srgb, var(--on-mark) 35%, transparent);
+}
+
+.changed button:focus-visible {
+  outline-color: var(--on-mark);
+  outline-offset: -3px;
 }
 
 .clock {
@@ -1226,9 +1432,13 @@ watch(group, (g) => {
 
   .days,
   .axis,
-  .empty,
-  .cal-narrow {
+  .empty {
     display: none;
+  }
+
+  .changed {
+    max-width: 30rem;
+    margin: 0 0 1.25rem;
   }
 
   .cal-wide {
@@ -1308,6 +1518,17 @@ watch(group, (g) => {
 
 @media (max-width: 51.99rem) {
   .wk .pick .chev {
+    display: none;
+  }
+}
+
+@media (max-width: 26rem) {
+  .bar {
+    gap: 0.3rem;
+  }
+
+  .grp .icon,
+  .par .icon {
     display: none;
   }
 }

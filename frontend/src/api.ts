@@ -179,3 +179,16 @@ export interface Timetable {
   source: string
   programs: TimetableProgram[]
 }
+
+export interface TimetableChange {
+  change: 'added' | 'removed'
+  detectedAt: string
+  day: number
+  startTime: string
+  endTime: string
+  weeks: WeekParity
+  kind: string | null
+  subject: string
+  room: string | null
+  teacher: string | null
+}

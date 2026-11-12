@@ -6,6 +6,7 @@ import {
   BookOpen,
   CalendarDays,
   ClipboardList,
+  Compass,
   FileText,
   Gauge,
   Radar,
@@ -116,6 +117,16 @@ watch(
                 {{ t('nav.timetable') }}
               </RouterLink>
             </div>
+            <RouterLink :to="{ name: 'guide' }" class="row-link mt-3 p-3 sm:max-w-md">
+              <Compass class="size-6 shrink-0 text-copper" aria-hidden="true" />
+              <span class="min-w-0 flex-1">
+                <strong class="display block text-xl leading-tight">{{
+                  t('guide.homeTitle')
+                }}</strong>
+                <span class="block text-sm text-muted">{{ t('guide.homeBody') }}</span>
+              </span>
+              <ArrowRight class="size-4 shrink-0 text-mask" aria-hidden="true" />
+            </RouterLink>
             <p v-if="signedOut" class="mt-1 text-sm text-muted">
               {{ t('auth.haveAccount') }}
               <RouterLink :to="{ name: 'signin' }" class="inline-flex min-h-11 items-center">

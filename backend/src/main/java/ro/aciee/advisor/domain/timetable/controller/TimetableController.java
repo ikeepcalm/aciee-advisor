@@ -32,8 +32,10 @@ public class TimetableController {
     }
 
     @GetMapping("/api/timetable/changes")
-    public List<TimetableChange> changes(@RequestParam String program, @RequestParam String group) {
-        return timetableChangeService.recent(program, group);
+    public ResponseEntity<List<TimetableChange>> changes(@RequestParam String program, @RequestParam String group) {
+        return ResponseEntity.ok()
+                .cacheControl(CacheControl.maxAge(Duration.ofMinutes(10)).cachePublic())
+                .body(timetableChangeService.recent(program, group));
     }
 
     @GetMapping("/api/timetable/calendar.ics")

@@ -579,6 +579,48 @@
       "empty": "Nicio altă grupă nu are ora asta în orar.",
       "reviews": "Ce spun colegii despre {course}"
     },
-    "paritySemester": "Săptămânile se numără de la începutul semestrului, prima e impară, iar vacanțele nu intră în numărătoare."
+    "paritySemester": "Săptămânile se numără de la începutul semestrului, prima e impară, iar vacanțele nu intră în numărătoare.",
+    "more": "Mai multe",
+    "changes": {
+      "title": "Orarul s-a schimbat",
+      "summary": "Modificări: {n} · ultima pe {date}",
+      "dismiss": "Am văzut, ascunde nota",
+      "lede": "Am comparat PDF-ul facultății cu versiunea dinainte. Iată ce e diferit pentru grupa {group}.",
+      "added": "Adăugat",
+      "removed": "Scos din orar",
+      "moved": "Modificat",
+      "everyWeek": "În fiecare săptămână",
+      "fields": {
+        "room": "Sala",
+        "time": "Ora",
+        "teacher": "Profesor",
+        "weeks": "Săptămâni",
+        "kind": "Tip"
+      }
+    },
+    "share": {
+      "action": "Distribuie săptămâna",
+      "lede": "O imagine cu orarul săptămânii, bună de trimis pe grupul de WhatsApp.",
+      "preparing": "Se pregătește imaginea…",
+      "failed": "Imaginea nu a putut fi creată. Încearcă din nou.",
+      "share": "Distribuie",
+      "download": "Descarcă imaginea",
+      "alt": "Orarul grupei {group} pentru săptămâna {range}",
+      "week": {
+        "ODD": "săptămână impară",
+        "EVEN": "săptămână pară"
+      },
+      "free": "Liber",
+      "updated": "Orar actualizat {date}"
+    }
+  },
+  "guide": {
+    "nav": "Ghid de anul I",
+    "homeTitle": "Ești în anul I?",
+    "homeBody": "Credite, prezențe, restanțe și burse: regulile pe scurt, cu sursa oficială.",
+    "index": "Secțiunile ghidului",
+    "newTab": "se deschide într-o filă nouă",
+    "catchUp": "Cu laboratoare nerecuperate nu intri în examen.",
+    "catchUpLink": "Vezi regulile"
   }
 }

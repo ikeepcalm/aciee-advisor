@@ -100,9 +100,16 @@ public class PreviewService {
     }
 
     public PreviewCard defaultCard(String path) {
-        String title = path.startsWith("/timetable") || path.startsWith("/orar")
-                ? "Orarul grupei tale"
-                : path.startsWith("/professors") ? "Profesorii, notați de studenți" : "Ce îți cere de fapt fiecare curs";
+        String title;
+        if (path.startsWith("/timetable") || path.startsWith("/orar")) {
+            title = "Orarul grupei tale";
+        } else if (path.startsWith("/professors")) {
+            title = "Profesorii, notați de studenți";
+        } else if (path.startsWith("/guide")) {
+            title = "Ghidul de anul I: credite, restanțe, burse";
+        } else {
+            title = "Ce îți cere de fapt fiecare curs";
+        }
         return new PreviewCard("Ghidul studentului de la ACIEE", title, List.of(),
                 "Evaluări anonime și sfaturi de la studenți",
                 path, "/og/img/default.png");

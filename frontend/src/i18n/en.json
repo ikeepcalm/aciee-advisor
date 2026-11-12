@@ -579,6 +579,48 @@
       "empty": "No other group has this class in the timetable.",
       "reviews": "What students say about {course}"
     },
-    "paritySemester": "Weeks are counted from the start of the semester: week 1 is odd, and holidays are skipped."
+    "paritySemester": "Weeks are counted from the start of the semester: week 1 is odd, and holidays are skipped.",
+    "more": "More",
+    "changes": {
+      "title": "The timetable changed",
+      "summary": "Changes: {n} · latest on {date}",
+      "dismiss": "Got it, hide this note",
+      "lede": "We compared the faculty PDF with the previous version. Here is what is different for group {group}.",
+      "added": "Added",
+      "removed": "Removed",
+      "moved": "Changed",
+      "everyWeek": "Every week",
+      "fields": {
+        "room": "Room",
+        "time": "Time",
+        "teacher": "Teacher",
+        "weeks": "Weeks",
+        "kind": "Type"
+      }
+    },
+    "share": {
+      "action": "Share the week",
+      "lede": "A picture of this week's timetable, ready to send to your group chat.",
+      "preparing": "Preparing the image…",
+      "failed": "The image could not be created. Try again.",
+      "share": "Share",
+      "download": "Download image",
+      "alt": "Timetable of group {group} for the week of {range}",
+      "week": {
+        "ODD": "odd week",
+        "EVEN": "even week"
+      },
+      "free": "Free",
+      "updated": "Timetable updated {date}"
+    }
+  },
+  "guide": {
+    "nav": "First-year guide",
+    "homeTitle": "In your first year?",
+    "homeBody": "Credits, attendance, resits and scholarships: the rules in short, with the official source.",
+    "index": "Guide sections",
+    "newTab": "opens in a new tab",
+    "catchUp": "With labs you have not made up, you cannot sit the exam.",
+    "catchUpLink": "See the rules"
   }
 }

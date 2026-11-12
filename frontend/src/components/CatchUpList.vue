@@ -100,6 +100,13 @@ const sections = computed(() => [
       </template>
     </template>
 
+    <p class="text-sm text-muted">
+      {{ t('guide.catchUp') }}
+      <RouterLink to="/guide#attendance" class="inline-flex min-h-11 items-center">
+        {{ t('guide.catchUpLink') }}
+      </RouterLink>
+    </p>
+
     <RouterLink
       :to="courseId ? `/courses/${courseId}` : { name: 'catalog' }"
       class="btn btn-ghost justify-start px-0 text-left"
