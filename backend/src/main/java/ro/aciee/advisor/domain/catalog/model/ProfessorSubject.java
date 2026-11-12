@@ -14,6 +14,8 @@ public class ProfessorSubject {
     private String subjectName;
     private int itemId;
     private String components;
+    private int firstYear;
+    private int lastYear;
     private Radar radar;
     private List<PublishedText> comments;
 }

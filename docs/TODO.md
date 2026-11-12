@@ -29,11 +29,17 @@ Public tools that need no account and lead into ratings with one small link each
 - [ ] Share my week as an image, from a "…" → Share menu (not a headline feature); the image names the site and the timetable's last change.
 - [ ] First-year guide (restanță, credite, bursă, sesiune, attendance marks), after everything above.
 
-Known limits of the calendar feed and catch-up dates: the winter break is not excluded and odd/even weeks may flip after it (no academic calendar in the DB); classes end the day before `rating_opens_at`. A timetable cell holding two courses by weeks ("SO S1-7 / POO S8-14") stays one class. Test real subscriptions in Google/Apple/Outlook and the WhatsApp/Telegram preview once deployed (needs public https; set `PUBLIC_URL`).
+Week parity comes from the semester row: the week holding the first day is week 1 (odd), weeks that are a break on all five weekdays are skipped (`core.semester.breaks`, a `datemultirange` such as `{[2026-12-22,2027-01-05)}`, edited in Admin → semester), and classes end the day before `rating_opens_at`. **Enter the real breaks for every semester**, or parity flips after the winter holiday. Without a semester row the timetable falls back to the old one-tap calibration and the calendar feed is unavailable. Known limits: a break that starts mid-week still lists that week's remaining classes. A timetable cell holding two courses by weeks ("SO S1-7 / POO S8-14") stays one class. Test real subscriptions in Google/Apple/Outlook and the WhatsApp/Telegram preview once deployed (needs public https; set `PUBLIC_URL`).
 
 Deferred: "Where is room X?" (campus guide; 3D models from your campus knowledge), exam schedule (check whether the faculty publishes parseable PDFs first), free rooms (we only see ACIEE rooms, other faculties use them too), grade calculator (dropped).
 
 AI review checking (plan agreed, not built): Gemini free tier; harsh-but-fair publishes, rude goes to human review; shadow mode first.
+
+## Professors
+
+- [x] Professor page shows an overall score (every answered axis weighted by its number of ratings) and the three pillar scores, the years each discipline was taught and an academic-year label on comments; `/professors` lists everyone with search.
+- [x] CTI department CV profiles: 13 CVs from cti.ugal.ro/structura-departament-cti summarised (ro + en) into `seed/003-professor-profiles.sql`, 9 portraits cut from the PDFs into `frontend/public/professors/`. A profile matches a professor by `core.name_key(full_name)` (sorted tokens, no diacritics), so admins must type the same first and last names; middle names break the match.
+- [ ] The other departments (automatica.ugal.ro, iesce.ugal.ro, etc.ugal.ro) were not looked at; repeat the same CV pass when their staff pages list CVs. The CTI page itself is from March 2024. Consider a yearly re-run, ideally with the Gemini key planned for moderation.
 
 ## Deploy (DEPLOY.md)
 

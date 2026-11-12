@@ -18,6 +18,7 @@ import CalendarOptions from '@/components/CalendarOptions.vue'
 import CatchUpList from '@/components/CatchUpList.vue'
 import {
   calendarFeedUrl,
+  isoDate,
   freeDates,
   mondayOf,
   ROMAN,
@@ -81,8 +82,11 @@ function sameDay(a: Date, b: Date) {
 const thisMonday = computed(() => mondayOf(now.value))
 const nowMinutes = computed(() => now.value.getHours() * 60 + now.value.getMinutes())
 
-// shortcut: parity alternates strictly from one tap, so a holiday that pauses the count needs one more tap
+// shortcut: without semester dates parity alternates strictly from one tap, so a holiday needs one more tap
 function parityOf(monday: Date): Parity | null {
+  if (parityFromSemester.value) {
+    return semesterWeeks.value[isoDate(monday)] ?? null
+  }
   const c = calibration.value
   if (!c) {
     return null
@@ -101,7 +105,9 @@ function calibrate(parity: Parity) {
 
 // One tap on the parity chip flips the stored calibration, so every week shifts with it.
 function tapParity() {
-  if (calibration.value) {
+  if (parityFromSemester.value) {
+    weekOpen.value = !weekOpen.value
+  } else if (calibration.value) {
     calibrate(parityOf(selectedMonday.value) === 'ODD' ? 'EVEN' : 'ODD')
   } else {
     weekOpen.value = true
@@ -142,6 +148,22 @@ const program = computed(() =>
   programs.value.find((p) => group.value && p.groups.includes(group.value)),
 )
 
+const semesterWeeks = computed(() => program.value?.weeks ?? {})
+const parityFromSemester = computed(() => Object.keys(semesterWeeks.value).length > 0)
+const parityKnown = computed(() => parityFromSemester.value || calibration.value !== null)
+
+const parityLabel = computed(() =>
+  parityFromSemester.value
+    ? t('timetable.weekPicker')
+    : t(calibration.value ? 'timetable.flip' : 'timetable.parityUnknown'),
+)
+
+watch(parityFromSemester, (known) => {
+  if (known) {
+    weekOpen.value = false
+  }
+})
+
 const lessons = computed(() =>
   (program.value?.lessons ?? []).filter(
     (l) =>
@@ -151,8 +173,8 @@ const lessons = computed(() =>
 )
 
 const calendarFeed = computed(() =>
-  calibration.value && program.value && group.value
-    ? calendarFeedUrl(window.location.origin, program.value.code, group.value, calibration.value)
+  parityFromSemester.value && program.value && group.value
+    ? calendarFeedUrl(window.location.origin, program.value.code, group.value)
     : null,
 )
 
@@ -178,7 +200,7 @@ const catchUp = computed(() => {
     missed: search.missed,
     slots: search.slots.map((slot) => {
       const dates = freeDates(slot.lesson, search.ownLessons, now.value, parityOf)
-      return { ...slot, dates, clash: calibration.value ? !dates.length : slot.clash }
+      return { ...slot, dates, clash: parityKnown.value ? !dates.length : slot.clash }
     }),
   }
 })
@@ -393,7 +415,7 @@ watch(group, (g) => {
             <button
               class="par"
               :class="selectedParity ?? 'unknown'"
-              :aria-label="calibration ? t('timetable.flip') : t('timetable.parityUnknown')"
+              :aria-label="parityLabel"
               @click="tapParity"
             >
               <template v-if="selectedParity">
@@ -421,7 +443,7 @@ watch(group, (g) => {
                   height="44"
                   class="sel"
                 />
-                <path :d="wavePath" class="trace" :class="{ unknown: !calibration }" />
+                <path :d="wavePath" class="trace" :class="{ unknown: !parityKnown }" />
               </svg>
               <div class="weeks">
                 <button
@@ -442,7 +464,7 @@ watch(group, (g) => {
                 </button>
               </div>
             </div>
-            <div v-if="!calibration" class="ask">
+            <div v-if="!parityKnown" class="ask">
               <p>{{ t('timetable.askParity', { range: range(selectedMonday) }) }}</p>
               <div class="answers">
                 <button @click="calibrate('ODD')">{{ t('timetable.parity.ODD') }}</button>
@@ -450,7 +472,10 @@ watch(group, (g) => {
               </div>
               <p class="hint">{{ t('timetable.askHint') }}</p>
             </div>
-            <p v-else class="hint">{{ t('timetable.parityNote') }}</p>
+            <p v-else class="hint">
+              <template v-if="parityFromSemester">{{ t('timetable.paritySemester') }}</template>
+              {{ t('timetable.parityNote') }}
+            </p>
           </section>
         </div>
 
@@ -577,12 +602,7 @@ watch(group, (g) => {
           <TimetablePicker :programs="programs" :group="group" @choose="chooseGroup" />
         </AppSheet>
         <AppSheet v-model="calendarOpen" :title="t('timetable.calendar.add')">
-          <CalendarOptions
-            :feed-url="calendarFeed"
-            :group="group!"
-            :week-range="range(selectedMonday)"
-            @calibrate="calibrate"
-          />
+          <CalendarOptions :feed-url="calendarFeed" :group="group!" />
         </AppSheet>
         <AppSheet v-model="catchUpOpen" :title="t('timetable.catchUp.action')">
           <CatchUpList

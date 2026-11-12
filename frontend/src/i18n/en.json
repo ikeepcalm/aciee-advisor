@@ -149,7 +149,8 @@
     "menu": "Menu",
     "timetable": "Timetable",
     "account": "Account",
-    "rateInvite": "Passed a course? Say what it was like."
+    "rateInvite": "Passed a course? Say what it was like.",
+    "professors": "Professors"
   },
   "prefs": {
     "language": "Language",
@@ -382,7 +383,28 @@
   "professor": {
     "subjects": "Subjects taught",
     "noSubjects": "This professor has no recorded subjects.",
-    "archived": "This professor no longer teaches at the faculty."
+    "archived": "This professor no longer teaches at the faculty.",
+    "score": "Overall score",
+    "basis": "from {ratings} ratings across {subjects} subjects",
+    "fewRatings": "Not enough ratings yet",
+    "fewRatingsBody": "The score appears once enough students have rated. Had classes with this professor?",
+    "bioNote": "Automatic summary of the public CV.",
+    "cv": "CV (PDF)",
+    "allYears": "All years",
+    "taught": "Years taught",
+    "yearHint": "Comments from {year}. Scores cover all years."
+  },
+  "professors": {
+    "title": "ACIEE professors",
+    "tagline": "Find a professor and see how students rate them.",
+    "search": "Search by name, department or title",
+    "sort": "Sort",
+    "sortName": "By name",
+    "sortBest": "Best rated",
+    "sortMost": "Most rated",
+    "few": "few ratings",
+    "subjects": "Subjects: {n}",
+    "count": "Professors: {n}"
   },
   "rateForm": {
     "anonymous": "The rating is anonymous.",
@@ -542,7 +564,8 @@
       "apple": "Apple / iPhone / Outlook",
       "copy": "Copy the link",
       "copied": "Link copied",
-      "googleNote": "Google Calendar only syncs every few hours."
+      "googleNote": "Google Calendar only syncs every few hours.",
+      "unavailable": "The calendar will be available once the semester dates are published."
     },
     "catchUp": {
       "action": "Catch up",
@@ -554,6 +577,7 @@
       "clash": "Overlaps with your timetable",
       "empty": "No other group has this class in the timetable.",
       "reviews": "What students say about {course}"
-    }
+    },
+    "paritySemester": "Weeks are counted from the start of the semester: week 1 is odd, and holidays are skipped."
   }
 }

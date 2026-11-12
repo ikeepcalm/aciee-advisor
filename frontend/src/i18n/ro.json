@@ -149,7 +149,8 @@
     "menu": "Meniu",
     "timetable": "Orar",
     "account": "Cont",
-    "rateInvite": "Ai trecut un curs? Spune cum a fost."
+    "rateInvite": "Ai trecut un curs? Spune cum a fost.",
+    "professors": "Profesori"
   },
   "prefs": {
     "language": "Limbă",
@@ -382,7 +383,28 @@
   "professor": {
     "subjects": "Discipline predate",
     "noSubjects": "Acest profesor nu are discipline înregistrate.",
-    "archived": "Profesorul nu mai predă la facultate."
+    "archived": "Profesorul nu mai predă la facultate.",
+    "score": "Scor general",
+    "basis": "din {ratings} evaluări la {subjects} discipline",
+    "fewRatings": "Încă prea puține evaluări",
+    "fewRatingsBody": "Scorul apare când se strâng destule evaluări. Ai avut ore cu acest profesor?",
+    "bioNote": "Rezumat automat al CV-ului public.",
+    "cv": "CV (PDF)",
+    "allYears": "Toți anii",
+    "taught": "Ani predați",
+    "yearHint": "Comentarii din {year}. Scorurile acoperă toți anii."
+  },
+  "professors": {
+    "title": "Profesorii ACIEE",
+    "tagline": "Caută un profesor și vezi cum îl evaluează studenții.",
+    "search": "Caută după nume, departament sau titlu",
+    "sort": "Sortare",
+    "sortName": "După nume",
+    "sortBest": "Cei mai buni",
+    "sortMost": "Cei mai evaluați",
+    "few": "puține evaluări",
+    "subjects": "Discipline: {n}",
+    "count": "Profesori: {n}"
   },
   "rateForm": {
     "anonymous": "Evaluarea este anonimă.",
@@ -542,7 +564,8 @@
       "apple": "Apple / iPhone / Outlook",
       "copy": "Copiază linkul",
       "copied": "Link copiat",
-      "googleNote": "Google Calendar sincronizează doar la câteva ore."
+      "googleNote": "Google Calendar sincronizează doar la câteva ore.",
+      "unavailable": "Calendarul va fi disponibil după ce facultatea publică datele semestrului."
     },
     "catchUp": {
       "action": "Recuperează",
@@ -554,6 +577,7 @@
       "clash": "Se suprapune cu orarul tău",
       "empty": "Nicio altă grupă nu are ora asta în orar.",
       "reviews": "Ce spun colegii despre {course}"
-    }
+    },
+    "paritySemester": "Săptămânile se numără de la începutul semestrului, prima e impară, iar vacanțele nu intră în numărătoare."
   }
 }

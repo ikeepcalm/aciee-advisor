@@ -7,6 +7,7 @@ import {
   CalendarDays,
   CircleUser,
   FileText,
+  GraduationCap,
   KeyRound,
   Moon,
   Settings,
@@ -36,6 +37,7 @@ watch(
 const tabs = computed(() => {
   const items = [
     { to: '/courses', label: t('nav.courses'), icon: BookOpen },
+    { to: '/professors', label: t('nav.professors'), icon: GraduationCap },
     { to: '/timetable', label: t('nav.timetable'), icon: CalendarDays },
   ]
   if (auth.user) {

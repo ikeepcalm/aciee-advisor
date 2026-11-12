@@ -96,6 +96,52 @@ export function safeNext(query: LocationQuery, fallback = '/'): string {
     : fallback
 }
 
+export interface PublicComment {
+  id: string
+  body: string
+  week: string
+}
+
+export interface ProfessorSubject {
+  subjectId: number
+  subjectName: string
+  itemId: number
+  components: string
+  firstYear: number
+  lastYear: number
+  radar: { n: number; scores: (number | null)[] } | null
+  comments: PublicComment[]
+}
+
+export interface ProfessorPage {
+  fullName: string
+  title: string
+  department: string
+  archived: boolean
+  threshold: number
+  ratings: number
+  overall: number | null
+  teaching: number | null
+  practice: number | null
+  grading: number | null
+  bioRo: string | null
+  bioEn: string | null
+  photo: string | null
+  cvUrl: string | null
+  subjects: ProfessorSubject[]
+}
+
+export interface ProfessorListItem {
+  slug: string
+  fullName: string
+  title: string
+  department: string
+  subjects: number
+  ratings: number
+  overall: number | null
+  photo: string | null
+}
+
 export type WeekParity = 'ALL' | 'ODD' | 'EVEN'
 
 export interface Lesson {
@@ -124,6 +170,7 @@ export interface TimetableProgram {
   updatedAt: string | null
   groups: string[]
   lessons: Lesson[]
+  weeks: Record<string, Exclude<WeekParity, 'ALL'>>
 }
 
 export interface Timetable {

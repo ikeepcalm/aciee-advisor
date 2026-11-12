@@ -9,7 +9,7 @@ export interface CatchUpSlot {
 
 const TITLES = /\b(prof|conf|lect|asist|as|dr|drd|ing|univ|s\.l|sl)\.|\bcadru didactic asociat\b/g
 
-function fold(text: string): string {
+export function fold(text: string): string {
   return text.normalize('NFD').replace(/\p{M}/gu, '').toLowerCase().replace(/\s+/g, ' ').trim()
 }
 

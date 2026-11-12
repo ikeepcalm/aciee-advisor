@@ -8,8 +8,6 @@ import org.springframework.web.util.HtmlUtils;
 import ro.aciee.advisor.domain.catalog.model.CoursePage;
 import ro.aciee.advisor.domain.catalog.model.Option;
 import ro.aciee.advisor.domain.catalog.model.ProfessorPage;
-import ro.aciee.advisor.domain.catalog.model.ProfessorSubject;
-import ro.aciee.advisor.domain.catalog.model.Radar;
 import ro.aciee.advisor.domain.catalog.model.Survival;
 import ro.aciee.advisor.domain.catalog.service.CatalogService;
 import ro.aciee.advisor.domain.preview.model.PreviewCard;
@@ -18,7 +16,6 @@ import ro.aciee.advisor.domain.preview.model.PreviewMetric;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
-import java.util.Objects;
 import java.util.regex.Pattern;
 
 @Service
@@ -81,19 +78,22 @@ public class PreviewService {
         } catch (ResponseStatusException e) {
             return defaultCard("/courses");
         }
-        var radars = page.getSubjects().stream().map(ProfessorSubject::getRadar).filter(Objects::nonNull).toList();
         var metrics = new ArrayList<PreviewMetric>();
-        int rated = radars.stream().mapToInt(Radar::getN).sum();
-        if (!radars.isEmpty()) {
-            var lookups = catalogService.lookups();
-            for (Option pillar : lookups.getPillars()) {
-                Double average = pillarAverage(radars, lookups.getAxes(), pillar.getCode());
+        if (page.getOverall() != null) {
+            metrics.add(new PreviewMetric("Scor general", score(page.getOverall()), true));
+            for (Option pillar : catalogService.lookups().getPillars()) {
+                Double average = switch (pillar.getCode()) {
+                    case "teaching" -> page.getTeaching();
+                    case "practice" -> page.getPractice();
+                    case "grading" -> page.getGrading();
+                    default -> null;
+                };
                 if (average != null) {
-                    metrics.add(new PreviewMetric(pillar.getLabel(), score(average), true));
+                    metrics.add(new PreviewMetric(pillar.getLabel(), score(average), false));
                 }
             }
         }
-        String note = metrics.isEmpty() ? FEW_RATINGS : ratings(rated);
+        String note = metrics.isEmpty() ? FEW_RATINGS : ratings(page.getRatings());
         String eyebrow = page.getTitle() + " · " + page.getSubjects().size() + " discipline";
         return new PreviewCard(eyebrow, page.getFullName(), metrics, note,
                 "/professors/" + slug, "/og/img/professors/" + slug + ".png");
@@ -102,7 +102,7 @@ public class PreviewService {
     public PreviewCard defaultCard(String path) {
         String title = path.startsWith("/timetable") || path.startsWith("/orar")
                 ? "Orarul grupei tale"
-                : "Ce îți cere de fapt fiecare curs";
+                : path.startsWith("/professors") ? "Profesorii, notați de studenți" : "Ce îți cere de fapt fiecare curs";
         return new PreviewCard("Ghidul studentului de la ACIEE", title, List.of(),
                 "Evaluări anonime și sfaturi de la studenți",
                 path, "/og/img/default.png");
@@ -136,21 +136,6 @@ public class PreviewService {
                 <body><a href="%3$s">%1$s</a></body>
                 </html>
                 """.formatted(title, description, HtmlUtils.htmlEscape(url, "UTF-8"), HtmlUtils.htmlEscape(image, "UTF-8"), SITE);
-    }
-
-    private Double pillarAverage(List<Radar> radars, List<Option> axes, String pillarCode) {
-        double weighted = 0;
-        int weight = 0;
-        for (Radar radar : radars) {
-            for (int axis = 0; axis < axes.size() && axis < radar.getScores().size(); axis++) {
-                Double score = radar.getScores().get(axis);
-                if (score != null && pillarCode.equals(axes.get(axis).getGroup())) {
-                    weighted += score * radar.getN();
-                    weight += radar.getN();
-                }
-            }
-        }
-        return weight == 0 ? null : weighted / weight;
     }
 
     private String score(double value) {

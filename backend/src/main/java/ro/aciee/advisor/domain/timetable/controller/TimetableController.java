@@ -1,7 +1,6 @@
 package ro.aciee.advisor.domain.timetable.controller;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.CacheControl;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -17,7 +16,6 @@ import ro.aciee.advisor.domain.timetable.service.TimetableService;
 
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
-import java.time.LocalDate;
 import java.util.List;
 
 @RestController
@@ -39,13 +37,12 @@ public class TimetableController {
     }
 
     @GetMapping("/api/timetable/calendar.ics")
-    public ResponseEntity<String> calendar(@RequestParam String program, @RequestParam String group,
-                                           @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate odd) {
+    public ResponseEntity<String> calendar(@RequestParam String program, @RequestParam String group) {
         return ResponseEntity.ok()
                 .cacheControl(CacheControl.maxAge(Duration.ofHours(1)).cachePublic())
                 .contentType(new MediaType("text", "calendar", StandardCharsets.UTF_8))
                 .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + fileName(group) + "\"")
-                .body(calendarService.calendar(program, group, odd));
+                .body(calendarService.calendar(program, group));
     }
 
     private static String fileName(String group) {

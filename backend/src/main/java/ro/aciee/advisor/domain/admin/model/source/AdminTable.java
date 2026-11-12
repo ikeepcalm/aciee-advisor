@@ -33,7 +33,7 @@ public enum AdminTable {
             column("during", "daterange")),
     SEMESTER("core.semester", "(SELECT a.during::text FROM core.academic_year a WHERE a.id = academic_year_id) || ' · sem. ' || no",
             ref("academic_year_id", "academic_year"), number("no"), column("during", "daterange"),
-            column("rating_opens_at", "timestamptz")),
+            column("rating_opens_at", "timestamptz"), optional("breaks", "datemultirange")),
     STUDY_GROUP("core.study_group", "code || ' · ' || (SELECT a.during::text FROM core.academic_year a WHERE a.id = academic_year_id)",
             ref("plan_id", "study_plan"), ref("academic_year_id", "academic_year"), number("study_year"), text("code"),
             number("max_size")),

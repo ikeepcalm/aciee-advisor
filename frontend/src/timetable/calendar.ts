@@ -10,23 +10,13 @@ export interface Calibration {
 
 export const ROMAN = ['', 'I', 'II', 'III', 'IV']
 
-function isoDate(date: Date): string {
+export function isoDate(date: Date): string {
   const pad = (value: number) => String(value).padStart(2, '0')
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`
 }
 
-export function oddMonday(calibration: Calibration): string {
-  const [year, month, day] = calibration.anchor.split('-').map(Number)
-  return isoDate(new Date(year!, month! - 1, day! + (calibration.parity === 'EVEN' ? 7 : 0)))
-}
-
-export function calendarFeedUrl(
-  origin: string,
-  programCode: string,
-  group: string,
-  calibration: Calibration,
-): string {
-  const query = new URLSearchParams({ program: programCode, group, odd: oddMonday(calibration) })
+export function calendarFeedUrl(origin: string, programCode: string, group: string): string {
+  const query = new URLSearchParams({ program: programCode, group })
   return `${origin}/api/timetable/calendar.ics?${query}`
 }
 

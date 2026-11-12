@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.RestController;
 import ro.aciee.advisor.domain.catalog.model.CatalogItem;
 import ro.aciee.advisor.domain.catalog.model.CoursePage;
 import ro.aciee.advisor.domain.catalog.model.Lookups;
+import ro.aciee.advisor.domain.catalog.model.ProfessorListItem;
 import ro.aciee.advisor.domain.catalog.model.ProfessorPage;
 import ro.aciee.advisor.domain.catalog.model.Specialization;
 import ro.aciee.advisor.domain.catalog.service.CatalogService;
@@ -38,6 +39,11 @@ public class CatalogController {
     @GetMapping("/api/catalog/courses/{itemId}")
     public CoursePage course(@PathVariable int itemId, @RequestParam(required = false) Integer year) {
         return catalogService.course(itemId, year);
+    }
+
+    @GetMapping("/api/catalog/professors")
+    public List<ProfessorListItem> professors() {
+        return catalogService.professors();
     }
 
     @GetMapping("/api/professors/{slug}")

@@ -13,6 +13,7 @@ import ro.aciee.advisor.domain.catalog.model.CourseTeacher;
 import ro.aciee.advisor.domain.catalog.model.Lookups;
 import ro.aciee.advisor.domain.catalog.model.Option;
 import ro.aciee.advisor.domain.catalog.model.PlanOption;
+import ro.aciee.advisor.domain.catalog.model.ProfessorListItem;
 import ro.aciee.advisor.domain.catalog.model.ProfessorPage;
 import ro.aciee.advisor.domain.catalog.model.ProfessorSubject;
 import ro.aciee.advisor.domain.catalog.model.PublishedText;
@@ -38,7 +39,24 @@ public class CatalogService {
             JOIN core.subject_root_v sr ON sr.subject_id = o.subject_id
             WHERE sr.root_id = :root""";
 
-    private static final String RADAR_COLUMNS = "n, ARRAY[a01, a02, a03, a04, a05, a06, a07, a08, a09, a10, a11, a12, a13, a14] AS scores";
+    private static final String AXES = "a01, a02, a03, a04, a05, a06, a07, a08, a09, a10, a11, a12, a13, a14";
+
+    private static final String RADAR_COLUMNS = "n, ARRAY[" + AXES + "] AS scores";
+
+    private static final String PROFESSOR_SCORES = """
+            SELECT cell.professor_id, rated.ratings,
+                   sum(cell.n * cell.score) / sum(cell.n) AS overall,
+                   sum(cell.n * cell.score) FILTER (WHERE cell.pillar = 'teaching') / sum(cell.n) FILTER (WHERE cell.pillar = 'teaching') AS teaching,
+                   sum(cell.n * cell.score) FILTER (WHERE cell.pillar = 'practice') / sum(cell.n) FILTER (WHERE cell.pillar = 'practice') AS practice,
+                   sum(cell.n * cell.score) FILTER (WHERE cell.pillar = 'grading') / sum(cell.n) FILTER (WHERE cell.pillar = 'grading') AS grading
+            FROM (SELECT r.professor_id, r.n, ax.pillar_code AS pillar, u.score
+                  FROM anon.prof_subject_radar r
+                  CROSS JOIN LATERAL unnest(ARRAY[%1$s]) WITH ORDINALITY u(score, no)
+                  JOIN ref.axis ax ON ax.code = 'a' || lpad(u.no::text, 2, '0')
+                  WHERE u.score IS NOT NULL) cell
+            JOIN (SELECT professor_id, sum(n) AS ratings FROM anon.prof_subject_radar
+                  WHERE num_nonnulls(%1$s) > 0 GROUP BY professor_id) rated ON rated.professor_id = cell.professor_id
+            GROUP BY cell.professor_id, rated.ratings""".formatted(AXES);
 
     private static final RowMapper<Radar> RADAR = (rs, row) -> {
         var radar = new Radar();
@@ -174,10 +192,15 @@ public class CatalogService {
     @Transactional(readOnly = true)
     public ProfessorPage professor(String slug) {
         var page = jdbc.sql("""
-                        SELECT p.id, p.full_name, t.label_ro AS title, d.name_ro AS department, p.archived_at IS NOT NULL AS archived
+                        SELECT p.id, p.full_name, t.label_ro AS title, d.name_ro AS department, p.archived_at IS NOT NULL AS archived,
+                               pr.bio_ro, pr.bio_en, pr.photo, pr.cv_url,
+                               coalesce(sc.ratings, 0) AS ratings, sc.overall, sc.teaching, sc.practice, sc.grading
                         FROM core.professor p
                         JOIN ref.academic_title t ON t.code = p.title_code
                         JOIN core.department d ON d.id = p.department_id
+                        LEFT JOIN core.professor_profile pr ON pr.name_key = core.name_key(p.full_name)
+                        LEFT JOIN (""" + PROFESSOR_SCORES + """
+                        ) sc ON sc.professor_id = p.id
                         WHERE p.slug = :slug""")
                 .param("slug", slug)
                 .query(ProfessorPage.class)
@@ -187,7 +210,9 @@ public class CatalogService {
         page.setSubjects(jdbc.sql("""
                         SELECT sr.root_id AS subject_id, root.name_ro AS subject_name,
                                (array_agg(ci.id ORDER BY ay.during DESC))[1] AS item_id,
-                               string_agg(DISTINCT c.label_ro, ', ') AS components
+                               string_agg(DISTINCT c.label_ro, ', ') AS components,
+                               extract(YEAR FROM min(lower(ay.during)))::int AS first_year,
+                               extract(YEAR FROM max(upper(ay.during)))::int AS last_year
                         FROM core.teaching_assignment ta
                         JOIN core.course_offering o ON o.id = ta.offering_id
                         JOIN core.curriculum_item ci ON ci.id = o.curriculum_item_id
@@ -209,6 +234,29 @@ public class CatalogService {
             subject.setComments(comments.getOrDefault(subject.getSubjectId(), List.of()));
         });
         return page;
+    }
+
+    @Transactional(readOnly = true)
+    public List<ProfessorListItem> professors() {
+        return jdbc.sql("""
+                        SELECT p.slug, p.full_name, t.label_ro AS title, d.name_ro AS department, pr.photo,
+                               taught.subjects, coalesce(sc.ratings, 0) AS ratings, sc.overall
+                        FROM core.professor p
+                        JOIN ref.academic_title t ON t.code = p.title_code
+                        JOIN core.department d ON d.id = p.department_id
+                        LEFT JOIN core.professor_profile pr ON pr.name_key = core.name_key(p.full_name)
+                        CROSS JOIN LATERAL (
+                            SELECT count(DISTINCT sr.root_id) AS subjects
+                            FROM core.teaching_assignment ta
+                            JOIN core.offering_v o ON o.offering_id = ta.offering_id
+                            JOIN core.subject_root_v sr ON sr.subject_id = o.subject_id
+                            WHERE ta.professor_id = p.id) taught
+                        LEFT JOIN (""" + PROFESSOR_SCORES + """
+                        ) sc ON sc.professor_id = p.id
+                        WHERE p.archived_at IS NULL OR sc.ratings > 0
+                        ORDER BY p.full_name""")
+                .query(ProfessorListItem.class)
+                .list();
     }
 
     private Map<Integer, Radar> radars(String filter, String keyColumn, int key) {

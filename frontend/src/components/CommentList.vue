@@ -2,13 +2,15 @@
 import { useI18n } from 'vue-i18n'
 import { ChevronRight } from 'lucide-vue-next'
 import ReportButton from '@/components/ReportButton.vue'
+import type { PublicComment } from '@/api'
+import { academicYear } from '@/professors'
 
-defineProps<{ comments: { id: string; body: string; week: string }[] }>()
+defineProps<{ comments: PublicComment[]; open?: boolean }>()
 const { t, d } = useI18n()
 </script>
 
 <template>
-  <details v-if="comments.length" class="group mt-1">
+  <details v-if="comments.length" class="group mt-1" :open="open">
     <summary
       class="flex min-h-11 cursor-pointer list-none items-center gap-1 text-sm font-medium text-mask [&::-webkit-details-marker]:hidden"
     >
@@ -18,6 +20,7 @@ const { t, d } = useI18n()
     <blockquote v-for="c in comments" :key="c.id" class="quote mb-3 text-sm">
       {{ c.body }}
       <footer class="mt-1 flex flex-wrap items-center gap-2 text-xs text-muted">
+        <span class="tag bg-board text-ink">{{ academicYear(c.week) }}</span>
         {{ t('course.week', { date: d(c.week, 'short') }) }}
         <ReportButton :post-id="c.id" />
       </footer>

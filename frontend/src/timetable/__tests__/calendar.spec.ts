@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { Lesson } from '@/api'
-import { calendarFeedUrl, freeDates, oddMonday, upcomingDates } from '../calendar'
+import { calendarFeedUrl, freeDates, isoDate, upcomingDates } from '../calendar'
 
 const oddOnNinth = (monday: Date) =>
   Math.round((monday.getTime() - new Date(2026, 10, 9).getTime()) / (7 * 864e5)) % 2 === 0
@@ -8,21 +8,17 @@ const oddOnNinth = (monday: Date) =>
     : 'EVEN'
 const thursdayNoon = new Date(2026, 10, 12, 12, 0)
 
-describe('oddMonday', () => {
-  it('keeps an odd anchor and pads it', () => {
-    expect(oddMonday({ anchor: '2026-11-9', parity: 'ODD' })).toBe('2026-11-09')
-  })
-
-  it('moves an even anchor one week on, across a month end', () => {
-    expect(oddMonday({ anchor: '2026-11-30', parity: 'EVEN' })).toBe('2026-12-07')
+describe('isoDate', () => {
+  it('pads local dates', () => {
+    expect(isoDate(new Date(2026, 10, 9))).toBe('2026-11-09')
   })
 })
 
 describe('calendarFeedUrl', () => {
-  it('encodes the programme, group and odd Monday', () => {
-    expect(
-      calendarFeedUrl('https://x.ro', 'an_2_CTI', '22C21A', { anchor: '2026-11-9', parity: 'ODD' }),
-    ).toBe('https://x.ro/api/timetable/calendar.ics?program=an_2_CTI&group=22C21A&odd=2026-11-09')
+  it('encodes the programme and group', () => {
+    expect(calendarFeedUrl('https://x.ro', 'an_2_CTI', '22C21A')).toBe(
+      'https://x.ro/api/timetable/calendar.ics?program=an_2_CTI&group=22C21A',
+    )
   })
 })
 

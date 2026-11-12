@@ -7,21 +7,18 @@ import ro.aciee.advisor.domain.timetable.model.source.WeekParity;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.time.DayOfWeek;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalTime;
-import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
-import java.time.temporal.ChronoUnit;
-import java.time.temporal.TemporalAdjusters;
+import java.util.ArrayList;
 import java.util.HexFormat;
+import java.util.List;
 import java.util.Map;
 
 public final class CalendarWriter {
 
-    public static final ZoneId BUCHAREST = ZoneId.of("Europe/Bucharest");
     private static final DateTimeFormatter LOCAL = DateTimeFormatter.ofPattern("yyyyMMdd'T'HHmmss");
     private static final DateTimeFormatter DATE = DateTimeFormatter.ofPattern("yyyyMMdd");
     private static final DateTimeFormatter UTC = DateTimeFormatter.ofPattern("yyyyMMdd'T'HHmmss'Z'").withZone(ZoneOffset.UTC);
@@ -48,8 +45,8 @@ public final class CalendarWriter {
     private CalendarWriter() {
     }
 
-    public static String write(TimetableProgram program, String group, LocalDate oddMonday, LocalDate firstDay,
-                               LocalDate lastDay, LocalDate ratingOpens, String publicUrl) {
+    public static String write(TimetableProgram program, String group, Map<LocalDate, WeekParity> weeks,
+                               LocalDate ratingOpens, String publicUrl) {
         var lines = new StringBuilder();
         Instant stamp = program.getUpdatedAt() == null ? Instant.EPOCH : program.getUpdatedAt();
         line(lines, "BEGIN:VCALENDAR");
@@ -66,10 +63,6 @@ public final class CalendarWriter {
             if (!lesson.getGroups().contains(group)) {
                 continue;
             }
-            LocalDate first = firstOccurrence(lesson, oddMonday, firstDay);
-            if (first.isAfter(lastDay)) {
-                continue;
-            }
             String kind = lesson.getKind() == null ? null : KINDS.get(lesson.getKind().trim());
             String name = lesson.getCourse();
             String link = lesson.getCourseId() == null ? null : publicUrl + "/courses/" + lesson.getCourseId();
@@ -81,22 +74,28 @@ public final class CalendarWriter {
                 description.append(lesson.getWeeks() == WeekParity.ODD ? "Săptămâna impară" : "Săptămâna pară").append('\n');
             }
             description.append(link != null ? "Ce spun colegii despre curs: " + link : "Orarul complet: " + publicUrl + "/timetable");
-            line(lines, "BEGIN:VEVENT");
-            line(lines, "UID:" + uid(program.getCode(), group, lesson) + "@acieeadvisor");
-            line(lines, "DTSTAMP:" + UTC.format(stamp));
-            line(lines, "DTSTART;TZID=Europe/Bucharest:" + LOCAL.format(first.atTime(LocalTime.parse(lesson.getStart()))));
-            line(lines, "DTEND;TZID=Europe/Bucharest:" + LOCAL.format(first.atTime(LocalTime.parse(lesson.getEnd()))));
-            line(lines, "RRULE:FREQ=WEEKLY;INTERVAL=" + (lesson.getWeeks() == WeekParity.ALL ? 1 : 2)
-                    + ";UNTIL=" + UTC.format(lastDay.atTime(LocalTime.MAX).atZone(BUCHAREST)));
-            line(lines, "SUMMARY:" + text(kind == null ? name : name + " (" + kind + ")"));
-            if (lesson.getRoom() != null) {
-                line(lines, "LOCATION:" + text(lesson.getRoom()));
+            int step = lesson.getWeeks() == WeekParity.ALL ? 1 : 2;
+            var dates = occurrences(lesson, weeks).stream().filter(date -> ratingOpens == null || date.isBefore(ratingOpens)).toList();
+            for (List<LocalDate> run : runs(dates, step)) {
+                LocalDate first = run.getFirst();
+                line(lines, "BEGIN:VEVENT");
+                line(lines, "UID:" + uid(program.getCode(), group, lesson) + "-" + DATE.format(first) + "@acieeadvisor");
+                line(lines, "DTSTAMP:" + UTC.format(stamp));
+                line(lines, "DTSTART;TZID=Europe/Bucharest:" + LOCAL.format(first.atTime(LocalTime.parse(lesson.getStart()))));
+                line(lines, "DTEND;TZID=Europe/Bucharest:" + LOCAL.format(first.atTime(LocalTime.parse(lesson.getEnd()))));
+                if (run.size() > 1) {
+                    line(lines, "RRULE:FREQ=WEEKLY;INTERVAL=" + step + ";COUNT=" + run.size());
+                }
+                line(lines, "SUMMARY:" + text(kind == null ? name : name + " (" + kind + ")"));
+                if (lesson.getRoom() != null) {
+                    line(lines, "LOCATION:" + text(lesson.getRoom()));
+                }
+                line(lines, "DESCRIPTION:" + text(description.toString()));
+                if (link != null) {
+                    line(lines, "URL:" + link);
+                }
+                line(lines, "END:VEVENT");
             }
-            line(lines, "DESCRIPTION:" + text(description.toString()));
-            if (link != null) {
-                line(lines, "URL:" + link);
-            }
-            line(lines, "END:VEVENT");
         }
         if (ratingOpens != null) {
             line(lines, "BEGIN:VEVENT");
@@ -113,14 +112,23 @@ public final class CalendarWriter {
         return lines.toString();
     }
 
-    public static LocalDate firstOccurrence(Lesson lesson, LocalDate oddMonday, LocalDate firstDay) {
-        LocalDate date = firstDay.with(TemporalAdjusters.nextOrSame(DayOfWeek.of(lesson.getDay())));
-        if (lesson.getWeeks() == WeekParity.ALL) {
-            return date;
+    public static List<LocalDate> occurrences(Lesson lesson, Map<LocalDate, WeekParity> weeks) {
+        return weeks.entrySet().stream()
+                .filter(week -> lesson.getWeeks() == WeekParity.ALL || week.getValue() == lesson.getWeeks())
+                .map(week -> week.getKey().plusDays(lesson.getDay() - 1))
+                .sorted()
+                .toList();
+    }
+
+    private static List<List<LocalDate>> runs(List<LocalDate> dates, int step) {
+        var runs = new ArrayList<List<LocalDate>>();
+        for (LocalDate date : dates) {
+            if (runs.isEmpty() || !runs.getLast().getLast().plusWeeks(step).equals(date)) {
+                runs.add(new ArrayList<>());
+            }
+            runs.getLast().add(date);
         }
-        long weeks = ChronoUnit.WEEKS.between(oddMonday, date.with(DayOfWeek.MONDAY));
-        boolean odd = Math.floorMod(weeks, 2) == 0;
-        return odd == (lesson.getWeeks() == WeekParity.ODD) ? date : date.plusWeeks(1);
+        return runs;
     }
 
     private static String uid(String program, String group, Lesson lesson) {

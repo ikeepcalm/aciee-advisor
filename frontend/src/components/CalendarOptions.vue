@@ -2,10 +2,8 @@
 import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { Calendar, Check, Copy, Smartphone } from 'lucide-vue-next'
-import type { Parity } from '@/timetable/calendar'
 
-const props = defineProps<{ feedUrl: string | null; group: string; weekRange: string }>()
-const emit = defineEmits<{ calibrate: [parity: Parity] }>()
+const props = defineProps<{ feedUrl: string | null; group: string }>()
 const { t } = useI18n()
 const copied = ref(false)
 const prefersApple = /iPhone|iPad|Macintosh/.test(navigator.userAgent)
@@ -27,18 +25,7 @@ async function copyLink() {
 </script>
 
 <template>
-  <div v-if="!feedUrl" class="flex flex-col gap-3">
-    <p class="font-semibold">{{ t('timetable.askParity', { range: weekRange }) }}</p>
-    <div class="flex gap-2">
-      <button type="button" class="chip flex-1" @click="emit('calibrate', 'ODD')">
-        {{ t('timetable.parity.ODD') }}
-      </button>
-      <button type="button" class="chip flex-1" @click="emit('calibrate', 'EVEN')">
-        {{ t('timetable.parity.EVEN') }}
-      </button>
-    </div>
-    <p class="text-sm text-muted">{{ t('timetable.askHint') }}</p>
-  </div>
+  <p v-if="!feedUrl">{{ t('timetable.calendar.unavailable') }}</p>
   <div v-else class="flex flex-col gap-3">
     <p>{{ t('timetable.calendar.lede', { group }) }}</p>
     <div class="flex flex-col gap-2" :class="{ 'flex-col-reverse': prefersApple }">

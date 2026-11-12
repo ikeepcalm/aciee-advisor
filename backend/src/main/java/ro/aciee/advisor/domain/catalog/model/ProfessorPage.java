@@ -16,5 +16,14 @@ public class ProfessorPage {
     private String department;
     private boolean archived;
     private int threshold;
+    private int ratings;
+    private Double overall;
+    private Double teaching;
+    private Double practice;
+    private Double grading;
+    private String bioRo;
+    private String bioEn;
+    private String photo;
+    private String cvUrl;
     private List<ProfessorSubject> subjects;
 }

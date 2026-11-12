@@ -1,38 +1,28 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
-import { ArrowLeft } from 'lucide-vue-next'
+import { ArrowLeft, ArrowRight, CalendarDays, ExternalLink } from 'lucide-vue-next'
 import AppNotice from '@/components/AppNotice.vue'
 import RadarChart from '@/components/RadarChart.vue'
 import CommentList from '@/components/CommentList.vue'
 import RateInvite from '@/components/RateInvite.vue'
-import { api, describeError, lookups, type Lookups } from '@/api'
+import ProfessorAvatar from '@/components/ProfessorAvatar.vue'
+import SegmentedChips from '@/components/SegmentedChips.vue'
+import { api, describeError, lookups, type Lookups, type ProfessorPage } from '@/api'
+import { useAuthStore } from '@/stores/auth'
+import { academicYear } from '@/professors'
 
-interface Subject {
-  subjectId: number
-  subjectName: string
-  itemId: number
-  components: string
-  radar: { n: number; scores: (number | null)[] } | null
-  comments: { id: string; body: string; week: string }[]
-}
-
-interface ProfessorPage {
-  fullName: string
-  title: string
-  department: string
-  archived: boolean
-  threshold: number
-  subjects: Subject[]
-}
-
-const { t } = useI18n()
+const ALL = 'all'
+const { t, locale } = useI18n()
+const route = useRoute()
 const router = useRouter()
-const slug = useRoute().params.slug as string
+const auth = useAuthStore()
+const slug = route.params.slug as string
 const page = ref<ProfessorPage | null>(null)
 const labels = ref<Lookups | null>(null)
 const error = ref('')
+const year = ref(ALL)
 
 async function load() {
   error.value = ''
@@ -50,7 +40,7 @@ function goBack() {
   if (window.history.state?.back) {
     router.back()
   } else {
-    router.push({ name: 'catalog' })
+    router.push({ name: 'professors' })
   }
 }
 
@@ -61,6 +51,49 @@ function missing(n: number) {
     ? t('course.noRatings')
     : t('course.locked', { missing: page.value!.threshold - n })
 }
+
+const bio = computed(() =>
+  locale.value === 'ro'
+    ? (page.value?.bioRo ?? page.value?.bioEn)
+    : (page.value?.bioEn ?? page.value?.bioRo),
+)
+
+const pillars = computed(() =>
+  (labels.value?.pillars ?? []).map((pillar) => ({
+    label: pillar.label,
+    value: page.value?.[pillar.code as 'teaching' | 'practice' | 'grading'] ?? null,
+  })),
+)
+
+const years = computed(() => {
+  const present = new Set(
+    (page.value?.subjects ?? []).flatMap((s) => s.comments.map((c) => academicYear(c.week))),
+  )
+  return [...present].sort().reverse()
+})
+
+const yearOptions = computed(() => [
+  { value: ALL, label: t('professor.allYears') },
+  ...years.value.map((value) => ({ value, label: value })),
+])
+
+const subjects = computed(() =>
+  (page.value?.subjects ?? [])
+    .map((subject) => ({
+      ...subject,
+      comments: subject.comments.filter(
+        (c) => year.value === ALL || academicYear(c.week) === year.value,
+      ),
+    }))
+    .filter((subject) => {
+      const start = Number(year.value.slice(0, 4))
+      return (
+        year.value === ALL ||
+        subject.comments.length ||
+        (subject.firstYear <= start && subject.lastYear > start)
+      )
+    }),
+)
 </script>
 
 <template>
@@ -77,44 +110,166 @@ function missing(n: number) {
     </AppNotice>
     <p v-else-if="!page" class="mt-4 text-muted" role="status">{{ t('common.loading') }}</p>
     <template v-if="page">
-      <span class="eyebrow mt-2">{{ page.department }}</span>
-      <h1 class="h1">{{ page.title }} {{ page.fullName }}</h1>
       <AppNotice v-if="page.archived">{{ t('professor.archived') }}</AppNotice>
-      <RateInvite class="mt-5" />
+      <header class="mt-2 grid gap-5 lg:grid-cols-[minmax(0,1fr)_24rem] lg:items-start lg:gap-x-10">
+        <div class="flex items-center gap-4 md:gap-6">
+          <ProfessorAvatar
+            :name="page.fullName"
+            :photo="page.photo"
+            class="size-20 shrink-0 md:size-28"
+          />
+          <div class="min-w-0">
+            <span class="eyebrow">{{ page.department }}</span>
+            <h1 class="h1">{{ page.fullName }}</h1>
+            <p class="mt-1 text-sm text-muted">{{ page.title }}</p>
+          </div>
+        </div>
+
+        <section class="score card lg:col-start-2 lg:row-span-2 lg:row-start-1">
+          <h2 class="sr-only">{{ t('professor.score') }}</h2>
+          <template v-if="page.overall !== null">
+            <p class="flex items-baseline gap-2">
+              <span class="score-value display text-6xl leading-none">{{
+                page.overall.toFixed(1)
+              }}</span>
+              <span class="mono text-sm text-muted">/ 10</span>
+            </p>
+            <p class="mt-2 text-sm text-muted">
+              {{ t('professor.basis', { ratings: page.ratings, subjects: page.subjects.length }) }}
+            </p>
+            <ul class="m-0 mt-4 grid list-none gap-2 p-0">
+              <li
+                v-for="pillar in pillars"
+                :key="pillar.label"
+                class="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 text-sm"
+              >
+                <span>{{ pillar.label }}</span>
+                <strong class="mono font-medium">
+                  {{ pillar.value === null ? '—' : pillar.value.toFixed(1) }}
+                </strong>
+                <span class="bar col-span-2 mt-1" aria-hidden="true">
+                  <span :style="{ width: `${(pillar.value ?? 0) * 10}%` }" />
+                </span>
+              </li>
+            </ul>
+          </template>
+          <template v-else>
+            <p class="display text-3xl leading-tight">{{ t('professor.fewRatings') }}</p>
+            <p class="mt-1 text-sm text-muted">{{ t('professor.fewRatingsBody') }}</p>
+            <RouterLink v-if="auth.user" :to="{ name: 'rate' }" class="btn btn-primary mt-4 w-full">
+              {{ t('nav.rate') }}
+              <ArrowRight class="size-4" aria-hidden="true" />
+            </RouterLink>
+            <RouterLink
+              v-else-if="auth.loaded"
+              :to="{ name: 'signin', query: { next: route.fullPath } }"
+              class="btn btn-outline mt-4 w-full"
+            >
+              {{ t('auth.signInAction') }}
+            </RouterLink>
+          </template>
+        </section>
+
+        <section v-if="bio || page.cvUrl" class="max-w-prose">
+          <p v-if="bio" class="text-sm md:text-base">{{ bio }}</p>
+          <p class="flex flex-wrap items-center gap-x-2 text-xs text-muted">
+            <span v-if="bio">{{ t('professor.bioNote') }}</span>
+            <a
+              v-if="page.cvUrl"
+              :href="page.cvUrl"
+              target="_blank"
+              rel="noopener"
+              class="inline-flex min-h-11 items-center gap-1 font-medium"
+            >
+              {{ t('professor.cv') }}
+              <ExternalLink class="size-3.5" aria-hidden="true" />
+            </a>
+          </p>
+        </section>
+      </header>
+
+      <RateInvite v-if="page.overall !== null" class="mt-5" />
+
       <h2 class="h2 mt-8">{{ t('professor.subjects') }}</h2>
       <p v-if="!page.subjects.length" class="mt-3 text-sm text-muted">
         {{ t('professor.noSubjects') }}
       </p>
+      <template v-if="years.length">
+        <SegmentedChips
+          v-model="year"
+          :options="yearOptions"
+          size="sm"
+          class="mono mt-3"
+          :aria-label="t('course.academicYear')"
+        />
+        <p v-if="year !== ALL" class="mt-2 text-xs text-muted" role="status">
+          {{ t('professor.yearHint', { year }) }}
+        </p>
+      </template>
       <div class="card-grid mt-3">
-        <article v-for="subject in page.subjects" :key="subject.subjectId" class="card">
+        <article v-for="subject in subjects" :key="subject.subjectId" class="card">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <span class="tag bg-board text-muted">{{ subject.components }}</span>
+            <span class="mono inline-flex items-center gap-1 text-xs font-medium">
+              <CalendarDays class="size-3.5 text-copper" aria-hidden="true" />
+              <span class="sr-only">{{ t('professor.taught') }}:</span>
+              {{ subject.firstYear }}–{{ subject.lastYear }}
+            </span>
+          </div>
           <RouterLink
             :to="`/courses/${subject.itemId}`"
             class="flex min-h-11 items-center font-semibold"
             >{{ subject.subjectName }}</RouterLink
           >
-          <p class="text-sm text-muted">
-            {{ subject.components
-            }}<template v-if="subject.radar">
-              · <span class="mono text-xs">n = {{ subject.radar.n }}</span></template
-            >
-          </p>
           <p
             v-if="!subject.radar || subject.radar.n < page.threshold"
-            class="mt-2 text-sm text-muted italic"
+            class="text-sm text-muted italic"
           >
             {{ missing(subject.radar?.n ?? 0) }}
           </p>
           <template v-else>
+            <p class="mono text-xs text-muted">n = {{ subject.radar.n }}</p>
             <RadarChart
               v-if="labels"
               :scores="subject.radar.scores"
               :axes="labels.axes"
               :pillars="labels.pillars"
             />
-            <CommentList :comments="subject.comments" />
+            <CommentList :comments="subject.comments" :open="year !== ALL" />
           </template>
         </article>
       </div>
     </template>
   </main>
 </template>
+
+<style scoped>
+.score {
+  border-color: var(--ink);
+  box-shadow: 2px 3px 0 color-mix(in srgb, var(--ink) 28%, transparent);
+}
+
+.score-value {
+  padding: 0.05em 0.2em 0;
+  border-radius: 0.5em 0.2em;
+  color: var(--on-mark);
+  background: var(--mark);
+  rotate: -2deg;
+}
+
+.bar {
+  display: block;
+  height: 0.625rem;
+  overflow: hidden;
+  border: 1.5px solid var(--line);
+  border-radius: var(--wobble);
+  background: var(--board);
+}
+
+.bar > span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--mask);
+}
+</style>
