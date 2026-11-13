@@ -1,4 +1,4 @@
-const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)')
+export const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)')
 let running: { transition: ViewTransition; kind: string } | null = null
 
 export function animateSwap(kind: string, update: () => void | Promise<void>) {

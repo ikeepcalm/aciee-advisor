@@ -4,7 +4,7 @@ What is left for a person to do: things code cannot do, decisions only you can m
 
 ## Now
 
-- [ ] **Resume here (2026-11-12): redo the first-year guide (`/guide`) as an immersive scrolling page.** The current card grid looks bad. Wanted: the page first greets the student full-screen, then each scroll step explains one thing in simple words, ordered from most to least important (attendance and exam rights, credits for year 2, sessions and resits, scholarships, budget/fee, calendar, secretariat), with the official source under each step. Keep the fact-checked text in `frontend/src/guide/content.ts` (rewrite into simpler, step-sized wording if needed, same facts) and rebuild `views/GuideView.vue` with Fable. Mobile-first, respects `prefers-reduced-motion`, deep links like `/guide#attendance` still land on their step.
+- [x] First-year guide (`/guide`) rebuilt 2026-11-13 as a scroll story: greeting, one step per topic with a doodle, senior-student tips, a one-step-per-scroll deck on desktop and Next buttons on mobile. Still to check on a real trackpad, Safari, Firefox and a phone; uk/ru tips need a native read.
 - [ ] Check the "Orarul s-a schimbat" note yourself: insert two rows into `core.timetable_change` for your group (one `removed`, one `added` with another room), open `/timetable`, then delete them.
 - [ ] Open `/admin/reports` and the sign-in / sign-up pages in a browser, including at 360 px. They were tested through the API and the build only, never looked at.
 - [ ] Free local resources: `dropdb -h localhost -U aciee aciee_large` (full-volume Stage 4 data, several GB) and stop `infra` compose (`docker compose down`) when not developing.
@@ -105,7 +105,7 @@ From VIEWS.md "Open questions" (items 1–4 and 17 are decided):
 
 Timetable (`/timetable`, `/orar` redirects, synced hourly from aciee.ugal.ro/studenti/orare-licenta):
 
-- [ ] Confirm with the secretariat or a group leader that the top half of a split slot in the PDF is the odd week. The page assumes so and says so in a footnote.
+- [x] The top half of a split slot in the PDF is the odd week (confirmed by the owner from first-year experience, 2026-11-13).
 - [ ] `an_4_IETTI_EA.pdf` (linked from the semester II table) is an empty file on the faculty site; it is skipped with a warning until they replace it.
 
 From ROADMAP.md: exact check-in dates per stage, and whether the faculty publishes the course descriptions (fișele disciplinelor).
