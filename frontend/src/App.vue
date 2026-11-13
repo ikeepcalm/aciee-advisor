@@ -6,7 +6,6 @@ import {
   BookOpen,
   CalendarDays,
   CircleUser,
-  Compass,
   FileText,
   GraduationCap,
   KeyRound,
@@ -115,13 +114,6 @@ async function signOut() {
             :aria-current="active(tab.to) ? 'page' : undefined"
           >
             <span :class="{ hl: tab.to === '/rate' }">{{ tab.label }}</span>
-          </RouterLink>
-          <RouterLink
-            to="/guide"
-            class="hidden min-h-11 items-center px-3 text-sm whitespace-nowrap text-muted no-underline hover:text-mask xl:flex"
-            :class="{ 'text-mask': active('/guide') }"
-          >
-            {{ t('guide.nav') }}
           </RouterLink>
         </nav>
 
@@ -232,13 +224,6 @@ async function signOut() {
           t('auth.signUp')
         }}</RouterLink>
       </template>
-      <RouterLink
-        to="/guide"
-        class="mt-3 flex min-h-11 items-center gap-3 rounded-md px-2 text-sm font-medium text-ink no-underline hover:bg-board"
-      >
-        <Compass class="size-5 text-copper" aria-hidden="true" />
-        {{ t('guide.nav') }}
-      </RouterLink>
       <hr class="my-5 border-line" />
       <div class="field">
         {{ t('prefs.language') }}

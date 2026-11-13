@@ -11,6 +11,7 @@ const ORDER = [
   'budget',
   'calendar',
   'contact',
+  'fun',
 ]
 const reference = guideFor('en')
 

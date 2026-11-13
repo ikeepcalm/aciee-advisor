@@ -14,8 +14,11 @@ const ENDING_ID = 'end'
 const EMAIL = /^\S+@\S+$/
 const HEADER_HEIGHT = 56
 const STRIP_CLEARANCE = 56
-const WHEEL_THRESHOLD = 40
-const WHEEL_IDLE = 140
+const WHEEL_IDLE = 200
+const WHEEL_TRAVEL = 30
+const WHEEL_RECENT = 5
+const WHEEL_REPUSH = 3
+const WHEEL_REPUSH_MIN = 10
 const GLIDE_GUARD = 1000
 const LINE_HEIGHT = 33
 const KEY_DIRECTIONS: Record<string, Direction> = {
@@ -54,10 +57,12 @@ let activeObserver: IntersectionObserver | undefined
 let scenes: HTMLElement[] = []
 let gliding = false
 let glideGuard = 0
-let wheelGesture: 'pending' | 'inside' | 'spent' = 'spent'
+let wheelSizes: number[] = []
 let wheelTravel = 0
+let wheelPhase: 'pending' | 'rising' | 'fading' = 'pending'
+let wheelPeak = 0
+let wheelTrough = 0
 let lastWheelAt = 0
-let lastWheelSize = 0
 
 function highlight(text: string, mark: string) {
   const at = mark ? text.indexOf(mark) : -1
@@ -147,7 +152,7 @@ function onWheel(event: WheelEvent) {
     !deck.value ||
     event.ctrlKey ||
     Math.abs(event.deltaX) > Math.abs(event.deltaY) ||
-    !story.value?.contains(event.target as Node)
+    (event.target instanceof Element && event.target.closest('[role="dialog"]') !== null)
   ) {
     return
   }
@@ -155,29 +160,45 @@ function onWheel(event: WheelEvent) {
   const scale = event.deltaMode === 1 ? LINE_HEIGHT : event.deltaMode === 2 ? innerHeight : 1
   const delta = event.deltaY * scale
   const size = Math.abs(delta)
-  const pausedBefore = event.timeStamp - lastWheelAt > WHEEL_IDLE
-  const pushedAgain =
-    wheelGesture === 'spent' && !gliding && size > WHEEL_THRESHOLD && size > lastWheelSize * 2
-  if (pausedBefore || pushedAgain) {
-    wheelGesture = 'pending'
+  if (event.timeStamp - lastWheelAt > WHEEL_IDLE) {
+    wheelSizes = []
     wheelTravel = 0
+    wheelPhase = 'pending'
   }
   lastWheelAt = event.timeStamp
-  lastWheelSize = size
-  if (gliding || wheelGesture === 'spent' || !delta) {
+  wheelSizes = [...wheelSizes.slice(1 - WHEEL_RECENT), size]
+  const recent = average(wheelSizes)
+  if (wheelPhase === 'rising') {
+    wheelPeak = Math.max(wheelPeak, recent)
+    if (recent < wheelPeak * 0.7) {
+      wheelPhase = 'fading'
+      wheelTrough = recent
+    }
+  } else if (wheelPhase === 'fading') {
+    wheelTrough = Math.min(wheelTrough, recent)
+    if (recent > wheelTrough * WHEEL_REPUSH && recent - wheelTrough > WHEEL_REPUSH_MIN) {
+      wheelPhase = 'pending'
+      wheelTravel = 0
+    }
+  }
+  if (gliding || !delta || wheelPhase !== 'pending') {
     return
   }
   const direction: Direction = delta > 0 ? 1 : -1
-  if (wheelGesture === 'inside' || roomInside(direction) > 2) {
-    wheelGesture = 'inside'
+  if (roomInside(direction) > 2) {
     scrollInside(direction, size)
     return
   }
   wheelTravel += delta
-  if (Math.abs(wheelTravel) >= WHEEL_THRESHOLD) {
-    wheelGesture = 'spent'
+  if (Math.abs(wheelTravel) >= WHEEL_TRAVEL) {
+    wheelPhase = 'rising'
+    wheelPeak = recent
     moveToStop(direction)
   }
+}
+
+function average(values: number[]) {
+  return values.reduce((sum, value) => sum + value, 0) / values.length
 }
 
 function onKeydown(event: KeyboardEvent) {

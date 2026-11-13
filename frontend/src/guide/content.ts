@@ -208,6 +208,19 @@ const ro: Guide = {
       ],
       sources: [{ label: 'Contact ACIEE', url: CONTACT }],
     },
+    {
+      id: 'fun',
+      title: 'Distracție și prieteni',
+      short: 'Nu uita să te distrezi și să-ți faci prieteni!',
+      mark: 'să te distrezi și să-ți faci prieteni',
+      points: [
+        'Colegii din grupă sunt cei cu care înveți, împarți notițele și treci prin sesiuni timp de patru ani.',
+        'Intră într-o organizație studențească, la un hackathon sau într-o echipă de sport: e cel mai simplu mod să cunoști oameni din alți ani.',
+        'Studenții din anii mari știu ce profesori, laboratoare și examene cer mai multă atenție. Întreabă-i.',
+        'Și odihna contează. O seară liberă înainte de examen nu e timp pierdut.',
+      ],
+      sources: [],
+    },
   ],
 }
 
@@ -378,6 +391,19 @@ const en: Guide = {
         'They only see students during set hours, usually around 12:00-14:00. Check the current hours yourself before you go.',
       ],
       sources: [{ label: 'ACIEE contact', url: CONTACT }],
+    },
+    {
+      id: 'fun',
+      title: 'Fun and friends',
+      short: 'Don’t forget to have fun and build connections!',
+      mark: 'have fun and build connections',
+      points: [
+        'The people in your group are the ones you will study with, share notes with and get through exam sessions with for four years.',
+        'Join a student organisation, a hackathon or a sports team: it is the easiest way to meet people from other years.',
+        'Older students know which professors, labs and exams need extra care. Ask them.',
+        'Rest counts too. A free evening before an exam is not wasted time.',
+      ],
+      sources: [],
     },
   ],
 }
@@ -550,6 +576,19 @@ const uk: Guide = {
       ],
       sources: [{ label: 'Контакти ACIEE', url: CONTACT }],
     },
+    {
+      id: 'fun',
+      title: 'Розваги й друзі',
+      short: 'Не забувай розважатися й заводити знайомства!',
+      mark: 'розважатися й заводити знайомства',
+      points: [
+        'З одногрупниками ти чотири роки вчитимешся, ділитимешся конспектами й переживатимеш сесії.',
+        'Долучайся до студентської організації, хакатону чи спортивної команди: так найпростіше познайомитися зі студентами інших курсів.',
+        'Старшокурсники знають, до яких викладачів, лабораторних та іспитів варто поставитися уважніше. Питай їх.',
+        'Відпочинок теж важливий. Вільний вечір перед іспитом не є втраченим часом.',
+      ],
+      sources: [],
+    },
   ],
 }
 
@@ -720,6 +759,19 @@ const ru: Guide = {
         'Студентов принимают только в определённые часы, обычно примерно 12:00-14:00. Перед тем как идти, сам проверь актуальные часы.',
       ],
       sources: [{ label: 'Контакты ACIEE', url: CONTACT }],
+    },
+    {
+      id: 'fun',
+      title: 'Отдых и друзья',
+      short: 'Не забывай развлекаться и заводить знакомства!',
+      mark: 'развлекаться и заводить знакомства',
+      points: [
+        'С одногруппниками ты четыре года будешь учиться, делиться конспектами и переживать сессии.',
+        'Вступай в студенческую организацию, иди на хакатон или в спортивную команду: так проще всего познакомиться со студентами других курсов.',
+        'Старшекурсники знают, к каким преподавателям, лабораторным и экзаменам стоит отнестись внимательнее. Спрашивай их.',
+        'Отдых тоже важен. Свободный вечер перед экзаменом не потерянное время.',
+      ],
+      sources: [],
     },
   ],
 }
