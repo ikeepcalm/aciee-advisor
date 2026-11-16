@@ -279,7 +279,8 @@
       "seminar_hours": "Ore seminar / săpt.",
       "lab_hours": "Ore laborator / săpt.",
       "project_hours": "Ore proiect / săpt.",
-      "breaks": "Vacanțe"
+      "breaks": "Vacanțe",
+      "hours": "Ore / săpt. (C / S / L / P)"
     },
     "search": "Caută",
     "add": "Adaugă",
@@ -298,7 +299,35 @@
     "rangeFrom": "Prima zi",
     "rangeTo": "Ultima zi",
     "rangeAdd": "Adaugă o perioadă",
-    "rangeRemove": "Șterge perioada"
+    "rangeRemove": "Șterge perioada",
+    "groups": {
+      "year": "În fiecare an",
+      "people": "Oameni",
+      "catalogue": "Curriculum",
+      "records": "Evidență"
+    },
+    "hints": {
+      "academic_year": "Începe de aici în fiecare toamnă: un rând pe an universitar, de la prima zi până în ziua dinaintea anului următor.",
+      "semester": "Cele două semestre ale anului, cu vacanțele. Săptămânile pare/impare și calendarul se calculează din aceste date.",
+      "study_group": "Un rând pe grupă și an (de exemplu 22C31). Apoi „Generează cursurile grupei” copiază disciplinele din plan.",
+      "subgroup": "Semigrupele unei grupe (A, B) pentru laboratoare și seminare.",
+      "course_offering": "Cursurile unei grupe în anul curent. De obicei generate din grupă; aici doar excepțiile.",
+      "teaching_assignment": "Cine predă ce: un profesor, un curs al grupei și o componentă (curs, seminar, laborator), opțional pentru o semigrupă.",
+      "leaders": "Aprobă studenții care cer să fie șefi de grupă și retrage rolul.",
+      "professor": "Cadrele didactice afișate pe paginile cursurilor și profesorilor. Arhivează în loc să ștergi pe cine a plecat.",
+      "faculty": "Facultăți. Se schimbă rar.",
+      "department": "Departamentele unei facultăți. Se schimbă rar.",
+      "specialization": "Programe de studii, de exemplu Calculatoare. Se schimbă rar.",
+      "subject": "Toate disciplinele din planuri, după codul oficial.",
+      "study_plan": "Planul de învățământ al unui program și anii de admitere cărora li se aplică.",
+      "curriculum_item": "Disciplinele unui plan, pe an și semestru, cu orele săptămânale.",
+      "history": "Fiecare modificare făcută în admin, cine a făcut-o și când.",
+      "reports": "Rezultatele agregate ale evaluărilor, exportabile pentru facultate."
+    },
+    "name": "Nume",
+    "actions": "Acțiuni",
+    "empty": "Nimic încă. Apasă Adaugă pentru primul rând.",
+    "deleteConfirm": "Apasă din nou pentru a șterge"
   },
   "rate": {
     "allDone": "Gata, mulțumim!",

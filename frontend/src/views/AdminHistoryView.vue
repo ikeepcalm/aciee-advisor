@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
-import AdminSections from '@/components/AdminSections.vue'
+import AdminShell from '@/components/AdminShell.vue'
 import AppNotice from '@/components/AppNotice.vue'
 import { api, describeError } from '@/api'
 
@@ -44,10 +44,7 @@ onMounted(() => load())
 </script>
 
 <template>
-  <main class="page">
-    <span class="eyebrow">{{ t('nav.admin') }}</span>
-    <h1 class="h1">{{ t('admin.sections.history') }}</h1>
-    <AdminSections />
+  <AdminShell :title="t('admin.sections.history')">
     <form class="mt-4 flex flex-wrap gap-2" @submit.prevent="load()">
       <input
         v-model.trim="table"
@@ -92,5 +89,5 @@ onMounted(() => load())
     <button v-if="more" class="btn btn-outline mt-4 w-full" @click="load(true)">
       {{ t('admin.more') }}
     </button>
-  </main>
+  </AdminShell>
 </template>

@@ -2,7 +2,7 @@
 import { computed, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { Loader2 } from 'lucide-vue-next'
-import AdminSections from '@/components/AdminSections.vue'
+import AdminShell from '@/components/AdminShell.vue'
 import AppNotice from '@/components/AppNotice.vue'
 import SegmentedChips from '@/components/SegmentedChips.vue'
 import { api, ApiError, describeError, lookups, type Option } from '@/api'
@@ -89,12 +89,7 @@ onMounted(async () => {
 </script>
 
 <template>
-  <main class="page-wide">
-    <span class="eyebrow">{{ t('nav.admin') }}</span>
-    <h1 class="h1">{{ t('admin.sections.reports') }}</h1>
-    <div class="max-w-3xl">
-      <AdminSections />
-    </div>
+  <AdminShell :title="t('admin.sections.reports')">
     <form class="card mt-4 grid gap-4 md:grid-cols-2" @submit.prevent>
       <div class="md:col-span-2"><SegmentedChips v-model="type" :options="types" /></div>
       <label class="field" for="report-specialization">
@@ -179,5 +174,5 @@ onMounted(async () => {
       </div>
       <p class="mt-3 text-xs text-muted">{{ t('reports.note') }}</p>
     </template>
-  </main>
+  </AdminShell>
 </template>

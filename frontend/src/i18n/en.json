@@ -279,7 +279,8 @@
       "seminar_hours": "Seminar hours / week",
       "lab_hours": "Lab hours / week",
       "project_hours": "Project hours / week",
-      "breaks": "Breaks"
+      "breaks": "Breaks",
+      "hours": "Hours / week (C / S / L / P)"
     },
     "search": "Search",
     "add": "Add",
@@ -298,7 +299,35 @@
     "rangeFrom": "First day",
     "rangeTo": "Last day",
     "rangeAdd": "Add a period",
-    "rangeRemove": "Remove period"
+    "rangeRemove": "Remove period",
+    "groups": {
+      "year": "Each year",
+      "people": "People",
+      "catalogue": "Curriculum",
+      "records": "Records"
+    },
+    "hints": {
+      "academic_year": "Start here each autumn: one row per academic year, from its first day to the day before the next one starts.",
+      "semester": "The two semesters of a year with their vacations. Odd/even weeks and the calendar feed are counted from these dates.",
+      "study_group": "One row per group and year (for example 22C31). Then use “Generate the group's courses” to copy its subjects from the plan.",
+      "subgroup": "The halves of a group (A, B) that labs and seminars are split into.",
+      "course_offering": "The courses a group takes this year. Usually generated from the group, edited here only for exceptions.",
+      "teaching_assignment": "Who teaches what: a professor, a group course and a component (lecture, seminar, lab), optionally for one subgroup.",
+      "leaders": "Approve students who ask to lead a group, and revoke leaders.",
+      "professor": "Teachers shown on course and professor pages. Archive instead of deleting someone who has left.",
+      "faculty": "Faculties. Rarely changes.",
+      "department": "Departments within a faculty. Rarely changes.",
+      "specialization": "Study programmes such as Calculatoare. Rarely changes.",
+      "subject": "Every subject that appears in any plan, by its official code.",
+      "study_plan": "A curriculum for one programme and the years of admission it applies to.",
+      "curriculum_item": "The subjects of a plan, by year and semester, with their weekly hours.",
+      "history": "Every change made in admin, who made it and when.",
+      "reports": "Aggregated rating results, exportable for the faculty."
+    },
+    "name": "Name",
+    "actions": "Actions",
+    "empty": "Nothing here yet. Use Add to create the first one.",
+    "deleteConfirm": "Click again to delete"
   },
   "rate": {
     "allDone": "All done, thank you!",

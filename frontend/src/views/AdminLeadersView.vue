@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
-import AdminSections from '@/components/AdminSections.vue'
+import AdminShell from '@/components/AdminShell.vue'
 import AppNotice from '@/components/AppNotice.vue'
 import { api, describeError } from '@/api'
 
@@ -44,10 +44,7 @@ onMounted(() => load().catch((e) => (error.value = describeError(t, e))))
 </script>
 
 <template>
-  <main class="page">
-    <span class="eyebrow">{{ t('nav.admin') }}</span>
-    <h1 class="h1">{{ t('admin.leadersTitle') }}</h1>
-    <AdminSections />
+  <AdminShell :title="t('admin.leadersTitle')">
     <AppNotice v-if="error" kind="error">{{ error }}</AppNotice>
 
     <h2 class="eyebrow mt-8 mb-3">{{ t('admin.pendingClaims') }}</h2>
@@ -98,5 +95,5 @@ onMounted(() => load().catch((e) => (error.value = describeError(t, e))))
         {{ t('admin.revoke') }}
       </button>
     </p>
-  </main>
+  </AdminShell>
 </template>

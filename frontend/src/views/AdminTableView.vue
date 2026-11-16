@@ -2,12 +2,14 @@
 import { computed, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
-import AdminSections from '@/components/AdminSections.vue'
+import AdminShell from '@/components/AdminShell.vue'
 import ComboSelect from '@/components/ComboSelect.vue'
 import DateRangeField from '@/components/DateRangeField.vue'
 import AppNotice from '@/components/AppNotice.vue'
 import AppSheet from '@/components/AppSheet.vue'
+import { Plus, Trash2 } from 'lucide-vue-next'
 import { api, describeError } from '@/api'
+import { parseRanges } from '@/dateRange'
 
 interface Column {
   name: string
@@ -31,7 +33,21 @@ const placeholders: Record<string, string> = {
   timestamptz: '2027-02-15 00:00+02',
 }
 
-const { t } = useI18n()
+// The columns worth scanning in the list; the rest are one click away in the form.
+const summaries: Record<string, string[]> = {
+  faculty: ['code'],
+  department: ['faculty_id'],
+  specialization: ['code', 'degree', 'duration_years'],
+  subject: ['name_en'],
+  curriculum_item: ['plan_id', 'hours', 'elective_slot'],
+  academic_year: ['during'],
+  semester: ['during', 'breaks', 'rating_opens_at'],
+  study_group: ['plan_id', 'study_year', 'max_size'],
+  professor: ['title_code', 'department_id', 'archived_at'],
+  teaching_assignment: ['component', 'subgroup_id', 'valid_during'],
+}
+
+const { t, locale } = useI18n()
 const route = useRoute()
 const tables = ref<Table[]>([])
 const rows = ref<Row[]>([])
@@ -44,6 +60,7 @@ const editingId = ref<string | null>(null)
 const formError = ref('')
 const options = ref<Record<string, Option[]>>({})
 const loaded = ref(false)
+const confirmDelete = ref(false)
 
 const key = computed(() => route.params.table as string)
 const table = computed(() => tables.value.find((candidate) => candidate.key === key.value))
@@ -53,8 +70,38 @@ const open = computed({
   set: (v) => v || (editing.value = null),
 })
 
-function shown(row: Row, column: Column) {
-  return column.ref ? row[`${column.name}_label`] : row[column.name]
+const summary = computed(() => summaries[key.value] ?? [])
+
+function day(date: string) {
+  return new Date(`${date}T00:00:00Z`).toLocaleDateString(locale.value, {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+    timeZone: 'UTC',
+  })
+}
+
+function display(row: Row, name: string) {
+  if (name === 'hours') {
+    return ['lecture_hours', 'seminar_hours', 'lab_hours', 'project_hours']
+      .map((hours) => row[hours] ?? 0)
+      .join(' / ')
+  }
+  const column = table.value?.columns.find((candidate) => candidate.name === name)
+  const value = column?.ref ? row[`${name}_label`] : row[name]
+  if (!value) return '—'
+  if (column?.type === 'daterange' || column?.type === 'datemultirange') {
+    return parseRanges(value)
+      .map(({ from, to }) => `${from ? day(from) : '…'} – ${to ? day(to) : '…'}`)
+      .join(', ')
+  }
+  if (column?.type === 'timestamptz') {
+    return new Date(value.replace(' ', 'T').replace(/([+-]\d\d)$/, '$1:00')).toLocaleString(
+      locale.value,
+      { dateStyle: 'medium', timeStyle: 'short' },
+    )
+  }
+  return value
 }
 
 async function load(append = false) {
@@ -87,6 +134,7 @@ async function loadOptions(column: Column, filter = '') {
 
 function openForm(row: Row | null) {
   formError.value = ''
+  confirmDelete.value = false
   editingId.value = row?.id ?? null
   editing.value = Object.fromEntries(
     editable.value.map((column) => [column.name, row?.[column.name] ?? '']),
@@ -115,6 +163,21 @@ async function save() {
   }
 }
 
+async function remove() {
+  if (!confirmDelete.value) {
+    confirmDelete.value = true
+    return
+  }
+  try {
+    await api('DELETE', `/api/admin/tables/${key.value}/${editingId.value}`)
+    editing.value = null
+    await load()
+  } catch (e) {
+    formError.value = describeError(t, e)
+    confirmDelete.value = false
+  }
+}
+
 async function act(method: string, path: string, done = '') {
   error.value = ''
   notice.value = ''
@@ -135,89 +198,120 @@ watch(
   },
   { immediate: true },
 )
+
+let searchTimer: ReturnType<typeof setTimeout> | undefined
+watch(search, () => {
+  clearTimeout(searchTimer)
+  searchTimer = setTimeout(() => load(), 300)
+})
 </script>
 
 <template>
-  <main class="page lg:max-w-6xl">
-    <span class="eyebrow">{{ t('nav.admin') }}</span>
-    <h1 class="h1">{{ t(`admin.sections.${key}`) }}</h1>
-    <div class="max-w-3xl">
-      <AdminSections />
-    </div>
-    <form class="mt-4 flex max-w-3xl flex-wrap gap-2" @submit.prevent="load()">
+  <AdminShell :title="t(`admin.sections.${key}`)">
+    <div class="mt-5 flex flex-wrap items-center gap-2">
       <input
         v-model.trim="search"
+        type="search"
         class="input min-w-40 flex-1"
         :placeholder="t('admin.search')"
         :aria-label="t('admin.search')"
       />
-      <button type="submit" class="btn btn-primary">{{ t('admin.search') }}</button>
-      <button type="button" class="btn btn-outline" @click="openForm(null)">
+      <button type="button" class="btn btn-primary" @click="openForm(null)">
+        <Plus class="size-4" aria-hidden="true" />
         {{ t('admin.add') }}
       </button>
-    </form>
+    </div>
     <AppNotice v-if="error" kind="error">{{ error }}</AppNotice>
     <AppNotice v-if="notice" kind="success">{{ notice }}</AppNotice>
 
     <p v-if="loaded && !rows.length" class="mt-6 text-sm text-muted">
-      {{ t('common.noResults') }}
+      {{ t(search ? 'common.noResults' : 'admin.empty') }}
     </p>
-    <div class="mt-4 grid gap-x-10 lg:grid-cols-2">
-      <div v-for="row in rows" :key="row.id!" class="border-t border-line py-3">
-        <strong class="block font-semibold [overflow-wrap:anywhere]">{{ row.label }}</strong>
-        <dl class="mt-1 grid grid-cols-[auto_1fr] gap-x-3 gap-y-0.5 text-xs">
-          <template v-for="column in table?.columns" :key="column.name">
-            <dt class="text-muted">{{ t(`admin.columns.${column.name}`) }}</dt>
-            <dd class="m-0 [overflow-wrap:anywhere]">{{ shown(row, column) ?? '—' }}</dd>
-          </template>
-        </dl>
-        <div class="mt-2 flex flex-wrap gap-1">
-          <button class="btn btn-ghost btn-sm" @click="openForm(row)">
-            {{ t('admin.edit') }}
-          </button>
-          <button
-            class="btn btn-danger btn-sm border-transparent"
-            @click="act('DELETE', `/api/admin/tables/${key}/${row.id}`)"
+    <table v-else-if="rows.length" class="mt-4 w-full border-collapse text-sm">
+      <thead>
+        <tr class="border-b-[1.5px] border-line text-left text-xs text-muted">
+          <th class="py-2 pr-3 font-medium">{{ t('admin.name') }}</th>
+          <th
+            v-for="column in summary"
+            :key="column"
+            class="hidden py-2 pr-3 font-medium md:table-cell"
           >
-            {{ t('admin.delete') }}
-          </button>
-          <button
-            v-if="key === 'professor' && !row.archived_at"
-            class="btn btn-ghost btn-sm text-muted"
-            @click="act('POST', `/api/admin/tables/professor/${row.id}/archive`)"
+            {{ t(`admin.columns.${column}`) }}
+          </th>
+          <th class="py-2">
+            <span class="sr-only">{{ t('admin.actions') }}</span>
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr
+          v-for="row in rows"
+          :key="row.id!"
+          class="cursor-pointer border-b border-line/60 align-top transition-colors hover:bg-panel"
+          @click="openForm(row)"
+        >
+          <td class="py-2.5 pr-3">
+            <button
+              type="button"
+              class="cursor-pointer text-left font-semibold [overflow-wrap:anywhere] hover:text-mask"
+              @click.stop="openForm(row)"
+            >
+              {{ row.label }}
+            </button>
+            <span
+              v-if="summary.length"
+              class="mt-0.5 block text-xs text-muted [overflow-wrap:anywhere] md:hidden"
+            >
+              {{ summary.map((column) => display(row, column)).join(' · ') }}
+            </span>
+          </td>
+          <td
+            v-for="column in summary"
+            :key="column"
+            class="hidden py-2.5 pr-3 [overflow-wrap:anywhere] md:table-cell"
+            :class="column === 'hours' && 'mono'"
           >
-            {{ t('admin.archive') }}
-          </button>
-          <button
-            v-if="key === 'study_group'"
-            class="btn btn-ghost btn-sm text-muted"
-            @click="
-              act(
-                'POST',
-                `/api/admin/tables/study_group/${row.id}/offerings`,
-                'admin.offeringsCreated',
-              )
-            "
-          >
-            {{ t('admin.createOfferings') }}
-          </button>
-          <button
-            v-if="key === 'academic_year'"
-            class="btn btn-ghost btn-sm text-muted"
-            @click="
-              act(
-                'POST',
-                `/api/admin/tables/academic_year/${row.id}/rollover`,
-                'admin.rolloverDone',
-              )
-            "
-          >
-            {{ t('admin.rollover') }}
-          </button>
-        </div>
-      </div>
-    </div>
-    <button v-if="more" class="btn btn-outline mt-4 w-full max-w-3xl" @click="load(true)">
+            {{ display(row, column) }}
+          </td>
+          <td class="py-1.5 text-right whitespace-nowrap">
+            <button
+              v-if="key === 'study_group'"
+              class="btn btn-ghost btn-sm"
+              @click.stop="
+                act(
+                  'POST',
+                  `/api/admin/tables/study_group/${row.id}/offerings`,
+                  'admin.offeringsCreated',
+                )
+              "
+            >
+              {{ t('admin.createOfferings') }}
+            </button>
+            <button
+              v-if="key === 'academic_year'"
+              class="btn btn-ghost btn-sm"
+              @click.stop="
+                act(
+                  'POST',
+                  `/api/admin/tables/academic_year/${row.id}/rollover`,
+                  'admin.rolloverDone',
+                )
+              "
+            >
+              {{ t('admin.rollover') }}
+            </button>
+            <button
+              v-if="key === 'professor' && !row.archived_at"
+              class="btn btn-ghost btn-sm text-muted"
+              @click.stop="act('POST', `/api/admin/tables/professor/${row.id}/archive`)"
+            >
+              {{ t('admin.archive') }}
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <button v-if="more" class="btn btn-outline mt-4 w-full" @click="load(true)">
       {{ t('admin.more') }}
     </button>
 
@@ -253,8 +347,20 @@ watch(
           />
         </div>
         <AppNotice v-if="formError" kind="error" class="my-0">{{ formError }}</AppNotice>
-        <button type="submit" class="btn btn-primary w-full">{{ t('admin.save') }}</button>
+        <div class="flex flex-wrap gap-2">
+          <button type="submit" class="btn btn-primary flex-1">{{ t('admin.save') }}</button>
+          <button
+            v-if="editingId"
+            type="button"
+            class="btn btn-danger"
+            :class="confirmDelete && 'bg-danger text-white'"
+            @click="remove"
+          >
+            <Trash2 class="size-4" aria-hidden="true" />
+            {{ t(confirmDelete ? 'admin.deleteConfirm' : 'admin.delete') }}
+          </button>
+        </div>
       </form>
     </AppSheet>
-  </main>
+  </AdminShell>
 </template>
