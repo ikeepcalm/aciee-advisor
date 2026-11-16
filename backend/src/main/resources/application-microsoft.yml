@@ -11,4 +11,4 @@ spring:
         provider:
           microsoft:
             issuer-uri: https://login.microsoftonline.com/${app.entra-tenant-id}/v2.0
-            user-name-attribute: oid
+            user-name-attribute: sub
