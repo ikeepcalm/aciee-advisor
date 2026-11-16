@@ -9,7 +9,7 @@ One VPS running the deploy tool. Each environment is a deploy-tool **Docker Comp
 | `web` | `frontend/Dockerfile` | nginx: the SPA, and `/api` + `/anon` proxied to `backend:8080` |
 | `backup` | postgres:18 | `pg_dump -Fc` once a day into the `backups` volume, 14 days kept |
 
-Only `web` gets a domain. the deploy tool's proxy terminates HTTPS and forwards to `web:80`. The browser sees one origin, so there is no CORS, and the session cookie stays `Secure` + `SameSite=Lax`.
+Only `web` is reachable from outside: it publishes `127.0.0.1:${WEB_PORT}`, and the host nginx (certbot certificates, the deploy tool's proxy is not used) terminates HTTPS and proxies to it, setting `X-Forwarded-Proto`. The browser sees one origin, so there is no CORS, and the session cookie stays `Secure` + `SameSite=Lax`.
 
 ## Environments
 
