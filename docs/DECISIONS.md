@@ -239,12 +239,12 @@ Format: context → decision → consequences. Never rewrite an accepted ADR; su
 
 **Consequences.** A new table needs one enum entry and its labels. The database stays the only validator: the form shows the constraint the row broke. Domain screens (groups, ratings) keep their own endpoints and messages.
 
-## ADR-026 — the deploy tool with Docker Compose instead of Caddy
-**Context.** The plan was Docker Compose plus Caddy for HTTPS on one VPS. The server is a VPS that already runs the deploy tool, whose Traefik proxy issues certificates and routes domains to containers.
+## ADR-026 — Docker Compose behind the host's reverse proxy instead of Caddy
+**Context.** The plan was Docker Compose plus Caddy for HTTPS on one VPS. The server already runs a reverse proxy that issues certificates and routes domains for other services.
 
-**Decision.** Deploy each environment as a deploy-tool Docker Compose resource (`infra/docker-compose.prod.yml`). An nginx container serves the SPA and proxies `/api` and `/anon` to the backend, so one domain covers both and there is still no CORS. The Postgres image bakes in the role script instead of bind-mounting it from the repository. A `backup` service runs `pg_dump` daily.
+**Decision.** Deploy each environment as one Docker Compose project (`infra/docker-compose.prod.yml`). An nginx container serves the SPA and proxies `/api` and `/anon` to the backend, so one domain covers both and there is still no CORS. Only that container publishes a port, on `127.0.0.1`, for the host's proxy. The Postgres image bakes in the role script instead of bind-mounting it from the repository. A `backup` service runs `pg_dump` daily.
 
-**Consequences.** No Caddyfile. The compose file also runs with plain `docker compose` given the same environment variables. nginx passes on Traefik's `X-Forwarded-Proto`, which Spring trusts from private addresses, so secure cookies work behind two proxies.
+**Consequences.** No Caddyfile. The compose file runs with plain `docker compose` given the same environment variables. nginx passes on the host proxy's `X-Forwarded-Proto`, which Spring trusts from private addresses, so secure cookies work behind two proxies.
 
 ## ADR-027 — Pitch-day shortcuts on the anonymous side
 **Context.** The project is presented at pitch day. Students need every view working; several protections in ARCHITECTURE §3 cost more than they are worth before launch.

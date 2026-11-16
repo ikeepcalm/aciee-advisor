@@ -1,6 +1,6 @@
 # ACIEE Advisor — Deployment
 
-One VPS running the deploy tool. Each environment is a deploy-tool **Docker Compose** resource built from this repository with `infra/docker-compose.prod.yml`:
+Each environment is one Docker Compose project built from this repository with `infra/docker-compose.prod.yml`, on any host that runs Docker Compose behind an HTTPS reverse proxy:
 
 | Service | Image | Role |
 |---|---|---|
@@ -9,43 +9,47 @@ One VPS running the deploy tool. Each environment is a deploy-tool **Docker Comp
 | `web` | `frontend/Dockerfile` | nginx: the SPA, and `/api` + `/anon` proxied to `backend:8080` |
 | `backup` | postgres:18 | `pg_dump -Fc` once a day into the `backups` volume, 14 days kept |
 
-Only `web` is reachable from outside: it publishes `127.0.0.1:${WEB_PORT}`, and the host nginx (certbot certificates, the deploy tool's proxy is not used) terminates HTTPS and proxies to it, setting `X-Forwarded-Proto`. The browser sees one origin, so there is no CORS, and the session cookie stays `Secure` + `SameSite=Lax`.
+Only `web` is reachable from outside: it publishes `127.0.0.1:${WEB_PORT}` (default 8080), and the host's reverse proxy terminates HTTPS and forwards to it. The proxy must set `X-Forwarded-Proto` (the session cookie is `Secure`, and Microsoft sign-in builds its redirect URL from it) and allow a read timeout of about two minutes for the signing-key batch. The browser sees one origin, so there is no CORS, and the session cookie stays `Secure` + `SameSite=Lax`.
 
 ## Environments
 
-| the deploy tool resource | Domain | `LIQUIBASE_CONTEXTS` |
+| Environment | Domain | `LIQUIBASE_CONTEXTS` |
 |---|---|---|
-| app | `https://acieeadvisor.com` (and `www.` redirecting to it) | `prod` (no fixtures) |
+| app | `https://acieeadvisor.com` (and `www.`) | `prod` (no fixtures) |
 | demo | `https://demo.acieeadvisor.com` | `fixtures` (synthetic data, demo accounts) |
 
 The demo accounts are `demo.admin`, `demo.moderator`, `demo.leader` and `demo.student` `@student.ugal.ro`, all with the password `demo-parola`. They exist only where the `fixtures` context ran.
 
-## Setting up a resource
+## Setting up an environment
 
-1. the deploy tool → Project → New resource → Public/Private repository → `ikeepcalm/aciee-advisor`, branch `main`.
-2. Build pack **Docker Compose**, base directory `/infra`, compose file `/docker-compose.prod.yml` (with base `/` the deploy tool resolves the `../backend` build contexts from the repo root and the build fails).
-3. Environment variables (generate each password with `openssl rand -base64 32`):
+1. Point your deploy tool at `infra/docker-compose.prod.yml` with `infra/` as the working directory, so the `../backend` and `../frontend` build contexts resolve.
+2. Environment variables (generate each password with `openssl rand -base64 32`):
 
    | Variable | Value |
    |---|---|
    | `POSTGRES_PASSWORD` | migrator / superuser `aciee` |
    | `ACIEE_IDENT_PASSWORD`, `ACIEE_ANON_PASSWORD`, `ACIEE_REPORT_PASSWORD` | app roles |
    | `LIQUIBASE_CONTEXTS` | `prod` or `fixtures` |
-   | `MAIL_HOST`, `MAIL_PORT`, `MAIL_USER`, `MAIL_PASSWORD` | SMTP provider (port 587, STARTTLS; the VPS provider blocks outbound 25 and 465, so never use those) |
+   | `MAIL_HOST`, `MAIL_PORT`, `MAIL_USER`, `MAIL_PASSWORD` | SMTP provider, port 587 with STARTTLS (many VPS providers block outbound 25 and 465) |
    | `MAIL_FROM` | `ACIEE Advisor <no-reply@acieeadvisor.com>` |
+   | `FEEDBACK_TO` | inbox for the "Report a problem" form; empty disables sending |
    | `PUBLIC_URL` | `https://acieeadvisor.com` (`https://demo.acieeadvisor.com` on demo); absolute links in the WhatsApp/Telegram link-preview cards |
+   | `WEB_PORT` | host port `web` publishes on `127.0.0.1` for the reverse proxy |
    | `SPRING_PROFILES_ACTIVE`, `ENTRA_CLIENT_ID`, `ENTRA_CLIENT_SECRET` | `microsoft` and the app registration below, to turn on Microsoft sign-in; leave empty to hide it |
 
    The role passwords are read only when the `pgdata` volume is created. Changing them later needs `ALTER ROLE … PASSWORD` in the database as well.
-4. Under the `web` service, set the domain (`https://acieeadvisor.com`). Leave the other services without a domain.
-5. Deploy. The first start runs every Liquibase changeset. With `fixtures` this takes about a minute.
+3. Deploy. The first start runs every Liquibase changeset. With `fixtures` this takes about a minute.
+
+## Professor profiles
+
+The CV summaries and portraits of professors are personal data copied from the university's site, so they are not in this repository. `core.professor_profile` starts empty; load the rows into the database once (`psql -f`), and copy the portraits into the `professor-photos` volume, which `web` serves at `/professors/`. A profile matches a professor by `core.name_key(full_name)`.
 
 ## Microsoft sign-in
 
 The button "Continuă cu Microsoft" appears only when the app runs with the `microsoft` profile (ADR-030).
 
 1. Register the app in Microsoft Entra (portal.azure.com → App registrations → New registration), signed in with a `@student.ugal.ro` account if the tenant allows students to register apps, otherwise ask the university's IT administrator.
-   - What worked for prod (2026-11-16): students cannot register apps in the UGAL tenant, so the app lives in a personal Entra directory as **multitenant** (`signInAudience: AzureADMultipleOrgs`). The portal refuses that change until the manifest's `api.requestedAccessTokenVersion` is `2`. UGAL allowed user consent for it, so no IT involvement was needed. Sign-in still goes through UGAL's tenant endpoint and checks `tid`, so other organisations are refused.
+   - If students cannot register apps in the UGAL tenant, register it in another directory as **multitenant** (`signInAudience: AzureADMultipleOrgs`); the portal refuses that change until the manifest's `api.requestedAccessTokenVersion` is `2`. Sign-in still goes through UGAL's tenant endpoint and checks `tid`, so other organisations are refused.
    - Supported account types: **this organizational directory only** (UGAL, tenant `445e5699-60fa-4f59-8e7f-778197a4d740`).
    - Redirect URI, platform **Web**: `https://acieeadvisor.com/api/auth/oauth2/code/microsoft` (add `https://demo.acieeadvisor.com/…` and `http://localhost:8080/…` for the other environments).
 2. Certificates & secrets → New client secret. Copy the value (shown once) into `ENTRA_CLIENT_SECRET`, the Application (client) ID into `ENTRA_CLIENT_ID`.
@@ -67,7 +71,7 @@ Before launch, send a verification code to a real `@student.ugal.ro` inbox and c
 
 ## First admin
 
-Sign up on the site, verify the code, then grant the role from the deploy tool's terminal of `db`:
+Sign up on the site, verify the code, then grant the role from a shell in the `db` container:
 
 ```
 psql -U aciee -d aciee -c "INSERT INTO core.user_role (user_id, role_code) SELECT id, 'admin' FROM core.user_account WHERE email = '<you>@student.ugal.ro'"
@@ -77,7 +81,7 @@ Sign out and in again so the session picks up the role.
 
 ## Backups
 
-`backup` writes `/backups/aciee-YYYY-MM-DD.dump` into the `backups` volume. Copying off the server is still manual: either point object storage backup at the volume, or `rsync` it to a a storage box from a cron job on the host. To restore into an empty database:
+`backup` writes `/backups/aciee-YYYY-MM-DD.dump` into the `backups` volume. Copying off the server is still manual: sync the volume to object storage or another machine from a cron job on the host. To restore into an empty database:
 
 ```
 pg_restore -U aciee -d aciee --clean --if-exists /backups/aciee-YYYY-MM-DD.dump

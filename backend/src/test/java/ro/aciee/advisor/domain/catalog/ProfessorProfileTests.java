@@ -34,6 +34,11 @@ class ProfessorProfileTests {
 
     @Test
     void matchesTheCvProfileWhateverTheNameOrderOrDiacritics() {
+        jdbc.sql("""
+                INSERT INTO core.professor_profile (name_key, bio_ro, bio_en, photo, cv_url)
+                VALUES (core.name_key('Şuşnea Ioan'), 'Profesor.', 'Professor.', '/professors/susnea-ioan.jpg',
+                        'https://example.org/Susnea_Ioan.pdf')
+                ON CONFLICT (name_key) DO NOTHING""").update();
         TestData.insert(jdbc, """
                 INSERT INTO core.department (faculty_id, name_ro)
                 SELECT id, 'Calculatoare test' FROM core.faculty WHERE code = 'ACIEE'

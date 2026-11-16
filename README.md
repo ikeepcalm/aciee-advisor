@@ -26,7 +26,7 @@ The Postgres image creates the `aciee_ident`, `aciee_anon` and `aciee_report` lo
 
 Synthetic data: start the backend with `LIQUIBASE_CONTEXTS=fixtures` on a fresh volume (about 2% of the target volumes, demo accounts `demo.admin` / `demo.leader` / `demo.student` `@student.ugal.ro`, password `demo-parola`). `fixtures-large` loads the full volumes. Without the variable the context is `prod` and no fixtures run. The session cookie is `Secure` by default; set `COOKIE_SECURE=false` only when running locally over plain `http://localhost` (Safari drops Secure cookies there), never in production.
 
-Deployment: [docs/DEPLOY.md](docs/DEPLOY.md) (the deploy tool, Docker Compose).
+Deployment: [docs/DEPLOY.md](docs/DEPLOY.md) (Docker Compose behind an HTTPS reverse proxy).
 
 ## Documentation
 

@@ -39,19 +39,19 @@ AI review checking (plan agreed, not built): Gemini free tier; harsh-but-fair pu
 ## Professors
 
 - [x] Professor page shows an overall score (every answered axis weighted by its number of ratings) and the three pillar scores, the years each discipline was taught and an academic-year label on comments; `/professors` lists everyone with search.
-- [x] CTI department CV profiles: 13 CVs from cti.ugal.ro/structura-departament-cti summarised (ro + en) into `seed/003-professor-profiles.sql`, 9 portraits cut from the PDFs into `frontend/public/professors/`. A profile matches a professor by `core.name_key(full_name)` (sorted tokens, no diacritics), so admins must type the same first and last names; middle names break the match.
+- [x] CTI department CV profiles: 13 CVs from cti.ugal.ro/structura-departament-cti summarised (ro + en), 9 portraits cut from the PDFs. Kept out of the repository (DEPLOY.md "Professor profiles") and loaded on the server. A profile matches a professor by `core.name_key(full_name)` (sorted tokens, no diacritics), so admins must type the same first and last names; middle names break the match.
 - [ ] The other departments (automatica.ugal.ro, iesce.ugal.ro, etc.ugal.ro) were not looked at; repeat the same CV pass when their staff pages list CVs. The CTI page itself is from March 2024. Consider a yearly re-run, ideally with the Gemini key planned for moderation.
 
 ## Deploy (DEPLOY.md)
 
-- [x] Buy the domain: `acieeadvisor.com` (DNS on the CDN); `.ro` later if registration as a non-resident works.
-- [x] Choose a mail provider: Resend (SMTP 587, user `resend`, API key as password); DKIM and `send` records in the CDN. Still to add: `_dmarc` TXT and the `demo` A record.
-- [ ] Create the deploy tool's resources for `acieeadvisor.com` (context `prod`) and `demo.acieeadvisor.com` (context `fixtures`) with every variable in DEPLOY.md, including `ACIEE_REPORT_PASSWORD`, which the app now uses for the report pool.
-  - [x] 2026-11-16: prod is live at https://acieeadvisor.com (the deploy tool project "ACIEE Advisor", web on 127.0.0.1:${WEB_PORT} behind the host nginx + certbot, the CDN proxied, Full strict). Mail is a placeholder (`MAIL_HOST=smtp.not-configured.invalid`): pick Brevo or Resend on port 587. Demo resource not created yet.
+- [x] Buy the domain: `acieeadvisor.com`; `.ro` later if registration as a non-resident works.
+- [x] Choose a mail provider: Resend (SMTP 587, user `resend`, API key as password); DKIM and `send` records in DNS. Still to add: `_dmarc` TXT and the `demo` A record.
+- [ ] Create the environments for `acieeadvisor.com` (context `prod`) and `demo.acieeadvisor.com` (context `fixtures`) with every variable in DEPLOY.md, including `ACIEE_REPORT_PASSWORD`, which the app now uses for the report pool.
+  - [x] 2026-11-16: prod is live at https://acieeadvisor.com with Resend mail. Demo environment not created yet.
 - [x] First deploy, then grant yourself `admin` with the `psql` line in DEPLOY.md "First admin".
 - [x] Send a verification code from our own domain to a real `@student.ugal.ro` inbox (Resend, 2026-11-16: arrived).
-- [ ] Copy the `backups` **and** `token-keys` volumes off the server (S3 or Storage Box cron), then test a restore into the demo resource.
-- [ ] Nightly demo reset (ARCHITECTURE §8): not built yet; decide between a deploy-tool scheduled redeploy with a fresh volume and a cron job that drops and recreates the demo database.
+- [ ] Copy the `backups` **and** `token-keys` volumes off the server (object storage or a cron sync to another machine), then test a restore into the demo resource.
+- [ ] Nightly demo reset (ARCHITECTURE §8): not built yet; decide between a scheduled redeploy with a fresh volume and a cron job that drops and recreates the demo database.
 
 ## Before ratings open on an environment
 

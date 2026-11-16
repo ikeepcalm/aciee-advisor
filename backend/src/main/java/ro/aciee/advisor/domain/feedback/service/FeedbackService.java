@@ -62,7 +62,7 @@ public class FeedbackService {
         mailSender.send(mail);
     }
 
-    // shortcut: one site-wide cap, since behind the CDN the client IP is not trusted yet; add a per-IP limit once CF-Connecting-IP is.
+    // shortcut: one site-wide cap, since the client IP behind the CDN and host proxy is not trusted yet; add a per-IP limit once the real-IP header is.
     private synchronized void admit() {
         Instant now = clock.instant();
         while (!recent.isEmpty() && recent.peekFirst().isBefore(now.minus(Duration.ofHours(1)))) {

@@ -8,7 +8,7 @@
 | Database | PostgreSQL 18 (single DBMS) |
 | Frontend | Vue 3, Vite, TypeScript, Pinia, Tailwind CSS 4, reka-ui, vue-i18n (`ro` and `en`) |
 | Crypto | RFC 9474 blind RSA: Bouncy Castle `bcprov-jdk18on` ≥ 1.85.2 (server), `@cloudflare/blindrsa-ts` (browser), WebCrypto HKDF + AES-GCM |
-| Infra | Docker Compose on one VPS under the deploy tool: postgres, app, nginx (SPA + `/api` proxy), backup; the deploy tool's proxy terminates HTTPS (DEPLOY.md) |
+| Infra | Docker Compose on one VPS: postgres, app, nginx (SPA + `/api` proxy), backup; the host's reverse proxy terminates HTTPS (DEPLOY.md) |
 | Reports | OpenPDF (PDF), fastexcel (.xlsx), plain CSV |
 | Load test | k6 |
 | CI | GitHub Actions + Testcontainers |
@@ -200,7 +200,7 @@ Captures, numbers and how to rerun them: [explain-plans/README.md](explain-plans
 backend/     Spring Boot app; db/changelog/schema (schema), db/changelog/seed (real curriculum, every environment), db/changelog/fixtures (fixtures contexts only)
 tools/       curriculum/plans_to_sql.py: study-plan PDFs → the seed changeset
 frontend/    Vue 3 SPA; src/crypto holds all blind-RSA code + RFC 9474 test vectors
-infra/       docker-compose.yml (local), docker-compose.prod.yml (the deploy tool), postgres/ (role script + image)
+infra/       docker-compose.yml (local), docker-compose.prod.yml (production), postgres/ (role script + image)
 loadtest/    k6 scripts
 docs/        specification, architecture, roadmap, decisions, AI log, explain-plan captures
 ```
