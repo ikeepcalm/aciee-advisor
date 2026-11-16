@@ -23,7 +23,7 @@ The demo accounts are `demo.admin`, `demo.moderator`, `demo.leader` and `demo.st
 ## Setting up a resource
 
 1. the deploy tool → Project → New resource → Public/Private repository → `ikeepcalm/aciee-advisor`, branch `main`.
-2. Build pack **Docker Compose**, base directory `/`, compose file `/infra/docker-compose.prod.yml`.
+2. Build pack **Docker Compose**, base directory `/infra`, compose file `/docker-compose.prod.yml` (with base `/` the deploy tool resolves the `../backend` build contexts from the repo root and the build fails).
 3. Environment variables (generate each password with `openssl rand -base64 32`):
 
    | Variable | Value |
