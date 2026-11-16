@@ -45,6 +45,7 @@ The demo accounts are `demo.admin`, `demo.moderator`, `demo.leader` and `demo.st
 The button "Continuă cu Microsoft" appears only when the app runs with the `microsoft` profile (ADR-030).
 
 1. Register the app in Microsoft Entra (portal.azure.com → App registrations → New registration), signed in with a `@student.ugal.ro` account if the tenant allows students to register apps, otherwise ask the university's IT administrator.
+   - What worked for prod (2026-11-16): students cannot register apps in the UGAL tenant, so the app lives in a personal Entra directory as **multitenant** (`signInAudience: AzureADMultipleOrgs`). The portal refuses that change until the manifest's `api.requestedAccessTokenVersion` is `2`. UGAL allowed user consent for it, so no IT involvement was needed. Sign-in still goes through UGAL's tenant endpoint and checks `tid`, so other organisations are refused.
    - Supported account types: **this organizational directory only** (UGAL, tenant `445e5699-60fa-4f59-8e7f-778197a4d740`).
    - Redirect URI, platform **Web**: `https://acieeadvisor.com/api/auth/oauth2/code/microsoft` (add `https://demo.acieeadvisor.com/…` and `http://localhost:8080/…` for the other environments).
 2. Certificates & secrets → New client secret. Copy the value (shown once) into `ENTRA_CLIENT_SECRET`, the Application (client) ID into `ENTRA_CLIENT_ID`.
