@@ -5,6 +5,7 @@ import { useI18n } from 'vue-i18n'
 import { Loader2 } from 'lucide-vue-next'
 import MicrosoftSignIn from '@/components/MicrosoftSignIn.vue'
 import AppNotice from '@/components/AppNotice.vue'
+import StudentEmailField from '@/components/StudentEmailField.vue'
 import PasswordField from '@/components/PasswordField.vue'
 import { describeError } from '@/api'
 import { useAuthStore } from '@/stores/auth'
@@ -52,18 +53,7 @@ async function submit() {
     <h1 class="h1">{{ t('auth.signUp') }}</h1>
     <p class="lede text-sm">{{ t('errors.domain') }}</p>
     <form class="card mt-6 grid gap-4" @submit.prevent="submit">
-      <div class="field">
-        <label for="email">{{ t('auth.email') }}</label>
-        <input
-          id="email"
-          v-model.trim="email"
-          type="email"
-          autocomplete="email"
-          :placeholder="t('auth.emailPlaceholder')"
-          required
-          class="input"
-        />
-      </div>
+      <StudentEmailField v-model="email" />
       <div class="field">
         <label for="password">{{ t('auth.password') }}</label>
         <PasswordField id="password" v-model="password" autocomplete="new-password" />

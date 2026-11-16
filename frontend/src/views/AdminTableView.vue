@@ -4,6 +4,7 @@ import { useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import AdminSections from '@/components/AdminSections.vue'
 import ComboSelect from '@/components/ComboSelect.vue'
+import DateRangeField from '@/components/DateRangeField.vue'
 import AppNotice from '@/components/AppNotice.vue'
 import AppSheet from '@/components/AppSheet.vue'
 import { api, describeError } from '@/api'
@@ -26,7 +27,6 @@ interface Option {
 type Row = Record<string, string | null>
 
 const placeholders: Record<string, string> = {
-  daterange: '[2026-10-01,2027-10-01)',
   int4range: '[2025,)',
   timestamptz: '2027-02-15 00:00+02',
 }
@@ -233,6 +233,14 @@ watch(
             :clearable="column.nullable"
             remote
             @search="loadOptions(column, $event)"
+          />
+          <DateRangeField
+            v-else-if="column.type === 'daterange' || column.type === 'datemultirange'"
+            :id="`field-${column.name}`"
+            :key="`${editingId}-${column.name}`"
+            v-model="editing[column.name]"
+            :multiple="column.type === 'datemultirange'"
+            :required="!column.nullable"
           />
           <input
             v-else

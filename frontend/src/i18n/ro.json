@@ -70,8 +70,8 @@
   "auth": {
     "wrongEmail": "Altă adresă",
     "passwordHint": "Minimum 10 caractere.",
-    "email": "E-mail instituțional",
-    "emailPlaceholder": "prenume.nume{'@'}student.ugal.ro",
+    "email": "Utilizator universitar",
+    "emailPlaceholder": "ab123",
     "password": "Parolă",
     "confirmPassword": "Confirmă parola",
     "signUp": "Creează cont",
@@ -278,7 +278,8 @@
       "lecture_hours": "Ore curs / săpt.",
       "seminar_hours": "Ore seminar / săpt.",
       "lab_hours": "Ore laborator / săpt.",
-      "project_hours": "Ore proiect / săpt."
+      "project_hours": "Ore proiect / săpt.",
+      "breaks": "Vacanțe"
     },
     "search": "Caută",
     "add": "Adaugă",
@@ -293,7 +294,11 @@
     "more": "Mai mult",
     "historyTable": "Tabel (ex. professor)",
     "historyRow": "Id rând",
-    "system": "sistem"
+    "system": "sistem",
+    "rangeFrom": "Prima zi",
+    "rangeTo": "Ultima zi",
+    "rangeAdd": "Adaugă o perioadă",
+    "rangeRemove": "Șterge perioada"
   },
   "rate": {
     "allDone": "Gata, mulțumim!",

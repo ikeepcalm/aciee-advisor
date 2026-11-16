@@ -70,8 +70,8 @@
   "auth": {
     "wrongEmail": "Інша адреса",
     "passwordHint": "Щонайменше 10 символів.",
-    "email": "Університетська пошта",
-    "emailPlaceholder": "first.last{'@'}student.ugal.ro",
+    "email": "Університетський логін",
+    "emailPlaceholder": "ab123",
     "password": "Пароль",
     "confirmPassword": "Підтвердьте пароль",
     "signUp": "Створити обліковий запис",
@@ -278,7 +278,8 @@
       "lecture_hours": "Годин лекцій / тиждень",
       "seminar_hours": "Годин семінарів / тиждень",
       "lab_hours": "Годин лабораторних / тиждень",
-      "project_hours": "Годин проєктів / тиждень"
+      "project_hours": "Годин проєктів / тиждень",
+      "breaks": "Канікули"
     },
     "search": "Пошук",
     "add": "Додати",
@@ -293,7 +294,11 @@
     "more": "Ще",
     "historyTable": "Таблиця (напр. викладач)",
     "historyRow": "ID рядка",
-    "system": "система"
+    "system": "система",
+    "rangeFrom": "Перший день",
+    "rangeTo": "Останній день",
+    "rangeAdd": "Додати період",
+    "rangeRemove": "Видалити період"
   },
   "rate": {
     "allDone": "Готово, дякуємо!",

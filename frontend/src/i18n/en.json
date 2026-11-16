@@ -70,8 +70,8 @@
   "auth": {
     "wrongEmail": "Different address",
     "passwordHint": "At least 10 characters.",
-    "email": "University e-mail",
-    "emailPlaceholder": "first.last{'@'}student.ugal.ro",
+    "email": "University username",
+    "emailPlaceholder": "ab123",
     "password": "Password",
     "confirmPassword": "Confirm password",
     "signUp": "Create account",
@@ -278,7 +278,8 @@
       "lecture_hours": "Lecture hours / week",
       "seminar_hours": "Seminar hours / week",
       "lab_hours": "Lab hours / week",
-      "project_hours": "Project hours / week"
+      "project_hours": "Project hours / week",
+      "breaks": "Breaks"
     },
     "search": "Search",
     "add": "Add",
@@ -293,7 +294,11 @@
     "more": "More",
     "historyTable": "Table (e.g. professor)",
     "historyRow": "Row id",
-    "system": "system"
+    "system": "system",
+    "rangeFrom": "First day",
+    "rangeTo": "Last day",
+    "rangeAdd": "Add a period",
+    "rangeRemove": "Remove period"
   },
   "rate": {
     "allDone": "All done, thank you!",
