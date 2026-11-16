@@ -108,9 +108,11 @@ onUnmounted(() => URL.revokeObjectURL(url.value))
       <img
         :src="url"
         :alt="t('timetable.share.alt', alt)"
-        class="mx-auto max-h-[52dvh] w-auto max-w-full rounded-md border border-line md:max-h-[68dvh]"
+        class="mx-auto max-h-[44dvh] w-auto max-w-full rounded-md border border-line md:max-h-[60dvh]"
       />
-      <div class="flex flex-col gap-2">
+      <div
+        class="sticky -bottom-5 -mx-5 -mb-5 flex flex-col gap-2 border-t border-line bg-panel px-5 pt-3 pb-[max(1.25rem,env(safe-area-inset-bottom))]"
+      >
         <button v-if="canShare" type="button" class="btn btn-primary" @click="share">
           <Share2 class="size-4" aria-hidden="true" />
           {{ t('timetable.share.share') }}

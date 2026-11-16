@@ -119,7 +119,7 @@ async function signOut() {
 <template>
   <div class="flex min-h-dvh flex-col">
     <header
-      class="sticky top-0 z-30 border-b border-line bg-board/85 backdrop-blur supports-backdrop-filter:bg-board/70"
+      class="sticky top-0 z-30 border-b border-line bg-board md:bg-board/85 md:backdrop-blur md:supports-backdrop-filter:bg-board/70"
     >
       <div class="mx-auto flex h-14 max-w-6xl items-center gap-2 px-4 md:px-6">
         <RouterLink

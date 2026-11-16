@@ -44,31 +44,32 @@ function chooseProgram(p: TimetableProgram) {
     </div>
     <p class="step">{{ t('timetable.pickProgram') }}</p>
     <div class="programs">
-      <button
-        v-for="p in yearPrograms"
-        :key="p.code"
-        class="program"
-        :class="{ on: code === p.code }"
-        @click="chooseProgram(p)"
-      >
-        <span>{{ p.name }}</span>
-        <span class="codes">{{ p.groups.join(' · ') }}</span>
-      </button>
-    </div>
-    <template v-if="picked && picked.groups.length > 1">
-      <p class="step">{{ t('timetable.pickGroup') }}</p>
-      <div class="chips">
+      <template v-for="p in yearPrograms" :key="p.code">
         <button
-          v-for="g in picked.groups"
-          :key="g"
-          class="chip code"
-          :class="{ on: g === group }"
-          @click="emit('choose', g)"
+          class="program"
+          :class="{ on: code === p.code }"
+          :aria-expanded="p.groups.length > 1 ? code === p.code : undefined"
+          @click="chooseProgram(p)"
         >
-          {{ g }}
+          <span>{{ p.name }}</span>
+          <span class="codes">{{ p.groups.join(' · ') }}</span>
         </button>
-      </div>
-    </template>
+        <div v-if="picked === p && p.groups.length > 1" class="groups">
+          <p class="step">{{ t('timetable.pickGroup') }}</p>
+          <div class="chips">
+            <button
+              v-for="g in p.groups"
+              :key="g"
+              class="chip code"
+              :class="{ on: g === group }"
+              @click="emit('choose', g)"
+            >
+              {{ g }}
+            </button>
+          </div>
+        </div>
+      </template>
+    </div>
   </div>
 </template>
 
@@ -145,6 +146,18 @@ function chooseProgram(p: TimetableProgram) {
   font-weight: 400;
   color: var(--muted);
   overflow-wrap: anywhere;
+}
+
+/* Groups open right under the tapped programme, so on a phone they appear where the finger is. */
+.groups {
+  grid-column: 1 / -1;
+  padding: 0.25rem 0 0.75rem 1.25rem;
+  border-left: 4px solid var(--copper);
+  margin-left: 0;
+}
+
+.groups .step {
+  margin-top: 0.5rem;
 }
 
 .program.on,

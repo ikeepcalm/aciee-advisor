@@ -1377,8 +1377,7 @@ watch(group, (g) => {
   margin: auto -1rem 0;
   padding: 0.45rem 1rem;
   border-top: 1px solid var(--line);
-  background: color-mix(in srgb, var(--board) 88%, transparent);
-  backdrop-filter: blur(8px);
+  background: var(--board);
   text-align: center;
   font-size: 0.75rem;
   line-height: 1.5;
