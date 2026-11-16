@@ -8,6 +8,7 @@ import { api, describeError } from '@/api'
 interface Claim {
   id: number
   email: string
+  displayName: string | null
   groupCode: string
   academicYear: string
   memberSince: string | null
@@ -15,6 +16,7 @@ interface Claim {
 interface Leader {
   membershipId: number
   email: string
+  displayName: string | null
   groupCode: string
   academicYear: string
 }
@@ -55,7 +57,10 @@ onMounted(() => load().catch((e) => (error.value = describeError(t, e))))
       class="card mb-2 flex flex-wrap items-center gap-x-3 gap-y-2 text-sm"
     >
       <div class="min-w-0 basis-full sm:flex-1 sm:basis-0">
-        <div class="font-semibold [overflow-wrap:anywhere]">{{ c.email }}</div>
+        <div class="font-semibold [overflow-wrap:anywhere]">{{ c.displayName ?? c.email }}</div>
+        <div v-if="c.displayName" class="text-xs text-muted [overflow-wrap:anywhere]">
+          {{ c.email }}
+        </div>
         <div class="text-muted">
           <strong class="text-ink">{{ c.groupCode }}</strong> ·
           <span class="mono text-xs">{{ c.academicYear }}</span> ·
@@ -87,7 +92,10 @@ onMounted(() => load().catch((e) => (error.value = describeError(t, e))))
       class="flex items-center gap-2 border-t border-line py-1 text-sm"
     >
       <strong>{{ l.groupCode }}</strong>
-      <span class="min-w-0 flex-1 [overflow-wrap:anywhere]">{{ l.email }}</span>
+      <span class="min-w-0 flex-1 [overflow-wrap:anywhere]"
+        >{{ l.displayName ?? l.email }}
+        <span v-if="l.displayName" class="text-xs text-muted">{{ l.email }}</span></span
+      >
       <button
         class="btn btn-danger btn-sm border-transparent"
         @click="act('DELETE', `/api/admin/leaders/${l.membershipId}`)"

@@ -38,7 +38,7 @@ public class GroupService {
     private static final String SELECT_GROUP = "SELECT g.id, g.code, g.specialization, g.study_year, g.academic_year FROM core.group_v g ";
 
     private static final String SELECT_REQUEST = """
-            SELECT r.id, a.email, g.code AS group_code, g.academic_year, r.kind, s.label AS subgroup, r.status
+            SELECT r.id, a.email, a.display_name, g.code AS group_code, g.academic_year, r.kind, s.label AS subgroup, r.status
             FROM core.membership_request r
             JOIN core.user_account a ON a.id = r.user_id
             JOIN core.group_v g ON g.id = r.group_id
@@ -173,13 +173,13 @@ public class GroupService {
     public List<RosterEntry> roster(int groupId) {
         requireLeader(groupId);
         return jdbc.sql("""
-                        SELECT a.email, s.label AS subgroup, lower(m.valid_during) AS since,
+                        SELECT a.email, a.display_name, s.label AS subgroup, lower(m.valid_during) AS since,
                                EXISTS (SELECT 1 FROM core.group_leader l WHERE l.membership_id = m.id) AS leader
                         FROM core.group_membership m
                         JOIN core.user_account a ON a.id = m.user_id
                         LEFT JOIN core.subgroup s ON s.id = m.subgroup_id
                         WHERE m.group_id = :group AND m.valid_during && daterange(current_date, NULL)
-                        ORDER BY s.label NULLS LAST, a.email""")
+                        ORDER BY s.label NULLS LAST, coalesce(a.display_name, a.email)""")
                 .param("group", groupId)
                 .query(RosterEntry.class)
                 .list();

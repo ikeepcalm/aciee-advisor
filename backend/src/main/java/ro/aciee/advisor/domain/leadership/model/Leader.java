@@ -10,6 +10,7 @@ import lombok.Setter;
 public class Leader {
     private int membershipId;
     private String email;
+    private String displayName;
     private String groupCode;
     private String academicYear;
 }

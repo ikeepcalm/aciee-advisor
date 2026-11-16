@@ -10,6 +10,7 @@ import lombok.Setter;
 public class JoinRequest {
     private int id;
     private String email;
+    private String displayName;
     private String groupCode;
     private String academicYear;
     private String kind;

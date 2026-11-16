@@ -21,6 +21,7 @@ interface Membership {
 interface JoinRequest {
   id: number
   email: string
+  displayName: string | null
   groupCode: string
   academicYear: string
   kind: string
@@ -36,6 +37,7 @@ interface GroupSummary {
 }
 interface RosterEntry {
   email: string
+  displayName: string | null
   subgroup: string | null
   since: string
   leader: boolean
@@ -291,7 +293,10 @@ onMounted(() => run(load))
           :key="m.email"
           class="flex flex-wrap items-center gap-2 border-b border-line py-2 text-sm"
         >
-          <span class="[overflow-wrap:anywhere]">{{ m.email }}</span>
+          <span class="[overflow-wrap:anywhere]">{{ m.displayName ?? m.email }}</span>
+          <span v-if="m.displayName" class="text-xs text-muted [overflow-wrap:anywhere]">{{
+            m.email
+          }}</span>
           <span v-if="m.subgroup" class="mono text-xs text-muted">{{ m.subgroup }}</span>
           <span v-if="m.leader" class="tag bg-mask text-on-mask">{{ t('group.leader') }}</span>
         </p>
@@ -307,7 +312,10 @@ onMounted(() => run(load))
           class="card mb-2 flex flex-wrap items-center gap-x-3 gap-y-2"
         >
           <div class="min-w-0 basis-full text-sm sm:flex-1 sm:basis-0">
-            <div class="font-semibold [overflow-wrap:anywhere]">{{ r.email }}</div>
+            <div class="font-semibold [overflow-wrap:anywhere]">{{ r.displayName ?? r.email }}</div>
+            <div v-if="r.displayName" class="text-xs text-muted [overflow-wrap:anywhere]">
+              {{ r.email }}
+            </div>
             <div class="text-muted">
               {{ t(`group.kind.${r.kind}`)
               }}<span v-if="r.subgroup"> · {{ t('group.subgroup') }} {{ r.subgroup }}</span>

@@ -89,7 +89,12 @@
     "or": "sau",
     "microsoft": "Continuă cu Microsoft",
     "verifyCode": "Codul din 6 cifre",
-    "signInLede": "Oricine poate citi ghidurile și evaluările. Autentifică-te ca să-ți evaluezi materiile și să lași sfaturi."
+    "signInLede": "Oricine poate citi ghidurile și evaluările. Autentifică-te ca să-ți evaluezi materiile și să lași sfaturi.",
+    "displayName": "Numele tău",
+    "displayNamePlaceholder": "Prenume Nume",
+    "saveName": "Salvează",
+    "nameSaved": "Salvat.",
+    "displayNameHint": "Apare în antet și pentru șeful de grupă. Se completează din Microsoft la prima autentificare cu acesta."
   },
   "errors": {
     "domain": "Folosește adresa ta {'@'}student.ugal.ro.",
@@ -135,7 +140,8 @@
     "microsoft_tenant": "Folosește contul Microsoft al universității ({'@'}student.ugal.ro).",
     "microsoft_domain": "Doar conturile {'@'}student.ugal.ro se pot autentifica.",
     "microsoft_conflict": "Adresa ta este deja legată de alt cont Microsoft.",
-    "microsoft_failed": "Autentificarea cu Microsoft nu a reușit. Încearcă din nou."
+    "microsoft_failed": "Autentificarea cu Microsoft nu a reușit. Încearcă din nou.",
+    "name_too_long": "Numele poate avea cel mult 80 de caractere."
   },
   "nav": {
     "groups": "Grupa mea",

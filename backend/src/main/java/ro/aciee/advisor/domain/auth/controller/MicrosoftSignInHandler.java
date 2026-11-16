@@ -38,7 +38,7 @@ public class MicrosoftSignInHandler implements AuthenticationSuccessHandler, Aut
                 throw new ResponseStatusException(HttpStatus.FORBIDDEN, "microsoft_tenant");
             }
             var email = user.getEmail() != null ? user.getEmail() : user.getPreferredUsername();
-            var account = accountService.signInWithMicrosoft(UUID.fromString(user.getClaimAsString("oid")), email);
+            var account = accountService.signInWithMicrosoft(UUID.fromString(user.getClaimAsString("oid")), email, user.getFullName());
             sessionService.start(account, request, response);
             response.sendRedirect("/");
         } catch (ResponseStatusException e) {

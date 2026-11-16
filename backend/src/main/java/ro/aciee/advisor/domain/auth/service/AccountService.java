@@ -23,8 +23,10 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class AccountService {
 
+    private static final int MAX_NAME = 80;
+
     private static final String SELECT_ACCOUNT = """
-            SELECT a.id, a.email, a.password_hash, a.disabled_at IS NOT NULL AS disabled,
+            SELECT a.id, a.email, a.display_name, a.password_hash, a.disabled_at IS NOT NULL AS disabled,
                    EXISTS (SELECT 1 FROM core.email_verification v WHERE v.user_id = a.id) AS unverified,
                    array(SELECT r.role_code FROM core.user_role r WHERE r.user_id = a.id ORDER BY r.role_code) AS roles
             FROM core.user_account a
@@ -109,7 +111,7 @@ public class AccountService {
     }
 
     @Transactional
-    public Account signInWithMicrosoft(UUID oid, String email) {
+    public Account signInWithMicrosoft(UUID oid, String email, String name) {
         if (email == null || !email.toLowerCase(Locale.ROOT).endsWith("@student.ugal.ro")) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "microsoft_domain");
         }
@@ -119,6 +121,12 @@ public class AccountService {
                 .optional()
                 .orElseGet(() -> linkMicrosoftAccount(oid, email));
         jdbc.sql("DELETE FROM core.email_verification WHERE user_id = :id").param("id", userId).update();
+        var cleaned = cleanName(name);
+        if (cleaned != null && cleaned.length() <= MAX_NAME) {
+            // Microsoft fills the name only once, so a name the student corrected is kept.
+            jdbc.sql("UPDATE core.user_account SET display_name = :name WHERE id = :id AND display_name IS NULL")
+                    .param("name", cleaned).param("id", userId).update();
+        }
         var account = findById(userId);
         if (account.isDisabled()) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "disabled");
@@ -141,6 +149,25 @@ public class AccountService {
                 .query(Integer.class)
                 .optional()
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.CONFLICT, "microsoft_conflict"));
+    }
+
+    @Transactional
+    public Account rename(int userId, String name) {
+        var cleaned = cleanName(name);
+        if (cleaned != null && cleaned.length() > MAX_NAME) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "name_too_long");
+        }
+        jdbc.sql("UPDATE core.user_account SET display_name = :name WHERE id = :id")
+                .param("name", cleaned).param("id", userId).update();
+        return findById(userId);
+    }
+
+    static String cleanName(String name) {
+        if (name == null) {
+            return null;
+        }
+        var cleaned = name.replaceAll("[\\p{Cntrl}\\s]+", " ").strip();
+        return cleaned.isEmpty() ? null : cleaned;
     }
 
     public Account findById(int id) {
@@ -183,6 +210,7 @@ public class AccountService {
         return new Account(
                 rs.getInt("id"),
                 rs.getString("email"),
+                rs.getString("display_name"),
                 rs.getString("password_hash"),
                 rs.getBoolean("disabled"),
                 rs.getBoolean("unverified"),

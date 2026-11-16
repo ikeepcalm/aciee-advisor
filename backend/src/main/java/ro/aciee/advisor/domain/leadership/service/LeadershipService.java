@@ -22,7 +22,7 @@ public class LeadershipService {
     @Transactional(readOnly = true)
     public Leadership overview() {
         var claims = jdbc.sql("""
-                        SELECT c.id, a.email, g.code AS group_code, g.academic_year, lower(m.valid_during) AS member_since
+                        SELECT c.id, a.email, a.display_name, g.code AS group_code, g.academic_year, lower(m.valid_during) AS member_since
                         FROM core.group_leader_claim c
                         JOIN core.user_account a ON a.id = c.user_id
                         JOIN core.group_v g ON g.id = c.group_id
@@ -33,7 +33,7 @@ public class LeadershipService {
                 .query(LeaderClaim.class)
                 .list();
         var leaders = jdbc.sql("""
-                        SELECT l.membership_id, a.email, g.code AS group_code, g.academic_year
+                        SELECT l.membership_id, a.email, a.display_name, g.code AS group_code, g.academic_year
                         FROM core.group_leader l
                         JOIN core.group_membership m ON m.id = l.membership_id
                         JOIN core.user_account a ON a.id = m.user_id

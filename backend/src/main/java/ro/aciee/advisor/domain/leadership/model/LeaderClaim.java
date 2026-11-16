@@ -12,6 +12,7 @@ import java.time.LocalDate;
 public class LeaderClaim {
     private int id;
     private String email;
+    private String displayName;
     private String groupCode;
     private String academicYear;
     private LocalDate memberSince;

@@ -11,6 +11,7 @@ import java.time.LocalDate;
 @NoArgsConstructor
 public class RosterEntry {
     private String email;
+    private String displayName;
     private String subgroup;
     private LocalDate since;
     private boolean leader;

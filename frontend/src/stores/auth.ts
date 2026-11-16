@@ -6,6 +6,7 @@ import { rateDraftPrefix, removeStoredStartingWith } from '@/storage'
 export interface Account {
   id: number
   email: string
+  displayName: string | null
   roles: string[]
 }
 
@@ -41,11 +42,15 @@ export const useAuthStore = defineStore('auth', () => {
     pendingPassword.value = ''
   }
 
+  async function rename(name: string) {
+    user.value = await api<Account>('PUT', '/api/auth/me/name', { name })
+  }
+
   async function signOut() {
     await api('POST', '/api/auth/signout')
     removeStoredStartingWith(rateDraftPrefix)
     user.value = null
   }
 
-  return { user, pendingPassword, loaded, load, signUp, signIn, verify, signOut }
+  return { user, pendingPassword, loaded, load, signUp, signIn, verify, rename, signOut }
 })

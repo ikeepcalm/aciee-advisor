@@ -89,7 +89,12 @@
     "resent": "We sent you a new code.",
     "or": "or",
     "microsoft": "Continue with Microsoft",
-    "signInLede": "Anyone can read guides and ratings. Sign in to rate your courses and leave tips."
+    "signInLede": "Anyone can read guides and ratings. Sign in to rate your courses and leave tips.",
+    "displayName": "Your name",
+    "displayNamePlaceholder": "First name Last name",
+    "saveName": "Save",
+    "nameSaved": "Saved.",
+    "displayNameHint": "Shown in the header and to your group leader. Filled in from Microsoft the first time you sign in with it."
   },
   "errors": {
     "domain": "Use your {'@'}student.ugal.ro address.",
@@ -135,7 +140,8 @@
     "microsoft_tenant": "Use the university's Microsoft account ({'@'}student.ugal.ro).",
     "microsoft_domain": "Only {'@'}student.ugal.ro accounts can sign in.",
     "microsoft_conflict": "Your address is already linked to another Microsoft account.",
-    "microsoft_failed": "Signing in with Microsoft failed. Try again."
+    "microsoft_failed": "Signing in with Microsoft failed. Try again.",
+    "name_too_long": "A name can have at most 80 characters."
   },
   "nav": {
     "groups": "My group",

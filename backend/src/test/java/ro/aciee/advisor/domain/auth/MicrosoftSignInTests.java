@@ -93,6 +93,31 @@ class MicrosoftSignInTests {
     }
 
     @Test
+    void microsoftFillsTheNameOnceAndKeepsACorrectedOne() throws Exception {
+        var oid = UUID.randomUUID();
+        var email = "ms" + RUN.incrementAndGet() + "@student.ugal.ro";
+        int userId = (Integer) signIn(UGAL, oid, email, "  HOROKH   Bohdan ").principal();
+        assertThat(name(userId)).isEqualTo("HOROKH Bohdan");
+
+        jdbc.sql("UPDATE core.user_account SET display_name = 'Bohdan Horokh' WHERE id = :id").param("id", userId).update();
+        signIn(UGAL, oid, email, "HOROKH Bohdan");
+        assertThat(name(userId)).isEqualTo("Bohdan Horokh");
+    }
+
+    @Test
+    void anOverlongMicrosoftNameIsSkippedWithoutFailingTheSignIn() throws Exception {
+        var email = "ms" + RUN.incrementAndGet() + "@student.ugal.ro";
+        var result = signIn(UGAL, UUID.randomUUID(), email, "x".repeat(81));
+        assertThat(result.getRedirect()).isEqualTo("/");
+        assertThat(name((Integer) result.principal())).isNull();
+    }
+
+    private String name(int userId) {
+        return jdbc.sql("SELECT display_name FROM core.user_account WHERE id = :id").param("id", userId)
+                .query(String.class).optional().orElse(null);
+    }
+
+    @Test
     void disabledAccountsCannotSignIn() throws Exception {
         var email = "ms" + RUN.incrementAndGet();
         int userId = TestData.account(jdbc, email);
@@ -102,11 +127,20 @@ class MicrosoftSignInTests {
     }
 
     private Result signIn(String tenant, UUID oid, String email) throws Exception {
+        return signIn(tenant, oid, email, null);
+    }
+
+    private Result signIn(String tenant, UUID oid, String email, String name) throws Exception {
         var token = OidcIdToken.withTokenValue("token")
                 .subject(oid.toString())
                 .claim("tid", tenant)
                 .claim("oid", oid.toString())
                 .claim("preferred_username", email)
+                .claims(claims -> {
+                    if (name != null) {
+                        claims.put("name", name);
+                    }
+                })
                 .issuedAt(Instant.now())
                 .expiresAt(Instant.now().plusSeconds(60))
                 .build();

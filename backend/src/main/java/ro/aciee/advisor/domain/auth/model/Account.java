@@ -11,6 +11,7 @@ import java.util.List;
 public class Account {
     private int id;
     private String email;
+    private String displayName;
     @JsonIgnore
     private String passwordHash;
     @JsonIgnore

@@ -11,12 +11,14 @@ import org.springframework.security.oauth2.client.registration.ClientRegistratio
 import org.springframework.security.web.csrf.CsrfToken;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import ro.aciee.advisor.domain.auth.model.Account;
 import ro.aciee.advisor.domain.auth.model.AuthProviders;
+import ro.aciee.advisor.domain.auth.model.DisplayNameRequest;
 import ro.aciee.advisor.domain.auth.model.ResendCodeRequest;
 import ro.aciee.advisor.domain.auth.model.SignInRequest;
 import ro.aciee.advisor.domain.auth.model.SignUpRequest;
@@ -62,6 +64,11 @@ public class AuthController {
     @GetMapping("/me")
     public Account me(Authentication authentication) {
         return accountService.findById((Integer) authentication.getPrincipal());
+    }
+
+    @PutMapping("/me/name")
+    public Account rename(@Valid @RequestBody DisplayNameRequest body, Authentication authentication) {
+        return accountService.rename((Integer) authentication.getPrincipal(), body.getName());
     }
 
     @GetMapping("/providers")

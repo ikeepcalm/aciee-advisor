@@ -22,12 +22,37 @@ import { isDark, setTheme, theme, type Theme } from '@/theme'
 import BrandMark from '@/components/BrandMark.vue'
 import SegmentedChips from '@/components/SegmentedChips.vue'
 import AppSheet from '@/components/AppSheet.vue'
+import UserAvatar from '@/components/UserAvatar.vue'
+import AppNotice from '@/components/AppNotice.vue'
+import { shortName } from '@/person'
+import { describeError } from '@/api'
 
 const { t, locale } = useI18n()
 const auth = useAuthStore()
 const route = useRoute()
 const router = useRouter()
 const accountOpen = ref(false)
+const nameDraft = ref('')
+const nameNote = ref('')
+const nameError = ref('')
+
+watch(accountOpen, (open) => {
+  if (!open) return
+  nameDraft.value = auth.user?.displayName ?? ''
+  nameNote.value = ''
+  nameError.value = ''
+})
+
+async function saveName() {
+  nameNote.value = ''
+  nameError.value = ''
+  try {
+    await auth.rename(nameDraft.value)
+    nameNote.value = t('auth.nameSaved')
+  } catch (e) {
+    nameError.value = describeError(t, e)
+  }
+}
 
 watch(
   () => route.fullPath,
@@ -145,12 +170,18 @@ async function signOut() {
             :aria-expanded="accountOpen"
             @click="accountOpen = true"
           >
-            <CircleUser class="size-5" />
+            <UserAvatar
+              v-if="auth.user"
+              :name="auth.user.displayName"
+              :email="auth.user.email"
+              class="size-7 text-[0.6875rem]"
+            />
+            <CircleUser v-else class="size-5" />
             <span class="sr-only lg:hidden">{{
               auth.user ? t('nav.account') : t('auth.signIn')
             }}</span>
             <span class="hidden max-w-40 truncate lg:inline">{{
-              auth.user ? auth.user.email.split('@')[0] : t('auth.signIn')
+              auth.user ? shortName(auth.user.displayName, auth.user.email) : t('auth.signIn')
             }}</span>
           </button>
         </div>
@@ -188,7 +219,13 @@ async function signOut() {
         :aria-expanded="accountOpen"
         @click="accountOpen = true"
       >
-        <CircleUser class="size-5" />
+        <UserAvatar
+          v-if="auth.user"
+          :name="auth.user.displayName"
+          :email="auth.user.email"
+          class="size-5 text-[0.5625rem]"
+        />
+        <CircleUser v-else class="size-5" />
         <span class="max-w-full truncate px-0.5">{{
           auth.user ? t('nav.account') : t('auth.signIn')
         }}</span>
@@ -197,9 +234,39 @@ async function signOut() {
 
     <AppSheet v-model="accountOpen" :title="t('nav.account')">
       <template v-if="auth.user">
-        <p class="mono text-xs break-all text-muted">
-          {{ t('auth.signedInAs', { email: auth.user.email }) }}
-        </p>
+        <div class="flex items-center gap-3">
+          <UserAvatar
+            :name="auth.user.displayName"
+            :email="auth.user.email"
+            class="size-10 text-sm"
+          />
+          <div class="min-w-0">
+            <div class="font-semibold [overflow-wrap:anywhere]">
+              {{ shortName(auth.user.displayName, auth.user.email) }}
+            </div>
+            <p class="mono text-xs break-all text-muted">
+              {{ t('auth.signedInAs', { email: auth.user.email }) }}
+            </p>
+          </div>
+        </div>
+        <form class="field mt-4" @submit.prevent="saveName">
+          <label for="display-name">{{ t('auth.displayName') }}</label>
+          <div class="flex gap-2">
+            <input
+              id="display-name"
+              v-model="nameDraft"
+              class="input min-w-0 flex-1"
+              maxlength="80"
+              autocomplete="name"
+              :placeholder="t('auth.displayNamePlaceholder')"
+            />
+            <button type="submit" class="btn btn-outline">{{ t('auth.saveName') }}</button>
+          </div>
+          <span class="text-xs font-normal text-muted">{{
+            nameNote || t('auth.displayNameHint')
+          }}</span>
+          <AppNotice v-if="nameError" kind="error" class="my-0">{{ nameError }}</AppNotice>
+        </form>
         <nav class="mt-3 grid gap-1">
           <RouterLink
             v-for="item in more"
