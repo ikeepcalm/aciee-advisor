@@ -8,7 +8,6 @@ import {
   ChevronDown,
   ChevronLeft,
   ChevronRight,
-  Compass,
   Ellipsis,
   Share2,
   StickyNote,
@@ -516,12 +515,6 @@ watch(group, (g) => {
                   >
                     <Share2 class="size-4" aria-hidden="true" />
                     {{ t('timetable.share.action') }}
-                  </DropdownMenuItem>
-                  <DropdownMenuItem as-child>
-                    <RouterLink to="/guide" :class="[MENU_ITEM, 'text-ink no-underline']">
-                      <Compass class="size-4" aria-hidden="true" />
-                      {{ t('guide.nav') }}
-                    </RouterLink>
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenuPortal>
