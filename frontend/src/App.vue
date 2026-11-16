@@ -117,7 +117,7 @@ async function signOut() {
 </script>
 
 <template>
-  <div class="flex min-h-dvh flex-col">
+  <div class="flex min-h-svh flex-col">
     <header
       class="sticky top-0 z-30 border-b border-line bg-board md:bg-board/85 md:backdrop-blur md:supports-backdrop-filter:bg-board/70"
     >
