@@ -26,7 +26,7 @@ const placement = {
 <template>
   <DialogRoot v-model:open="open">
     <DialogPortal>
-      <DialogOverlay class="fixed inset-0 z-40 bg-ink/40 backdrop-blur-[2px]" />
+      <DialogOverlay class="fixed inset-0 z-40 bg-ink/40 md:backdrop-blur-[2px]" />
       <DialogContent
         class="fixed z-50 flex flex-col overflow-hidden border border-line bg-panel text-ink focus:outline-none"
         :class="placement[side]"
