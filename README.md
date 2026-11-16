@@ -37,3 +37,7 @@ Deployment: [docs/DEPLOY.md](docs/DEPLOY.md) (Docker Compose behind an HTTPS rev
 - [Roadmap](docs/ROADMAP.md): course stages, scope, timeline
 - [Decisions](docs/DECISIONS.md): architectural decision records
 - [AI log](docs/AI_LOG.md): AI usage and corrected AI errors
+
+## License
+
+[GNU AGPL-3.0](LICENSE). You may run, study, change and share this code; if you run a modified version for others over a network, you must offer them its source under the same license. Professor CV summaries and portraits are not part of this repository (see [DEPLOY.md](docs/DEPLOY.md#professor-profiles)).
