@@ -15,8 +15,8 @@ Only `web` gets a domain. the deploy tool's proxy terminates HTTPS and forwards 
 
 | the deploy tool resource | Domain | `LIQUIBASE_CONTEXTS` |
 |---|---|---|
-| app | `https://acieeadvisor.ro` (and `www.` redirecting to it) | `prod` (no fixtures) |
-| demo | `https://demo.acieeadvisor.ro` | `fixtures` (synthetic data, demo accounts) |
+| app | `https://acieeadvisor.com` (and `www.` redirecting to it) | `prod` (no fixtures) |
+| demo | `https://demo.acieeadvisor.com` | `fixtures` (synthetic data, demo accounts) |
 
 The demo accounts are `demo.admin`, `demo.moderator`, `demo.leader` and `demo.student` `@student.ugal.ro`, all with the password `demo-parola`. They exist only where the `fixtures` context ran.
 
@@ -31,13 +31,13 @@ The demo accounts are `demo.admin`, `demo.moderator`, `demo.leader` and `demo.st
    | `POSTGRES_PASSWORD` | migrator / superuser `aciee` |
    | `ACIEE_IDENT_PASSWORD`, `ACIEE_ANON_PASSWORD`, `ACIEE_REPORT_PASSWORD` | app roles |
    | `LIQUIBASE_CONTEXTS` | `prod` or `fixtures` |
-   | `MAIL_HOST`, `MAIL_PORT`, `MAIL_USER`, `MAIL_PASSWORD` | SMTP provider (port 587, STARTTLS) |
-   | `MAIL_FROM` | `ACIEE Advisor <no-reply@acieeadvisor.ro>` |
-   | `PUBLIC_URL` | `https://acieeadvisor.ro` (`https://demo.acieeadvisor.ro` on demo); absolute links in the WhatsApp/Telegram link-preview cards |
+   | `MAIL_HOST`, `MAIL_PORT`, `MAIL_USER`, `MAIL_PASSWORD` | SMTP provider (port 587, STARTTLS; the VPS provider blocks outbound 25 and 465, so never use those) |
+   | `MAIL_FROM` | `ACIEE Advisor <no-reply@acieeadvisor.com>` |
+   | `PUBLIC_URL` | `https://acieeadvisor.com` (`https://demo.acieeadvisor.com` on demo); absolute links in the WhatsApp/Telegram link-preview cards |
    | `SPRING_PROFILES_ACTIVE`, `ENTRA_CLIENT_ID`, `ENTRA_CLIENT_SECRET` | `microsoft` and the app registration below, to turn on Microsoft sign-in; leave empty to hide it |
 
    The role passwords are read only when the `pgdata` volume is created. Changing them later needs `ALTER ROLE … PASSWORD` in the database as well.
-4. Under the `web` service, set the domain (`https://acieeadvisor.ro`). Leave the other services without a domain.
+4. Under the `web` service, set the domain (`https://acieeadvisor.com`). Leave the other services without a domain.
 5. Deploy. The first start runs every Liquibase changeset. With `fixtures` this takes about a minute.
 
 ## Microsoft sign-in
@@ -46,7 +46,7 @@ The button "Continuă cu Microsoft" appears only when the app runs with the `mic
 
 1. Register the app in Microsoft Entra (portal.azure.com → App registrations → New registration), signed in with a `@student.ugal.ro` account if the tenant allows students to register apps, otherwise ask the university's IT administrator.
    - Supported account types: **this organizational directory only** (UGAL, tenant `445e5699-60fa-4f59-8e7f-778197a4d740`).
-   - Redirect URI, platform **Web**: `https://acieeadvisor.ro/api/auth/oauth2/code/microsoft` (add `https://demo.acieeadvisor.ro/…` and `http://localhost:8080/…` for the other environments).
+   - Redirect URI, platform **Web**: `https://acieeadvisor.com/api/auth/oauth2/code/microsoft` (add `https://demo.acieeadvisor.com/…` and `http://localhost:8080/…` for the other environments).
 2. Certificates & secrets → New client secret. Copy the value (shown once) into `ENTRA_CLIENT_SECRET`, the Application (client) ID into `ENTRA_CLIENT_ID`.
 3. API permissions: the app asks only for `openid profile email`; the default `User.Read` can be removed. These are permissions users can normally consent to themselves, but if the UGAL tenant blocks user consent, an administrator has to grant it once (the first sign-in then shows "Need admin approval").
 4. Set `SPRING_PROFILES_ACTIVE=microsoft` and redeploy. `GET /api/auth/providers` should answer `{"microsoft":true}`.
@@ -57,8 +57,8 @@ At startup the app fetches the tenant's OpenID configuration from `login.microso
 
 | Record | Value |
 |---|---|
-| `A acieeadvisor.ro`, `A www`, `A demo` | the VPS IPv4 (plus `AAAA` for IPv6) |
-| `TXT acieeadvisor.ro` (SPF) | from the mail provider, e.g. `v=spf1 include:<provider> -all` |
+| `A acieeadvisor.com`, `A www`, `A demo` | the VPS IPv4 (plus `AAAA` for IPv6) |
+| `TXT acieeadvisor.com` (SPF) | from the mail provider, e.g. `v=spf1 include:<provider> -all` |
 | DKIM `TXT`/`CNAME` | from the mail provider |
 | `TXT _dmarc` | `v=DMARC1; p=quarantine; rua=mailto:<admin mailbox>` |
 

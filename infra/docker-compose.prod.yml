@@ -33,9 +33,9 @@ services:
       MAIL_USER: ${MAIL_USER:-}
       MAIL_PASSWORD: ${MAIL_PASSWORD:-}
       MAIL_SMTP_SECURE: ${MAIL_SMTP_SECURE:-true}
-      MAIL_FROM: ${MAIL_FROM:-ACIEE Advisor <no-reply@acieeadvisor.ro>}
+      MAIL_FROM: ${MAIL_FROM:-ACIEE Advisor <no-reply@acieeadvisor.com>}
       TOKEN_KEYS_DIR: /keys
-      PUBLIC_URL: ${PUBLIC_URL:-https://acieeadvisor.ro}
+      PUBLIC_URL: ${PUBLIC_URL:-https://acieeadvisor.com}
       SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-}
       ENTRA_CLIENT_ID: ${ENTRA_CLIENT_ID:-}
       ENTRA_CLIENT_SECRET: ${ENTRA_CLIENT_SECRET:-}

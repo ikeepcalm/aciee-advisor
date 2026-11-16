@@ -44,9 +44,9 @@ AI review checking (plan agreed, not built): Gemini free tier; harsh-but-fair pu
 
 ## Deploy (DEPLOY.md)
 
-- [ ] Buy the domain `acieeadvisor.ro`.
+- [x] Buy the domain: `acieeadvisor.com` (DNS on the CDN); `.ro` later if registration as a non-resident works.
 - [ ] Choose a mail provider and add SPF, DKIM and DMARC records, plus `A` records for `@`, `www` and `demo`.
-- [ ] Create the deploy tool's resources for `acieeadvisor.ro` (context `prod`) and `demo.acieeadvisor.ro` (context `fixtures`) with every variable in DEPLOY.md, including `ACIEE_REPORT_PASSWORD`, which the app now uses for the report pool.
+- [ ] Create the deploy tool's resources for `acieeadvisor.com` (context `prod`) and `demo.acieeadvisor.com` (context `fixtures`) with every variable in DEPLOY.md, including `ACIEE_REPORT_PASSWORD`, which the app now uses for the report pool.
 - [ ] First deploy, then grant yourself `admin` with the `psql` line in DEPLOY.md "First admin".
 - [ ] Send a verification code from our own domain to a real `@student.ugal.ro` inbox and check it lands outside spam.
 - [ ] Copy the `backups` **and** `token-keys` volumes off the server (S3 or Storage Box cron), then test a restore into the demo resource.
