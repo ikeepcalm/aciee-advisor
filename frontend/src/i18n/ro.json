@@ -141,7 +141,9 @@
     "microsoft_domain": "Doar conturile {'@'}student.ugal.ro se pot autentifica.",
     "microsoft_conflict": "Adresa ta este deja legată de alt cont Microsoft.",
     "microsoft_failed": "Autentificarea cu Microsoft nu a reușit. Încearcă din nou.",
-    "name_too_long": "Numele poate avea cel mult 80 de caractere."
+    "name_too_long": "Numele poate avea cel mult 80 de caractere.",
+    "feedback_busy": "Prea multe mesaje acum. Încearcă din nou peste o oră.",
+    "feedback_unavailable": "Mesajele nu pot fi trimise acum. Încearcă mai târziu."
   },
   "nav": {
     "groups": "Grupa mea",
@@ -661,5 +663,21 @@
     "newTab": "se deschide într-o filă nouă",
     "catchUp": "Cu laboratoare nerecuperate nu intri în examen.",
     "catchUpLink": "Vezi regulile"
+  },
+  "feedback": {
+    "eyebrow": "Ajută-ne să reparăm",
+    "title": "Raportează o problemă",
+    "lede": "Ceva greșit, învechit sau lipsă pe site? Un orar greșit, un curs sau un profesor lipsă, o eroare? Scrie-ne, mesajul ajunge direct la cel care se ocupă de site.",
+    "message": "Ce nu merge sau ce lipsește?",
+    "messagePlaceholder": "De exemplu: orarul pentru 22C32A e cel de semestrul trecut",
+    "page": "Pagina: {page}",
+    "replyTo": "E-mailul tău pentru răspuns (opțional)",
+    "replyHint": "Lasă gol ca să rămâi anonim.",
+    "replyAccount": "Îți răspundem la {email} dacă e nevoie.",
+    "send": "Trimite",
+    "sent": "Mulțumim! Mesajul a fost trimis.",
+    "back": "Înapoi la pagină",
+    "footerLink": "Raportează o problemă",
+    "footerNote": "Proiect studențesc neoficial, nu un site al UGAL."
   }
 }

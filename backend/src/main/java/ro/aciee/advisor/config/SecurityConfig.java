@@ -42,7 +42,7 @@ public class SecurityConfig {
                 .securityContext(context -> context.securityContextRepository(securityContextRepository))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/signup", "/api/auth/signin", "/api/auth/verify", "/api/auth/verify/resend", "/api/auth/csrf",
-                                "/api/auth/providers", "/api/auth/oauth2/**").permitAll()
+                                "/api/auth/providers", "/api/auth/oauth2/**", "/api/feedback").permitAll()
                         .requestMatchers("/api/catalog/**", "/api/timetable", "/api/timetable/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/professors/*").permitAll()
                         .requestMatchers("/api/admin/**", "/api/reports/**").hasRole("ADMIN")

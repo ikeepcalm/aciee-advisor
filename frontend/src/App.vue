@@ -9,6 +9,7 @@ import {
   FileText,
   GraduationCap,
   KeyRound,
+  MessageSquareWarning,
   Moon,
   Settings,
   ShieldCheck,
@@ -73,6 +74,11 @@ const tabs = computed(() => {
   }
   return items
 })
+
+const feedbackLink = computed(() => ({
+  name: 'feedback',
+  query: { from: route.name === 'feedback' ? route.query.from : route.fullPath },
+}))
 
 const more = computed(() => {
   const user = auth.user
@@ -188,7 +194,24 @@ async function signOut() {
       </div>
     </header>
 
-    <RouterView class="flex-1 pb-[calc(5rem+env(safe-area-inset-bottom))] md:pb-0" />
+    <RouterView class="flex-1" />
+
+    <footer
+      class="border-t border-dashed border-line pb-[calc(5rem+env(safe-area-inset-bottom))] md:pb-0"
+    >
+      <div
+        class="mx-auto flex w-full max-w-6xl flex-wrap items-center justify-between gap-x-6 gap-y-1 px-4 py-4 text-xs text-muted md:px-6"
+      >
+        <span>{{ t('feedback.footerNote') }}</span>
+        <RouterLink
+          :to="feedbackLink"
+          class="inline-flex min-h-11 items-center gap-1.5 font-semibold text-mask"
+        >
+          <MessageSquareWarning class="size-4" aria-hidden="true" />
+          {{ t('feedback.footerLink') }}
+        </RouterLink>
+      </div>
+    </footer>
 
     <nav
       class="fixed inset-x-0 bottom-0 z-30 grid border-t border-line bg-panel pb-[env(safe-area-inset-bottom)] md:hidden"
@@ -291,6 +314,14 @@ async function signOut() {
           t('auth.signUp')
         }}</RouterLink>
       </template>
+      <RouterLink
+        :to="feedbackLink"
+        class="mt-3 flex min-h-11 items-center gap-3 rounded-md px-2 text-sm font-medium text-ink no-underline hover:bg-board"
+        @click="accountOpen = false"
+      >
+        <MessageSquareWarning class="size-5 text-copper" />
+        {{ t('feedback.footerLink') }}
+      </RouterLink>
       <hr class="my-5 border-line" />
       <div class="field">
         {{ t('prefs.language') }}

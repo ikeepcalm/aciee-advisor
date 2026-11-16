@@ -34,6 +34,7 @@ services:
       MAIL_PASSWORD: ${MAIL_PASSWORD:-}
       MAIL_SMTP_SECURE: ${MAIL_SMTP_SECURE:-true}
       MAIL_FROM: ${MAIL_FROM:-ACIEE Advisor <no-reply@acieeadvisor.com>}
+      FEEDBACK_TO: ${FEEDBACK_TO:-}
       TOKEN_KEYS_DIR: /keys
       PUBLIC_URL: ${PUBLIC_URL:-https://acieeadvisor.com}
       SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-}

@@ -141,7 +141,9 @@
     "microsoft_domain": "Only {'@'}student.ugal.ro accounts can sign in.",
     "microsoft_conflict": "Your address is already linked to another Microsoft account.",
     "microsoft_failed": "Signing in with Microsoft failed. Try again.",
-    "name_too_long": "A name can have at most 80 characters."
+    "name_too_long": "A name can have at most 80 characters.",
+    "feedback_busy": "Too many messages right now. Please try again in an hour.",
+    "feedback_unavailable": "Messages cannot be sent right now. Please try again later."
   },
   "nav": {
     "groups": "My group",
@@ -661,5 +663,21 @@
     "newTab": "opens in a new tab",
     "catchUp": "With labs you have not made up, you cannot sit the exam.",
     "catchUpLink": "See the rules"
+  },
+  "feedback": {
+    "eyebrow": "Help us fix it",
+    "title": "Report a problem",
+    "lede": "Something wrong, outdated or missing on the site? A wrong timetable, a missing course or professor, a bug? Tell us, it goes straight to the person who runs the site.",
+    "message": "What's wrong or missing?",
+    "messagePlaceholder": "For example: the timetable for 22C32A shows last semester",
+    "page": "Page: {page}",
+    "replyTo": "Your e-mail for a reply (optional)",
+    "replyHint": "Leave it empty to stay anonymous.",
+    "replyAccount": "We'll reply to {email} if needed.",
+    "send": "Send",
+    "sent": "Thanks! Your message was sent.",
+    "back": "Back to the page",
+    "footerLink": "Report a problem",
+    "footerNote": "An unofficial student project, not a UGAL website."
   }
 }

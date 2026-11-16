@@ -5,6 +5,9 @@ import { safeNext } from '@/api'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
+  // A new page starts at the top; hash targets are scrolled by the page itself (the guide).
+  scrollBehavior: (to, from, saved) =>
+    saved ?? (to.path === from.path || to.hash ? false : { top: 0 }),
   routes: [
     {
       path: '/',
@@ -42,6 +45,11 @@ const router = createRouter({
       path: '/guide',
       name: 'guide',
       component: () => import('../views/GuideView.vue'),
+    },
+    {
+      path: '/feedback',
+      name: 'feedback',
+      component: () => import('../views/FeedbackView.vue'),
     },
     {
       path: '/signup',

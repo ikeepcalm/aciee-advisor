@@ -43,6 +43,7 @@ server:
 app:
   entra-tenant-id: ${ENTRA_TENANT_ID:445e5699-60fa-4f59-8e7f-778197a4d740}
   mail-from: ${MAIL_FROM:ACIEE Advisor <no-reply@localhost>}
+  feedback-to: ${FEEDBACK_TO:}
   token-keys-dir: ${TOKEN_KEYS_DIR:token-keys}
   public-url: ${PUBLIC_URL:http://localhost:5173}
   report-datasource:
