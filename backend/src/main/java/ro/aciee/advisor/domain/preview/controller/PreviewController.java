@@ -34,9 +34,19 @@ public class PreviewController {
         return image(previewService.professorCard(slug));
     }
 
+    @GetMapping("/og/img/timetable/{group}.png")
+    public ResponseEntity<byte[]> timetableImage(@PathVariable String group) {
+        return image(previewService.timetableCard("/timetable", group));
+    }
+
+    @GetMapping("/og/img/pages/{page}.png")
+    public ResponseEntity<byte[]> pageImage(@PathVariable String page) {
+        return image(previewService.cardForPath("/" + page));
+    }
+
     @GetMapping("/og/img/default.png")
     public ResponseEntity<byte[]> defaultImage() {
-        return image(previewService.defaultCard("/"));
+        return image(previewService.cardForPath("/"));
     }
 
     @GetMapping("/og/**")
@@ -45,7 +55,7 @@ public class PreviewController {
         return ResponseEntity.ok()
                 .cacheControl(CACHE)
                 .contentType(new MediaType(MediaType.TEXT_HTML, StandardCharsets.UTF_8))
-                .body(previewService.html(previewService.cardForPath(path.isEmpty() ? "/" : path)));
+                .body(previewService.html(previewService.cardForPath(path.isEmpty() ? "/" : path, request.getParameter("g"))));
     }
 
     private ResponseEntity<byte[]> image(PreviewCard card) {

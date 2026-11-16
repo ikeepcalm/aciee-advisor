@@ -3,6 +3,7 @@ package ro.aciee.advisor.domain.preview.service;
 import org.springframework.stereotype.Component;
 import ro.aciee.advisor.domain.preview.model.PreviewCard;
 import ro.aciee.advisor.domain.preview.model.PreviewMetric;
+import ro.aciee.advisor.domain.preview.type.PreviewPage;
 
 import javax.imageio.ImageIO;
 import java.awt.BasicStroke;
@@ -14,6 +15,8 @@ import java.awt.Graphics2D;
 import java.awt.RenderingHints;
 import java.awt.Shape;
 import java.awt.geom.AffineTransform;
+import java.awt.geom.Ellipse2D;
+import java.awt.geom.Line2D;
 import java.awt.geom.Path2D;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
@@ -45,6 +48,8 @@ public class PreviewCardRenderer {
     private static final Color COPPER = new Color(0xc13a2c);
     private static final Color MARK = new Color(0xffe270);
     private static final float[] WOBBLE = {90, 7, 7, 70, 80, 8, 8, 60};
+    private static final float[] ROUND = {6, 6, 6, 6, 6, 6, 6, 6};
+    private static final int[][] BLOCKS = {{0, 42, 14}, {0, 60, 10}, {1, 42, 10}, {1, 56, 22}, {2, 48, 14}, {3, 42, 22}, {3, 68, 14}, {4, 42, 10}};
     private static final float[] WOBBLE_ALT = {8, 60, 80, 8, 7, 70, 90, 7};
     private static final int[][] TITLE_ABOVE_METRICS = {{1, 112, 84}, {2, 80, 60}};
     private static final int[][] TITLE_ALONE = {{1, 128, 116}, {2, 124, 80}, {3, 76, 60}};
@@ -73,10 +78,15 @@ public class PreviewCardRenderer {
             paintPaper(g);
             paintSheet(g, random);
             List<PreviewMetric> metrics = card.getMetrics().subList(0, Math.min(card.getMetrics().size(), 4));
+            PreviewPage page = card.getPage();
             if (metrics.isEmpty()) {
-                paintStatement(g, card, random);
+                paintStatement(g, card, page == null ? CONTENT_WIDTH : CONTENT_WIDTH - 330, random);
             } else {
-                paintScores(g, card, metrics, random);
+                paintScores(g, card, metrics, page == null ? CONTENT_WIDTH : CONTENT_WIDTH - 190, random);
+            }
+            if (page != null) {
+                int size = metrics.isEmpty() ? 290 : 150;
+                paintMotif(g, page, WIDTH - LEFT - size, metrics.isEmpty() ? 148 : 76, size, random);
             }
             paintFooter(g, metrics.isEmpty() ? null : card.getNote());
         } finally {
@@ -122,8 +132,8 @@ public class PreviewCardRenderer {
         g.setTransform(upright);
     }
 
-    private void paintScores(Graphics2D g, PreviewCard card, List<PreviewMetric> metrics, Random random) {
-        TextBlock title = fit(g, display, card.getTitle(), CONTENT_WIDTH, TITLE_ABOVE_METRICS);
+    private void paintScores(Graphics2D g, PreviewCard card, List<PreviewMetric> metrics, int titleWidth, Random random) {
+        TextBlock title = fit(g, display, card.getTitle(), titleWidth, TITLE_ABOVE_METRICS);
         int titleHeight = titleHeight(title);
         int room = CONTENT_BOTTOM - CONTENT_TOP - 46 - titleHeight - 22;
         int tileHeight = Math.clamp(room, 150, 236);
@@ -196,15 +206,15 @@ public class PreviewCardRenderer {
         return body.deriveFont(size * 0.4f);
     }
 
-    private void paintStatement(Graphics2D g, PreviewCard card, Random random) {
-        TextBlock title = fit(g, display, card.getTitle(), CONTENT_WIDTH, TITLE_ALONE);
+    private void paintStatement(Graphics2D g, PreviewCard card, int width, Random random) {
+        TextBlock title = fit(g, display, card.getTitle(), width, TITLE_ALONE);
         String note = card.getNote().strip();
         int split = Math.max(note.lastIndexOf(". "), Math.max(note.lastIndexOf("! "), note.lastIndexOf("? ")));
         String lead = split < 0 ? "" : note.substring(0, split + 1);
         Font leadFont = body.deriveFont(36f);
         List<String> leadLines = lead.isEmpty() ? List.of()
-                : clamp(g.getFontMetrics(leadFont), lead, 2, CONTENT_WIDTH);
-        TextBlock punchline = fit(g, display, note.substring(split + 1).strip(), CONTENT_WIDTH - 24, PUNCHLINE);
+                : clamp(g.getFontMetrics(leadFont), lead, 2, width);
+        TextBlock punchline = fit(g, display, note.substring(split + 1).strip(), width - 24, PUNCHLINE);
         int punchlineStep = (int) (punchline.size() * 1.12f);
         int noteHeight = note.isEmpty() ? 0 : 20 + leadLines.size() * 46 + punchline.lines().size() * punchlineStep + 8;
         int top = CONTENT_TOP + Math.max(0, (CONTENT_BOTTOM - CONTENT_TOP - 46 - titleHeight(title) - noteHeight) / 2);
@@ -260,6 +270,114 @@ public class PreviewCardRenderer {
         g.setColor(MARK);
         g.fill(wobbly(x - size * 0.12f, baseline - size * 0.56f, width + size * 0.24f, size * 0.76f,
                 new float[]{broad, broad, tight, tight, broad, broad, tight, tight}, size * 0.03f, random));
+    }
+
+    private void paintMotif(Graphics2D g, PreviewPage page, double x, double y, double size, Random random) {
+        AffineTransform upright = g.getTransform();
+        g.translate(x, y);
+        g.scale(size / 100, size / 100);
+        g.rotate(Math.toRadians(-4), 50, 50);
+        g.setStroke(new BasicStroke(3f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
+        switch (page) {
+            case HOME -> paintLogo(g, 2, 4, 96);
+            case COURSES -> {
+                paintBook(g, 12, 70, 80, MASK, random);
+                paintBook(g, 4, 46, 78, MARK, random);
+                g.rotate(Math.toRadians(-7), 50, 34);
+                paintBook(g, 16, 22, 72, COPPER, random);
+            }
+            case PROFESSORS -> {
+                var shoulders = new Path2D.Float();
+                shoulders.moveTo(6, 94);
+                shoulders.curveTo(6, 64, 24, 58, 38, 58);
+                shoulders.curveTo(52, 58, 70, 64, 70, 94);
+                shoulders.closePath();
+                ink(g, shoulders, MASK);
+                ink(g, new Ellipse2D.Float(20, 16, 36, 36), PANEL);
+                ink(g, star(76, 30, 21), MARK);
+            }
+            case TIMETABLE -> {
+                Shape sheet = wobbly(8, 16, 84, 78, ROUND, 1, random);
+                g.setColor(PANEL);
+                g.fill(sheet);
+                g.setClip(sheet);
+                g.setColor(COPPER);
+                g.fillRect(0, 0, 100, 34);
+                g.setClip(null);
+                g.setColor(INK);
+                g.draw(sheet);
+                g.draw(new Line2D.Float(8, 34, 92, 34));
+                g.draw(new Line2D.Float(30, 9, 30, 23));
+                g.draw(new Line2D.Float(70, 9, 70, 23));
+                g.setStroke(new BasicStroke(1.6f));
+                for (int[] block : BLOCKS) {
+                    ink(g, wobbly(14.5f + block[0] * 14.6f, block[1], 12, block[2], new float[]{2, 2, 2, 2, 2, 2, 2, 2}, 0, random),
+                            block[1] == 56 || block[1] == 48 ? MASK : MARK);
+                }
+            }
+            case GUIDE -> {
+                ink(g, new Ellipse2D.Float(43, 1, 14, 14), PANEL);
+                ink(g, new Ellipse2D.Float(6, 10, 86, 86), MARK);
+                ink(g, new Ellipse2D.Float(17, 21, 64, 64), PANEL);
+                g.rotate(Math.toRadians(38), 49, 53);
+                ink(g, triangle(49, 27, 49, 53), COPPER);
+                ink(g, triangle(49, 79, 49, 53), MASK);
+            }
+            case RATE -> {
+                g.rotate(Math.toRadians(9), 50, 30);
+                ink(g, wobbly(31, 4, 38, 50, ROUND, 1, random), PANEL);
+                g.setColor(COPPER);
+                g.setStroke(new BasicStroke(4.5f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
+                var tick = new Path2D.Float();
+                tick.moveTo(40, 24);
+                tick.lineTo(47, 32);
+                tick.lineTo(60, 14);
+                g.draw(tick);
+                g.rotate(Math.toRadians(-9), 50, 30);
+                g.setStroke(new BasicStroke(3f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
+                ink(g, wobbly(10, 46, 80, 48, ROUND, 1, random), MASK);
+                ink(g, star(50, 72, 15), MARK);
+                g.setStroke(new BasicStroke(6f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
+                g.draw(new Line2D.Float(26, 46, 74, 46));
+            }
+        }
+        g.setTransform(upright);
+    }
+
+    private void paintBook(Graphics2D g, float x, float y, float width, Color cover, Random random) {
+        ink(g, wobbly(x, y, width, 24, ROUND, 1, random), cover);
+        ink(g, wobbly(x + 15, y + 6, width - 15, 12, new float[8], 0, random), PANEL);
+    }
+
+    private void ink(Graphics2D g, Shape shape, Color fill) {
+        g.setColor(fill);
+        g.fill(shape);
+        g.setColor(INK);
+        g.draw(shape);
+    }
+
+    private Shape star(double x, double y, double radius) {
+        var path = new Path2D.Double();
+        for (int i = 0; i < 10; i++) {
+            double angle = Math.PI * i / 5 - Math.PI / 2;
+            double r = i % 2 == 0 ? radius : radius * 0.46;
+            if (i == 0) {
+                path.moveTo(x + r * Math.cos(angle), y + r * Math.sin(angle));
+            } else {
+                path.lineTo(x + r * Math.cos(angle), y + r * Math.sin(angle));
+            }
+        }
+        path.closePath();
+        return path;
+    }
+
+    private Shape triangle(float tipX, float tipY, float baseX, float baseY) {
+        var path = new Path2D.Float();
+        path.moveTo(tipX, tipY);
+        path.lineTo(baseX - 8, baseY);
+        path.lineTo(baseX + 8, baseY);
+        path.closePath();
+        return path;
     }
 
     private void paintFooter(Graphics2D g, String note) {

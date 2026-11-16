@@ -12,8 +12,15 @@ import ro.aciee.advisor.domain.catalog.model.Survival;
 import ro.aciee.advisor.domain.catalog.service.CatalogService;
 import ro.aciee.advisor.domain.preview.model.PreviewCard;
 import ro.aciee.advisor.domain.preview.model.PreviewMetric;
+import ro.aciee.advisor.domain.preview.type.PreviewPage;
+import ro.aciee.advisor.domain.timetable.model.Lesson;
+import ro.aciee.advisor.domain.timetable.model.source.WeekParity;
+import ro.aciee.advisor.domain.timetable.service.TimetableService;
 
+import java.time.Duration;
+import java.time.LocalTime;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 import java.util.regex.Pattern;
@@ -24,15 +31,23 @@ public class PreviewService {
 
     private static final Pattern COURSE_PATH = Pattern.compile("^/courses/(\\d+)/?$");
     private static final Pattern PROFESSOR_PATH = Pattern.compile("^/professors/([a-z0-9-]+)/?$");
+    private static final Pattern PAGE_PATH = Pattern.compile("^/([a-z]+)(?:/.*)?$");
+    private static final Pattern GROUP = Pattern.compile("^[A-Z0-9]{2,3}[0-9]{2}[A-Z]?$");
+    private static final String[] DAYS = {"", "Luni", "Marți", "Miercuri", "Joi", "Vineri", "Sâmbătă", "Duminică"};
     private static final String SITE = "ACIEE Advisor";
     private static final String FEW_RATINGS = "Încă puține evaluări. Spune cum a fost.";
 
     private final CatalogService catalogService;
+    private final TimetableService timetableService;
 
     @Value("${app.public-url}")
     private String publicUrl;
 
     public PreviewCard cardForPath(String path) {
+        return cardForPath(path, null);
+    }
+
+    public PreviewCard cardForPath(String path, String group) {
         var course = COURSE_PATH.matcher(path);
         if (course.matches()) {
             return courseCard(Integer.parseInt(course.group(1)));
@@ -41,7 +56,16 @@ public class PreviewService {
         if (professor.matches()) {
             return professorCard(professor.group(1));
         }
-        return defaultCard(path);
+        var match = PAGE_PATH.matcher(path);
+        PreviewPage page = switch (match.matches() ? match.group(1) : "") {
+            case "courses" -> PreviewPage.COURSES;
+            case "professors" -> PreviewPage.PROFESSORS;
+            case "timetable", "orar" -> PreviewPage.TIMETABLE;
+            case "guide" -> PreviewPage.GUIDE;
+            case "rate" -> PreviewPage.RATE;
+            default -> PreviewPage.HOME;
+        };
+        return page == PreviewPage.TIMETABLE ? timetableCard(path, group) : pageCard(page, path);
     }
 
     public PreviewCard courseCard(int itemId) {
@@ -49,7 +73,7 @@ public class PreviewService {
         try {
             page = catalogService.course(itemId, null);
         } catch (ResponseStatusException e) {
-            return defaultCard("/courses");
+            return pageCard(PreviewPage.COURSES, "/courses");
         }
         var metrics = new ArrayList<PreviewMetric>();
         Survival survival = page.getSurvival();
@@ -68,7 +92,7 @@ public class PreviewService {
         String note = metrics.isEmpty() ? FEW_RATINGS : ratings(survival.getN());
         String eyebrow = page.getSpecialization() + " · Anul " + page.getStudyYear() + " · Sem. " + page.getSemesterNo();
         return new PreviewCard(eyebrow, page.getSubjectName(), metrics, note,
-                "/courses/" + itemId, "/og/img/courses/" + itemId + ".png");
+                "/courses/" + itemId, "/og/img/courses/" + itemId + ".png", null);
     }
 
     public PreviewCard professorCard(String slug) {
@@ -76,7 +100,7 @@ public class PreviewService {
         try {
             page = catalogService.professor(slug);
         } catch (ResponseStatusException e) {
-            return defaultCard("/courses");
+            return pageCard(PreviewPage.PROFESSORS, "/professors");
         }
         var metrics = new ArrayList<PreviewMetric>();
         if (page.getOverall() != null) {
@@ -96,23 +120,56 @@ public class PreviewService {
         String note = metrics.isEmpty() ? FEW_RATINGS : ratings(page.getRatings());
         String eyebrow = page.getTitle() + " · " + page.getSubjects().size() + " discipline";
         return new PreviewCard(eyebrow, page.getFullName(), metrics, note,
-                "/professors/" + slug, "/og/img/professors/" + slug + ".png");
+                "/professors/" + slug, "/og/img/professors/" + slug + ".png", null);
     }
 
-    public PreviewCard defaultCard(String path) {
-        String title;
-        if (path.startsWith("/timetable") || path.startsWith("/orar")) {
-            title = "Orarul grupei tale";
-        } else if (path.startsWith("/professors")) {
-            title = "Profesorii, notați de studenți";
-        } else if (path.startsWith("/guide")) {
-            title = "Ghidul de anul I: credite, restanțe, burse";
-        } else {
-            title = "Ce îți cere de fapt fiecare curs";
+    public PreviewCard timetableCard(String path, String group) {
+        String code = group == null ? "" : group.toUpperCase(Locale.ROOT);
+        List<Lesson> lessons = List.of();
+        String eyebrow = null;
+        if (GROUP.matcher(code).matches()) {
+            for (var program : timetableService.current().getPrograms()) {
+                if (program.getGroups().contains(code)) {
+                    eyebrow = program.getName() + " · Anul " + program.getYear();
+                    lessons = program.getLessons().stream().filter(lesson -> lesson.getGroups().contains(code)).toList();
+                }
+            }
         }
-        return new PreviewCard("Ghidul studentului de la ACIEE", title, List.of(),
-                "Evaluări anonime și sfaturi de la studenți",
-                path, "/og/img/default.png");
+        if (lessons.isEmpty()) {
+            return pageCard(PreviewPage.TIMETABLE, path);
+        }
+        long[] odd = new long[8];
+        long[] even = new long[8];
+        for (Lesson lesson : lessons) {
+            long hours = Math.round(Duration.between(LocalTime.parse(lesson.getStart()), LocalTime.parse(lesson.getEnd())).toMinutes() / 60.0);
+            odd[lesson.getDay()] += lesson.getWeeks() == WeekParity.EVEN ? 0 : hours;
+            even[lesson.getDay()] += lesson.getWeeks() == WeekParity.ODD ? 0 : hours;
+        }
+        long oddTotal = 0;
+        long evenTotal = 0;
+        int days = 0;
+        int busiest = 1;
+        for (int day = 1; day <= 7; day++) {
+            oddTotal += odd[day];
+            evenTotal += even[day];
+            days += odd[day] + even[day] > 0 ? 1 : 0;
+            busiest = odd[day] + even[day] > odd[busiest] + even[busiest] ? day : busiest;
+        }
+        Lesson first = lessons.stream().min(Comparator.comparing(Lesson::getDay).thenComparing(Lesson::getStart)).orElseThrow();
+        var metrics = List.of(
+                new PreviewMetric("Ore pe săptămână", number((oddTotal + evenTotal) / 2.0).replace(".0", ""), true),
+                new PreviewMetric("Zile cu ore", String.valueOf(days), false),
+                new PreviewMetric("Cea mai plină zi", DAYS[busiest], false),
+                new PreviewMetric(DAYS[first.getDay()] + " începi la", first.getStart(), false));
+        String note = oddTotal == evenTotal ? "La fel în fiecare săptămână"
+                : "Săpt. impară " + oddTotal + " h · pară " + evenTotal + " h";
+        return new PreviewCard(eyebrow, "Orarul grupei " + code, metrics, note,
+                path + "?g=" + code, "/og/img/timetable/" + code + ".png", PreviewPage.TIMETABLE);
+    }
+
+    public PreviewCard pageCard(PreviewPage page, String path) {
+        return new PreviewCard(page.getEyebrow(), page.getTitle(), List.of(), page.getNote(),
+                path, "/og/img/pages/" + page.name().toLowerCase(Locale.ROOT) + ".png", page);
     }
 
     public String html(PreviewCard card) {

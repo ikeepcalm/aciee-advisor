@@ -3,6 +3,8 @@ package ro.aciee.advisor.domain.preview.model;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
+import ro.aciee.advisor.domain.preview.type.PreviewPage;
+
 import java.util.List;
 
 @Getter
@@ -14,6 +16,7 @@ public class PreviewCard {
     private String note;
     private String path;
     private String imagePath;
+    private PreviewPage page;
 
     public String description() {
         if (metrics.isEmpty()) {
