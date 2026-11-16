@@ -1,5 +1,6 @@
 package ro.aciee.advisor.domain.feedback.service;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.mail.SimpleMailMessage;
@@ -31,6 +32,7 @@ public class FeedbackService {
     @Value("${app.public-url}")
     private String publicUrl;
 
+    @Autowired
     public FeedbackService(JavaMailSender mailSender) {
         this(mailSender, Clock.systemUTC());
     }
