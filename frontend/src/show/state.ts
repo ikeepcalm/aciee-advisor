@@ -3,7 +3,7 @@ import { ref } from 'vue'
 const ROOM_KEY = 'show.room'
 const LANG_KEY = 'show.lang'
 export type ShowLang = 'en' | 'ro'
-export const ROOM_PATTERN = /^[a-z0-9-]{8,40}$/
+export const ROOM_PATTERN = /^[a-z0-9-]{4,40}$/
 
 function storedRoom(): string | null {
   try {

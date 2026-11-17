@@ -21,7 +21,7 @@ import ro.aciee.advisor.domain.show.service.ShowRelay;
 @RequiredArgsConstructor
 public class ShowController {
 
-    private static final String ROOM = "[a-z0-9-]{8,40}";
+    private static final String ROOM = "[a-z0-9-]{4,40}";
 
     private final ShowRelay showRelay;
 
