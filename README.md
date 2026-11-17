@@ -24,7 +24,7 @@ docker compose -f infra/docker-compose.yml up -d
 
 The Postgres image creates the `aciee_ident`, `aciee_anon` and `aciee_report` login roles (`infra/postgres/init-roles.sh`) only when its volume is first created. A volume created before those roles existed needs `docker compose -f infra/docker-compose.yml down -v` once, or the script run by hand. The app reads `DB_IDENT_USER` / `DB_IDENT_PASSWORD` for its pool and `DB_MIGRATOR_USER` / `DB_MIGRATOR_PASSWORD` for Liquibase.
 
-Synthetic data: start the backend with `LIQUIBASE_CONTEXTS=fixtures` on a fresh volume (about 2% of the target volumes, demo accounts `demo.admin` / `demo.leader` / `demo.student` `@student.ugal.ro`, password `demo-parola`). `fixtures-large` loads the full volumes. Without the variable the context is `prod` and no fixtures run. The session cookie is `Secure` by default; set `COOKIE_SECURE=false` only when running locally over plain `http://localhost` (Safari drops Secure cookies there), never in production.
+Synthetic data: start the backend with `LIQUIBASE_CONTEXTS=fixtures` on a fresh volume (about 2% of the target volumes, demo accounts `demo.admin` / `demo.leader` / `demo.student` `@student.ugal.ro`, password `demo-parola`). `fixtures-large` loads the full volumes, and `demo` loads a smaller realistic data set with fictional professors for demo.acieeadvisor.com. Without the variable the context is `prod` and no fixtures run. The session cookie is `Secure` by default; set `COOKIE_SECURE=false` only when running locally over plain `http://localhost` (Safari drops Secure cookies there), never in production.
 
 Deployment: [docs/DEPLOY.md](docs/DEPLOY.md) (Docker Compose behind an HTTPS reverse proxy).
 

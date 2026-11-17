@@ -2,6 +2,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 import HomeView from '../views/HomeView.vue'
 import { useAuthStore } from '@/stores/auth'
 import { safeNext } from '@/api'
+import { ROOM_PATTERN, startShow } from '@/show/state'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -135,6 +136,25 @@ const router = createRouter({
       name: 'admin-table',
       component: () => import('../views/AdminTableView.vue'),
       meta: { role: 'admin' },
+    },
+    {
+      path: '/show',
+      name: 'show',
+      component: HomeView,
+      beforeEnter: (to) => {
+        const room = String(to.query.room ?? '')
+        if (!ROOM_PATTERN.test(room)) {
+          return { name: 'show', query: { room: crypto.randomUUID().slice(0, 13) } }
+        }
+        startShow(room, to.query.lang === 'ro' ? 'ro' : 'en')
+        return { name: 'home' }
+      },
+    },
+    {
+      path: '/show/remote',
+      name: 'show-remote',
+      component: () => import('../views/ShowRemoteView.vue'),
+      meta: { bare: true },
     },
     {
       path: '/forbidden',

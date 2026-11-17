@@ -20,6 +20,7 @@ import { anonApi, ApiError, describeError, lookups, type Lookups } from '@/api'
 import { useAuthStore } from '@/stores/auth'
 import { issueTokens, localMaster, markSubmitted, tokenFor } from '@/crypto/tokens'
 import { rateDraftPrefix, readStored, removeStored, writeStored } from '@/storage'
+import { showRoom, showToken } from '@/show/state'
 
 interface Assignment {
   id: number
@@ -292,7 +293,7 @@ function prefill(existing: Existing) {
 
 onMounted(async () => {
   try {
-    token.value = await tokenFor(userId, offeringId)
+    token.value = showRoom.value ? showToken(offeringId) : await tokenFor(userId, offeringId)
     if (!token.value) {
       if (!(await localMaster(userId))) {
         await router.replace({ name: 'recovery', query: { next: route.fullPath } })

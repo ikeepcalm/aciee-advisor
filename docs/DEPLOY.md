@@ -16,9 +16,11 @@ Only `web` is reachable from outside: it publishes `127.0.0.1:${WEB_PORT}` (defa
 | Environment | Domain | `LIQUIBASE_CONTEXTS` |
 |---|---|---|
 | app | `https://acieeadvisor.com` (and `www.`) | `prod` (no fixtures) |
-| demo | `https://demo.acieeadvisor.com` | `fixtures` (synthetic data, demo accounts) |
+| demo | `https://demo.acieeadvisor.com` | `demo` (realistic fictional data, demo accounts), plus `SPRING_PROFILES_ACTIVE=show` |
 
-The demo accounts are `demo.admin`, `demo.moderator`, `demo.leader` and `demo.student` `@student.ugal.ro`, all with the password `demo-parola`. They exist only where the `fixtures` context ran.
+The demo accounts are `demo.admin`, `demo.moderator`, `demo.leader` and `demo.student` `@student.ugal.ro`, all with the password `demo-parola`. They exist only where the `demo` or `fixtures` context ran.
+
+Pitch show (demo only): open `/show?room=<secret>` on the laptop (add `&lang=ro` for Romanian) and `/show/remote?room=<same secret>` on the phone. The laptop warms up every beat, then the phone's Next plays them one by one; →, Space and PageDown also advance, Escape twice exits. The show serves its own bundled data, so it needs the backend only for the phone relay (`/api/show/**`, the `show` profile), which the host nginx must proxy without buffering.
 
 ## Setting up an environment
 
@@ -29,7 +31,7 @@ The demo accounts are `demo.admin`, `demo.moderator`, `demo.leader` and `demo.st
    |---|---|
    | `POSTGRES_PASSWORD` | migrator / superuser `aciee` |
    | `ACIEE_IDENT_PASSWORD`, `ACIEE_ANON_PASSWORD`, `ACIEE_REPORT_PASSWORD` | app roles |
-   | `LIQUIBASE_CONTEXTS` | `prod` or `fixtures` |
+   | `LIQUIBASE_CONTEXTS` | `prod` or `demo` |
    | `MAIL_HOST`, `MAIL_PORT`, `MAIL_USER`, `MAIL_PASSWORD` | SMTP provider, port 587 with STARTTLS (many VPS providers block outbound 25 and 465) |
    | `MAIL_FROM` | `ACIEE Advisor <no-reply@acieeadvisor.com>` |
    | `FEEDBACK_TO` | inbox for the "Report a problem" form; empty disables sending |
@@ -38,7 +40,7 @@ The demo accounts are `demo.admin`, `demo.moderator`, `demo.leader` and `demo.st
    | `SPRING_PROFILES_ACTIVE`, `ENTRA_CLIENT_ID`, `ENTRA_CLIENT_SECRET` | `microsoft` and the app registration below, to turn on Microsoft sign-in; leave empty to hide it |
 
    The role passwords are read only when the `pgdata` volume is created. Changing them later needs `ALTER ROLE … PASSWORD` in the database as well.
-3. Deploy. The first start runs every Liquibase changeset. With `fixtures` this takes about a minute.
+3. Deploy. The first start runs every Liquibase changeset. With `demo` this takes about a minute.
 
 ## Professor profiles
 

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { computed, defineAsyncComponent, ref, watch } from 'vue'
 import { RouterLink, RouterView, useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import {
@@ -27,6 +27,9 @@ import UserAvatar from '@/components/UserAvatar.vue'
 import AppNotice from '@/components/AppNotice.vue'
 import { shortName } from '@/person'
 import { describeError } from '@/api'
+import { showRoom } from '@/show/state'
+
+const ShowLayer = defineAsyncComponent(() => import('@/show/ShowLayer.vue'))
 
 const { t, locale } = useI18n()
 const auth = useAuthStore()
@@ -119,6 +122,7 @@ async function signOut() {
 <template>
   <div class="flex min-h-svh flex-col">
     <header
+      v-if="!route.meta.bare"
       class="sticky top-0 z-30 border-b border-line bg-board md:bg-board/85 md:backdrop-blur md:supports-backdrop-filter:bg-board/70"
     >
       <div class="mx-auto flex h-14 max-w-6xl items-center gap-2 px-4 md:px-6">
@@ -197,6 +201,7 @@ async function signOut() {
     <RouterView class="flex-1" />
 
     <footer
+      v-if="!route.meta.bare"
       class="border-t border-dashed border-line pb-[calc(5rem+env(safe-area-inset-bottom))] md:pb-0"
     >
       <div
@@ -214,6 +219,7 @@ async function signOut() {
     </footer>
 
     <nav
+      v-if="!route.meta.bare"
       class="fixed inset-x-0 bottom-0 z-30 grid border-t border-line bg-panel pb-[env(safe-area-inset-bottom)] md:hidden"
       :style="{ gridTemplateColumns: `repeat(${tabs.length + 1}, minmax(0, 1fr))` }"
       :aria-label="t('nav.menu')"
@@ -332,6 +338,7 @@ async function signOut() {
         <SegmentedChips v-model="themeModel" :options="themes" />
       </div>
     </AppSheet>
+    <ShowLayer v-if="showRoom && !route.meta.bare" :room="showRoom" />
   </div>
 </template>
 
