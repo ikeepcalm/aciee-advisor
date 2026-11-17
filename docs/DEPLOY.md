@@ -20,7 +20,7 @@ Only `web` is reachable from outside: it publishes `127.0.0.1:${WEB_PORT}` (defa
 
 The demo accounts are `demo.admin`, `demo.moderator`, `demo.leader` and `demo.student` `@student.ugal.ro`, all with the password `demo-parola`. They exist only where the `demo` or `fixtures` context ran.
 
-Pitch show (demo only): open `/show?room=<secret>` on the laptop (add `&lang=ro` for Romanian) and `/show/remote?room=<same secret>` on the phone. The laptop warms up every beat, then the phone's Next plays them one by one; →, Space and PageDown also advance, Escape twice exits. The show serves its own bundled data, so it needs the backend only for the phone relay (`/api/show/**`, the `show` profile), which the host nginx must proxy without buffering.
+Pitch show (demo only): open `/show?room=<secret>` on the laptop (add `&lang=ro` for Romanian) and `/show/remote?room=<same secret>` on the phone. The laptop warms up every beat, then the phone's Next plays them one by one; →, Space and PageDown also advance, Escape twice exits. The show serves its own bundled data, so it needs the backend only for the phone relay (`/api/show/**`, the `show` profile), which the host nginx must proxy without buffering. How it works and how to edit beats: [SHOW.md](SHOW.md).
 
 ## Setting up an environment
 

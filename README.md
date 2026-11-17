@@ -37,6 +37,7 @@ Deployment: [docs/DEPLOY.md](docs/DEPLOY.md) (Docker Compose behind an HTTPS rev
 - [Roadmap](docs/ROADMAP.md): course stages, scope, timeline
 - [Decisions](docs/DECISIONS.md): architectural decision records
 - [AI log](docs/AI_LOG.md): AI usage and corrected AI errors
+- [Pitch show](docs/SHOW.md): the phone-steered self-playing demo, and how to edit its beats
 
 ## License
 
