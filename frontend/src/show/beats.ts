@@ -13,6 +13,7 @@ export interface Beat {
 const HookScene = defineAsyncComponent(() => import('./scenes/HookScene.vue'))
 const AnonymityScene = defineAsyncComponent(() => import('./scenes/AnonymityScene.vue'))
 const PreviewScene = defineAsyncComponent(() => import('./scenes/PreviewScene.vue'))
+const MobileScene = defineAsyncComponent(() => import('./scenes/MobileScene.vue'))
 const ArchitectureScene = defineAsyncComponent(() => import('./scenes/ArchitectureScene.vue'))
 const CloseScene = defineAsyncComponent(() => import('./scenes/CloseScene.vue'))
 
@@ -202,6 +203,16 @@ export const beats: Beat[] = [
       d.hush()
       d.cursor(false)
       d.scene(PreviewScene)
+    },
+  },
+  {
+    title: 'Mobile first',
+    note: 'Everything you saw was designed for the phone first. No laptop needed: on the way to class your phone is enough. Next room, the professor, a rating in a minute.',
+    async run(d) {
+      d.hush()
+      d.cursor(false)
+      d.scene(MobileScene)
+      await d.wait(400)
     },
   },
   {
