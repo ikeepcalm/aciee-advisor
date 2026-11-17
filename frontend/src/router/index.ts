@@ -146,7 +146,7 @@ const router = createRouter({
         if (!ROOM_PATTERN.test(room)) {
           return { name: 'show', query: { room: crypto.randomUUID().slice(0, 13) } }
         }
-        startShow(room, to.query.lang === 'ro' ? 'ro' : 'en')
+        startShow(room, to.query.lang === 'ro' ? 'ro' : 'en', to.query.mirror === '1')
         return { name: 'home' }
       },
     },

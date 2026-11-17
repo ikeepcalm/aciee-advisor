@@ -8,7 +8,15 @@ import { beginRun, cancelRuns, director, resetStage, setPace, Skipped, stage } f
 import { clearCache, installFetchCache } from './fetchCache'
 import { listen, send } from './relay'
 import { registerShowcase, SHOW_USER } from './showcase'
-import { showLang, stopShow, type RemoteCommand, type ShowLang, type ShowMessage } from './state'
+import {
+  showLang,
+  showMirror,
+  stopShow,
+  type RemoteCommand,
+  type ShowLang,
+  type ShowMessage,
+  type StageState,
+} from './state'
 import { i18n, setLocale } from '@/i18n'
 import ShowSpot from './ShowSpot.vue'
 
@@ -35,6 +43,7 @@ auth.load().finally(signInShowcase)
 setTheme('light')
 
 function report() {
+  if (showMirror.value) return
   send(props.room, {
     from: 'stage',
     beat: beat.value,
@@ -80,6 +89,32 @@ function replay() {
   if (ready.value && beat.value >= 0) advance(beat.value)
 }
 
+let lastStage: StageState | null = null
+let following: Promise<void> = Promise.resolve()
+
+// The phone preview replays the beats itself and follows what the laptop reports.
+async function follow(message: StageState) {
+  const previous = lastStage
+  lastStage = message
+  if (!ready.value) return
+  const langChanged = message.lang !== i18n.global.locale.value
+  if (langChanged) await applyLang(message.lang)
+  if (
+    message.beat >= 0 &&
+    (!previous ||
+      langChanged ||
+      message.beat !== previous.beat ||
+      (message.playing && !previous.playing))
+  ) {
+    advance(message.beat)
+  }
+}
+
+function onMessage(message: ShowMessage) {
+  if (!showMirror.value) onCommand(message)
+  else if (message.from === 'stage') following = following.then(() => follow(message))
+}
+
 function onCommand(message: ShowMessage) {
   if (message.from !== 'remote' || handled.has(message.id)) {
     return
@@ -98,6 +133,12 @@ function onCommand(message: ShowMessage) {
 }
 
 async function switchLang(lang: ShowLang) {
+  await applyLang(lang)
+  if (beat.value >= 0) replay()
+  else report()
+}
+
+async function applyLang(lang: ShowLang) {
   try {
     sessionStorage.setItem('show.lang', lang)
   } catch {
@@ -108,8 +149,6 @@ async function switchLang(lang: ShowLang) {
     await new Promise((resolve) => setTimeout(resolve, 25))
   }
   clearCache()
-  if (beat.value >= 0) replay()
-  else report()
 }
 
 let escapedAt = 0
@@ -153,12 +192,17 @@ async function warmUp() {
   scrollTo({ top: 0, behavior: 'instant' })
   ready.value = true
   report()
+  if (lastStage) {
+    const caughtUp = lastStage
+    lastStage = null
+    following = following.then(() => follow(caughtUp))
+  }
 }
 
 onMounted(() => {
   document.documentElement.classList.add('show-on')
-  addEventListener('keydown', onKey, { capture: true })
-  closeLink = listen(props.room, onCommand, (up) => {
+  if (!showMirror.value) addEventListener('keydown', onKey, { capture: true })
+  closeLink = listen(props.room, onMessage, (up) => {
     if (up && !linked.value) {
       linkedAt = performance.now()
       report()
@@ -217,9 +261,11 @@ onBeforeUnmount(() => {
       </svg>
     </div>
 
-    <div v-if="!ready" class="show-curtain">
-      <p class="display text-4xl">ACIEE <span class="text-mask">Advisor</span></p>
-    </div>
+    <Transition name="show-lift">
+      <div v-if="!ready || beat < 0" class="show-curtain">
+        <p class="display text-5xl">ACIEE <span class="text-mask">Advisor</span></p>
+      </div>
+    </Transition>
 
     <div class="show-status">
       <span :class="linked ? 'bg-mask' : 'bg-copper'" />
@@ -433,7 +479,13 @@ html.show-on ::-webkit-scrollbar {
   inset: 0;
   display: grid;
   place-items: center;
-  background: var(--color-board);
+  background: #fff;
+}
+.show-lift-leave-active {
+  transition: opacity 400ms ease 250ms;
+}
+.show-lift-leave-to {
+  opacity: 0;
 }
 .show-status {
   position: fixed;

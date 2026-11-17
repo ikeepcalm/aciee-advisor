@@ -14,6 +14,7 @@ function storedRoom(): string | null {
 }
 
 export const showRoom = ref<string | null>(storedRoom())
+export const showMirror = ref(false)
 
 export function showLang(): ShowLang {
   try {
@@ -23,8 +24,11 @@ export function showLang(): ShowLang {
   }
 }
 
-export function startShow(room: string, lang: ShowLang) {
+export function startShow(room: string, lang: ShowLang, mirror = false) {
   showRoom.value = room
+  showMirror.value = mirror
+  // the mirror lives in an iframe that shares sessionStorage with the remote page
+  if (mirror) return
   try {
     sessionStorage.setItem(LANG_KEY, lang)
     sessionStorage.setItem(ROOM_KEY, room)

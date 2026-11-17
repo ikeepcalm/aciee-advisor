@@ -7,6 +7,7 @@ import { listen, send } from '@/show/relay'
 import { ROOM_PATTERN, type RemoteCommand, type ShowLang, type StageState } from '@/show/state'
 
 const PITCH_SECONDS = 5 * 60
+const STAGE_WIDTH = 1440
 
 const route = useRoute()
 const room = String(route.query.room ?? '')
@@ -19,6 +20,11 @@ const now = ref(Date.now())
 let closeLink = () => {}
 let ticker = 0
 let wakeLock: WakeLockSentinel | null = null
+const frame = ref<HTMLElement | null>(null)
+const previewScale = ref(0.25)
+const resized = new ResizeObserver(([entry]) => {
+  if (entry) previewScale.value = entry.contentRect.width / STAGE_WIDTH
+})
 
 const current = computed(() =>
   stage.value && stage.value.beat >= 0 ? beats[stage.value.beat] : null,
@@ -73,12 +79,14 @@ onMounted(() => {
     (up) => (linked.value = up),
   )
   ticker = window.setInterval(() => (now.value = Date.now()), 500)
+  if (frame.value) resized.observe(frame.value)
   keepAwake()
   document.addEventListener('visibilitychange', onVisible)
 })
 
 onBeforeUnmount(() => {
   closeLink()
+  resized.disconnect()
   clearInterval(ticker)
   wakeLock?.release().catch(() => undefined)
   document.removeEventListener('visibilitychange', onVisible)
@@ -115,6 +123,15 @@ onBeforeUnmount(() => {
         </button>
       </header>
 
+      <div ref="frame" class="preview">
+        <iframe
+          :src="`/show?room=${room}&mirror=1`"
+          title="What the big screen shows"
+          tabindex="-1"
+          :style="{ scale: previewScale }"
+        />
+      </div>
+
       <section class="card">
         <p class="eyebrow mb-1">
           {{ current ? `${(stage?.beat ?? 0) + 1} / ${beats.length}` : 'Standby' }}
@@ -126,9 +143,11 @@ onBeforeUnmount(() => {
         <p v-if="current" class="mt-2 text-base">{{ current.note }}</p>
       </section>
 
-      <p v-if="upcoming" class="text-sm text-muted">
-        Next: <strong class="text-ink">{{ upcoming.title }}</strong>
-      </p>
+      <section v-if="upcoming" class="upcoming">
+        <p class="eyebrow">Next · {{ (stage?.beat ?? -1) + 2 }} / {{ beats.length }}</p>
+        <p class="display text-xl leading-tight">{{ upcoming.title }}</p>
+        <p class="mt-1 line-clamp-2 text-sm text-muted">{{ upcoming.note }}</p>
+      </section>
 
       <button
         class="btn btn-primary next mt-auto w-full text-2xl"
@@ -161,8 +180,32 @@ onBeforeUnmount(() => {
 .remote {
   padding-bottom: calc(1rem + env(safe-area-inset-bottom));
 }
+.preview {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  border: 2px solid var(--color-ink);
+  border-radius: 0.75rem;
+  background: #fff;
+}
+.preview iframe {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 1440px;
+  height: 810px;
+  border: 0;
+  transform-origin: 0 0;
+  pointer-events: none;
+}
+.upcoming {
+  padding: 0.75rem 1rem;
+  border: 2px dashed color-mix(in srgb, var(--color-ink) 35%, transparent);
+  border-radius: 0.75rem;
+}
 .next {
-  min-height: 42svh;
+  flex: 1;
+  min-height: 18svh;
   touch-action: manipulation;
 }
 </style>

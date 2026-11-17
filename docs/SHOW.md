@@ -11,9 +11,9 @@ A self-playing walkthrough of the real site for live presentations. The laptop o
 
 `<room>` is any 4–40 characters of `a-z`, `0-9` and `-`, the same on both devices. With an invalid name (too short, capitals, other characters) the laptop silently joins a random room the phone cannot reach, so check the name if the phone never shows "ready".
 
-1. Open the laptop page. A curtain covers the screen while the show warms up (about 10 s: it plays every beat at full speed so every page, chunk and response is cached), then it waits on the home page.
+1. Open the laptop page. A curtain covers the screen while the show warms up (about 10 s: it plays every beat at full speed so every page, chunk and response is cached), then it holds a white ACIEE Advisor screen until the first Next.
 2. Open the phone page. The dot turns blue and the status reads "ready" once the laptop is warm.
-3. Next plays the next beat. Each beat runs by itself and holds on its last frame. Back plays the previous beat, Replay restarts the current one, EN/RO switches the language and replays the beat. The timer counts down 5:00 from the first Next; tap it to reset. The phone screen is kept awake.
+3. The phone shows a small live preview of the big screen, the current beat with its speaker note, and the next beat with its note. Next plays the next beat. Each beat runs by itself and holds on its last frame. Back plays the previous beat, Replay restarts the current one, EN/RO switches the language and replays the beat. The timer counts down 5:00 from the first Next; tap it to reset. The phone screen is kept awake.
 
 Laptop keys, also what a presentation clicker sends: → / Space / PageDown / Enter next, ← / PageUp back, `r` replay, Escape twice leaves show mode.
 
@@ -31,7 +31,7 @@ phone /show/remote ──POST /api/show/{room}──▶ backend relay ──SSE 
 - **Show layer** (`frontend/src/show/ShowLayer.vue`): mounted by `App.vue` only while a room is active, loaded lazily so normal visitors never download it. It runs the beats, listens to the relay and the keyboard, and draws the overlay: the drawn cursor, the caption, the spotlight (`ShowSpot.vue`), the full-screen scenes and the warm-up curtain. A command that arrives within 1.5 s of (re)connecting is ignored, since that is the relay replaying an old press.
 - **Fetch cache** (`fetchCache.ts`): in show mode every same-origin `GET /api/…` and `/anon/…` is answered once and then from memory, so beats never wait for the server. `cannedResponse(pattern, body)` answers a URL without the network.
 - **Showcase data** (`showcase.ts`, `data/`): the show does not use the demo database. It serves a timetable snapshot (`data/timetable.json`, prod's timetable on 2026-11-17), the lookups (`data/lookups.json`), a fictional professor (Elena Dobrescu and eight others), four rateable courses and the rating form, a "timetable changed" note for group 22C31A, and the signed-in student. `RateFormView` gets a stand-in token in show mode (`showToken` in `state.ts`), so the wizard opens without blind-signature keys; the show never submits.
-- **Remote** (`frontend/src/views/ShowRemoteView.vue`, route `/show/remote`, no app header or footer).
+- **Remote** (`frontend/src/views/ShowRemoteView.vue`, route `/show/remote`, no app header or footer). Its preview is an iframe of `/show?room=<room>&mirror=1` drawn at 1440×810 and scaled down: a mirror runs the same beats on the phone and follows the beat, replay and language the laptop reports, instead of streaming pixels. A mirror never reports, ignores remote commands and keys, and does not touch `sessionStorage`, which the iframe shares with the remote page.
 
 ## Editing beats
 
@@ -78,7 +78,7 @@ When you press Next mid-beat, the running beat is cancelled at its next `wait`, 
 
 ## Scenes
 
-Full-screen slides in `frontend/src/show/scenes/` (hook, anonymity, link preview, close). Contract: no props, the animation starts on mount and holds its last frame, an opaque paper background, CSS and SVG only. Text is kept in the component as `{ en, ro }` and chosen with `useI18n().locale`. Each scene's root uses the `.show-paper` class from `ShowLayer.vue`, which scales the whole scene with the viewport (1em = 16px on a 1440×810 stage) and switches to the final frame under reduced motion. A new scene is imported in `beats.ts` with `defineAsyncComponent` and shown with `d.scene(...)`; replaying a beat remounts its scene, so the animation restarts.
+Full-screen slides in `frontend/src/show/scenes/` (hook, anonymity, link preview, architecture, close). Contract: no props, the animation starts on mount and holds its last frame, an opaque paper background, CSS and SVG only. Text is kept in the component as `{ en, ro }` and chosen with `useI18n().locale`. Each scene's root uses the `.show-paper` class from `ShowLayer.vue`, which scales the whole scene with the viewport (1em = 16px on a 1440×810 stage) and switches to the final frame under reduced motion. A new scene is imported in `beats.ts` with `defineAsyncComponent` and shown with `d.scene(...)`; replaying a beat remounts its scene, so the animation restarts.
 
 ## Running locally
 

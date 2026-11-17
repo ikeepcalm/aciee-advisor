@@ -13,6 +13,7 @@ export interface Beat {
 const HookScene = defineAsyncComponent(() => import('./scenes/HookScene.vue'))
 const AnonymityScene = defineAsyncComponent(() => import('./scenes/AnonymityScene.vue'))
 const PreviewScene = defineAsyncComponent(() => import('./scenes/PreviewScene.vue'))
+const ArchitectureScene = defineAsyncComponent(() => import('./scenes/ArchitectureScene.vue'))
 const CloseScene = defineAsyncComponent(() => import('./scenes/CloseScene.vue'))
 
 const t = (key: string) => i18n.global.t(key)
@@ -38,7 +39,7 @@ function forgetSeenChanges() {
 export const beats: Beat[] = [
   {
     title: 'The problem',
-    note: 'Who do you pick, how hard is the exam? Today that lives in scattered group chats. ACIEE Advisor puts it in one place, anonymously.',
+    note: 'Admitted here as a foreigner, no connections, nobody explained anything: timetable, labs, buildings, professors. These questions go unanswered in group chats.',
     async run(d) {
       d.hush()
       d.cursor(false)
@@ -48,7 +49,7 @@ export const beats: Beat[] = [
   },
   {
     title: 'Timetable',
-    note: 'The faculty timetable is a set of PDFs. We read them every hour and show your group, your week, odd or even. When a room moves, you get a note.',
+    note: 'First struggle: the timetable is a set of faculty PDFs. We read them every hour; you see your group, your week, odd or even. A class moves room, you know right away.',
     async run(d) {
       d.scene(null)
       forgetSeenChanges()
@@ -78,7 +79,7 @@ export const beats: Beat[] = [
   },
   {
     title: 'Catch-up finder',
-    note: 'Missed a lab? It finds the same lab with the same teacher at another group this week and next, and greys out what clashes with your own classes.',
+    note: 'Missed a lab? Same lab, same teacher, another group; whatever clashes with your classes is greyed out.',
     async run(d) {
       d.scene(null)
       if (!location.pathname.startsWith('/timetable')) {
@@ -99,7 +100,7 @@ export const beats: Beat[] = [
   },
   {
     title: 'First-year guide',
-    note: 'Credits, attendance, exams, scholarships, fees: checked against the university rules, written like a senior student would explain it.',
+    note: 'Credits, attendance, exams, scholarships, fees. Checked against the university rules, written like an older student explains it. The guide I wish I had.',
     async run(d) {
       d.scene(null)
       d.cursor(false)
@@ -120,7 +121,7 @@ export const beats: Beat[] = [
   },
   {
     title: 'Professors',
-    note: 'Every professor gets a public page once five students have rated them: an overall score, three pillars, a radar, and comments.',
+    note: 'What to expect from professors and subjects: score, three pillars, comments. Only after 5 ratings, comments moderated.',
     async run(d) {
       d.scene(null)
       await d.go('/professors')
@@ -151,7 +152,7 @@ export const beats: Beat[] = [
   },
   {
     title: 'Rating, anonymously',
-    note: 'Rating takes a minute. The key point: the server signs a blinded token, so it knows you are a student in this course but can never link the rating back to you.',
+    note: 'One minute to rate. Trust: blind signature. Server confirms you are a student in this course but never sees what it signs, so it cannot link the rating to you. Not even me as admin.',
     async run(d) {
       d.scene(null)
       removeStoredStartingWith(rateDraftPrefix)
@@ -186,7 +187,7 @@ export const beats: Beat[] = [
   },
   {
     title: 'Sharing',
-    note: 'Growth is built in: share your week as an image, and every course or professor link shows a preview card in WhatsApp and Telegram.',
+    note: 'Students have to actually come: send your week as an image, every link shows a preview card in WhatsApp and Telegram.',
     async run(d) {
       d.scene(null)
       forgetSeenChanges()
@@ -204,8 +205,18 @@ export const beats: Beat[] = [
     },
   },
   {
+    title: 'How it is built',
+    note: 'Vue web app, Spring Boot on Java, PostgreSQL split in two: who you are / what was said, bridged only by the blind token. Docker on one server. AI: months of work made possible; my part was a day or two of plans, stack choice and review per feature.',
+    async run(d) {
+      d.hush()
+      d.cursor(false)
+      d.scene(ArchitectureScene)
+      await d.wait(400)
+    },
+  },
+  {
     title: 'Close',
-    note: 'Live at acieeadvisor.com. Ask: group leaders to share it with their groups before the exam session.',
+    note: 'Live at acieeadvisor.com. Next: room finder (where is room X), AI pre-moderation of comments. Goal: no first-year figures it all out alone. Everyone here: know a first-year or sit in a group chat? Share it, scan the code. Thank you.',
     async run(d) {
       d.hush()
       d.cursor(false)
