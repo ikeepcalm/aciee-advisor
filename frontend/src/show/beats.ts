@@ -141,7 +141,7 @@ export const beats: Beat[] = [
       await d.wait(3600)
       await d.spot(null)
       await d.scrollTo('main h2.h2.mt-8', 1600)
-      await d.click('main details summary')
+      await d.click('main article details summary')
       d.say(
         say('Ce spun studenții', 'What students say'),
         say(
