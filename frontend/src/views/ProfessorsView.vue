@@ -70,7 +70,7 @@ onMounted(load)
           type="search"
           class="input pl-9"
           autocomplete="off"
-          :placeholder="t('professors.search')"
+          :placeholder="t('professors.searchPlaceholder')"
         />
       </label>
       <SegmentedChips
@@ -81,32 +81,49 @@ onMounted(load)
       />
     </section>
 
-    <p v-if="!professors && !error" class="mt-8 text-muted" role="status">
-      {{ t('common.loading') }}
-    </p>
+    <div v-if="!professors && !error" role="status">
+      <p class="mono mt-4 text-xs text-muted">{{ t('common.loading') }}</p>
+      <ul
+        class="m-0 mt-2 grid list-none gap-2 p-0 md:grid-cols-2 xl:grid-cols-3"
+        aria-hidden="true"
+      >
+        <li v-for="n in 6" :key="n"><span class="row-link h-24 border-dashed opacity-60" /></li>
+      </ul>
+    </div>
     <template v-if="professors">
       <p class="mono mt-4 text-xs text-muted" role="status">
         {{ shown.length ? t('professors.count', { n: shown.length }) : t('common.noResults') }}
       </p>
+      <button v-if="!shown.length" class="btn btn-outline mt-3" @click="query = ''">
+        {{ t('professors.clearSearch') }}
+      </button>
       <ul class="m-0 mt-2 grid list-none gap-2 p-0 md:grid-cols-2 xl:grid-cols-3">
         <li v-for="p in shown" :key="p.slug">
           <RouterLink :to="`/professors/${p.slug}`" class="row-link h-full">
-            <ProfessorAvatar :name="p.fullName" :photo="p.photo" class="size-14 shrink-0" />
+            <ProfessorAvatar
+              :name="p.fullName"
+              :photo="p.photo"
+              class="size-12 shrink-0 md:size-14"
+            />
             <span class="min-w-0 flex-1">
-              <strong class="block font-semibold text-balance">{{ p.fullName }}</strong>
+              <strong class="block leading-snug font-semibold text-balance">{{
+                p.fullName
+              }}</strong>
               <span class="block text-sm text-muted">{{ p.title }}</span>
-              <span class="mt-0.5 flex flex-wrap gap-x-3 text-xs text-muted">
-                <span>{{ p.department }}</span>
-                <span class="whitespace-nowrap">{{
-                  t('professors.subjects', { n: p.subjects })
-                }}</span>
+              <span class="mt-0.5 block text-xs text-muted">
+                {{ p.department }}&nbsp;·
+                <span class="whitespace-nowrap">
+                  {{ t('professors.subjects', { n: p.subjects }) }}
+                </span>
               </span>
+              <span v-if="p.overall === null" class="tag mt-1.5 bg-board text-muted">{{
+                t('professors.few')
+              }}</span>
             </span>
             <span v-if="p.overall !== null" class="shrink-0 text-right">
               <span class="display block text-3xl leading-none">{{ p.overall.toFixed(1) }}</span>
               <span class="mono text-[0.625rem] text-muted">/ 10</span>
             </span>
-            <span v-else class="tag shrink-0 bg-board text-muted">{{ t('professors.few') }}</span>
           </RouterLink>
         </li>
       </ul>

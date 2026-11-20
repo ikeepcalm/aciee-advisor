@@ -420,7 +420,10 @@
     "rateThis": "Rate this course",
     "updated": "Results refresh every hour.",
     "showAllTips": "Show all ({n})",
-    "criteria": "All criteria"
+    "criteria": "All criteria",
+    "ratingsCount": "Ratings: {n}",
+    "ratedHighest": "Rated highest",
+    "ratedLowest": "Rated lowest"
   },
   "professor": {
     "subjects": "Subjects taught",
@@ -447,7 +450,9 @@
     "sortMost": "Most rated",
     "few": "few ratings",
     "subjects": "Subjects: {n}",
-    "count": "Professors: {n}"
+    "count": "Professors: {n}",
+    "searchPlaceholder": "Name, department or title",
+    "clearSearch": "Clear search"
   },
   "rateForm": {
     "anonymous": "The rating is anonymous.",
@@ -485,7 +490,11 @@
     "rateAnother": "Rate another course",
     "quickHint": "4 quick questions. The rest is optional.",
     "allCriteria": "All 14 criteria",
-    "quickOnly": "Just the quick 4"
+    "quickOnly": "Just the quick 4",
+    "scaleDifficulty": "0 easy · 10 hard",
+    "scaleHelp": "0 not at all · 10 a lot",
+    "scaleStrict": "0 relaxed · 10 strict",
+    "scaleQuality": "0 poor · 10 excellent"
   },
   "submissions": {
     "deviceOnly": "Visible only on this device (or after restoring your code).",

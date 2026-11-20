@@ -221,8 +221,8 @@ onMounted(async () => {
               }}</span>
               <span
                 v-if="teacher.radar && teacher.radar.n >= page.threshold"
-                class="mono ml-auto text-xs text-muted"
-                >n = {{ teacher.radar.n }}</span
+                class="ml-auto text-xs text-muted"
+                >{{ t('course.ratingsCount', { n: teacher.radar.n }) }}</span
               >
             </div>
             <RouterLink
