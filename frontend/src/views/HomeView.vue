@@ -17,7 +17,7 @@ import {
 import { api } from '@/api'
 import { useAuthStore } from '@/stores/auth'
 import RadarChart from '@/components/RadarChart.vue'
-import { localTokens, pendingOfferings, type RateableOffering } from '@/crypto/tokens'
+import type { RateableOffering } from '@/crypto/tokens'
 
 const { t } = useI18n()
 const auth = useAuthStore()
@@ -52,6 +52,7 @@ watch(
   async (user) => {
     pending.value = 0
     if (!user) return
+    const { localTokens, pendingOfferings } = await import('@/crypto/tokens')
     pending.value = await Promise.all([
       api<RateableOffering[]>('GET', '/api/tokens/offerings'),
       localTokens(user.id),
