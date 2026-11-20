@@ -1,5 +1,6 @@
 import { defineAsyncComponent } from 'vue'
 import { i18n } from '@/i18n'
+import { useAuthStore } from '@/stores/auth'
 import { rateDraftPrefix, removeStoredStartingWith } from '@/storage'
 import type { Director } from './director'
 import { SHOW_GROUP, SHOW_OFFERING, SHOW_PROFESSOR } from './showcase'
@@ -25,6 +26,8 @@ function say(ro: string, en: string) {
 
 const score = (field: string, value: number) =>
   `[aria-labelledby$="-${field}"] label:nth-child(${value + 1})`
+
+const MICROSOFT = 'a[href="/api/auth/oauth2/microsoft"]'
 
 const timetable = `/timetable?g=${SHOW_GROUP.group}`
 
@@ -149,6 +152,25 @@ export const beats: Beat[] = [
           'Comments go through moderation before they appear.',
         ),
       )
+    },
+  },
+  {
+    title: 'Microsoft sign-in',
+    note: 'To rate you need an account, and making one takes a tap: sign in with the university Microsoft account. Only @student.ugal.ro from UGAL’s own tenant gets in, so every rating comes from a real student. No new password, the name fills itself in.',
+    async run(d) {
+      d.scene(null)
+      useAuthStore().user = null
+      await d.go('/signin')
+      d.say(
+        say('Intri cu contul de student', 'Sign in with your student account'),
+        say(
+          'Un tap cu Microsoft, doar pentru adrese @student.ugal.ro.',
+          'One tap with Microsoft, only for @student.ugal.ro addresses.',
+        ),
+      )
+      await d.point(MICROSOFT)
+      await d.spot(MICROSOFT)
+      await d.wait(400)
     },
   },
   {

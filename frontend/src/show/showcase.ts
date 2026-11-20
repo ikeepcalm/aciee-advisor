@@ -275,6 +275,7 @@ export function registerShowcase() {
     url.pathname.endsWith(SHOW_PROFESSOR) ? professor() : NOT_FOUND,
   )
   cannedResponse(/^\/api\/auth\/me$/, () => SHOW_USER)
+  cannedResponse(/^\/api\/auth\/providers$/, () => ({ microsoft: true }))
   cannedResponse(/^\/api\/vault$/, () => NOT_FOUND)
   cannedResponse(/^\/api\/tokens\/offerings$/, () => offerings)
   cannedResponse(/^\/anon\/offerings\//, () => offeringForm)

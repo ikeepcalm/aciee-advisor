@@ -63,6 +63,7 @@ async function advance(index: number) {
     return
   }
   resetStage()
+  signInShowcase()
   const run = beginRun()
   beat.value = index
   playing.value = true
@@ -179,6 +180,7 @@ async function warmUp() {
   setPace(0)
   for (let index = 0; index < beats.length; index++) {
     resetStage()
+    signInShowcase()
     const run = beginRun()
     await beats[index]!.run(director(run)).catch((e) => {
       if (!(e instanceof Skipped)) console.error('warm-up', index + 1, e)
