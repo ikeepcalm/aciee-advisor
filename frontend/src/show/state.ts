@@ -51,6 +51,7 @@ export interface StageState {
   beat: number
   playing: boolean
   ready: boolean
+  beats?: number
   lang: ShowLang
 }
 

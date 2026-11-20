@@ -49,6 +49,7 @@ function report() {
     beat: beat.value,
     playing: playing.value,
     ready: ready.value,
+    beats: beats.length,
     lang: i18n.global.locale.value === 'ro' ? 'ro' : 'en',
   }).catch(() => undefined)
 }

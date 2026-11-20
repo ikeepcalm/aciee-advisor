@@ -29,6 +29,7 @@ const resized = new ResizeObserver(([entry]) => {
 const current = computed(() =>
   stage.value && stage.value.beat >= 0 ? beats[stage.value.beat] : null,
 )
+const outdated = computed(() => !!stage.value?.beats && stage.value.beats !== beats.length)
 const upcoming = computed(() => beats[(stage.value?.beat ?? -1) + 1] ?? null)
 const left = computed(() =>
   startedAt.value === null
@@ -132,6 +133,11 @@ onBeforeUnmount(() => {
         />
       </div>
 
+      <p v-if="outdated" class="card border-copper text-copper" role="alert">
+        The laptop has {{ stage?.beats }} beats, this phone has {{ beats.length }}. Reload both
+        pages.
+      </p>
+
       <section class="card">
         <p class="eyebrow mb-1">
           {{ current ? `${(stage?.beat ?? 0) + 1} / ${beats.length}` : 'Standby' }}
@@ -149,28 +155,30 @@ onBeforeUnmount(() => {
         <p class="mt-1 line-clamp-2 text-sm text-muted">{{ upcoming.note }}</p>
       </section>
 
-      <button
-        class="btn btn-primary next mt-auto w-full text-2xl"
-        :disabled="!linked || !stage?.ready || sending || !upcoming"
-        @click="command('next')"
-      >
-        {{ upcoming ? 'Next' : 'The end' }}
-      </button>
-      <div class="grid grid-cols-[1fr_1fr_auto] gap-3">
-        <button class="btn btn-outline h-16" :disabled="!stage?.ready" @click="command('prev')">
-          <ChevronLeft class="size-5" aria-hidden="true" /> Back
-        </button>
-        <button class="btn btn-outline h-16" :disabled="!stage?.ready" @click="command('replay')">
-          <RotateCcw class="size-5" aria-hidden="true" /> Replay
-        </button>
+      <div class="controls">
         <button
-          class="btn btn-outline mono h-16 px-4"
-          :disabled="!stage?.ready || sending"
-          :aria-label="'Switch the show language'"
-          @click="command('lang', stage?.lang === 'ro' ? 'en' : 'ro')"
+          class="btn btn-primary next w-full text-2xl"
+          :disabled="!linked || !stage?.ready || sending || !upcoming"
+          @click="command('next')"
         >
-          {{ stage?.lang === 'ro' ? 'RO' : 'EN' }}
+          {{ upcoming ? 'Next' : 'The end' }}
         </button>
+        <div class="grid grid-cols-[1fr_1fr_auto] gap-3">
+          <button class="btn btn-outline h-16" :disabled="!stage?.ready" @click="command('prev')">
+            <ChevronLeft class="size-5" aria-hidden="true" /> Back
+          </button>
+          <button class="btn btn-outline h-16" :disabled="!stage?.ready" @click="command('replay')">
+            <RotateCcw class="size-5" aria-hidden="true" /> Replay
+          </button>
+          <button
+            class="btn btn-outline mono h-16 px-4"
+            :disabled="!stage?.ready || sending"
+            :aria-label="'Switch the show language'"
+            @click="command('lang', stage?.lang === 'ro' ? 'en' : 'ro')"
+          >
+            {{ stage?.lang === 'ro' ? 'RO' : 'EN' }}
+          </button>
+        </div>
       </div>
     </template>
   </main>
@@ -178,7 +186,18 @@ onBeforeUnmount(() => {
 
 <style scoped>
 .remote {
-  padding-bottom: calc(1rem + env(safe-area-inset-bottom));
+  padding-bottom: 0;
+}
+.controls {
+  position: sticky;
+  bottom: 0;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin: auto -1rem 0;
+  padding: 0.75rem 1rem calc(1rem + env(safe-area-inset-bottom));
+  background: var(--board);
 }
 .preview {
   position: relative;
