@@ -120,7 +120,10 @@ async function signOut() {
 </script>
 
 <template>
-  <div class="flex min-h-svh flex-col">
+  <div
+    class="flex min-h-svh flex-col"
+    :class="{ 'pb-[calc(3.5rem+1px+env(safe-area-inset-bottom))] md:pb-0': !route.meta.bare }"
+  >
     <header
       v-if="!route.meta.bare"
       class="sticky top-0 z-30 border-b border-line bg-board md:bg-board/85 md:backdrop-blur md:supports-backdrop-filter:bg-board/70"
@@ -202,7 +205,7 @@ async function signOut() {
 
     <footer
       v-if="!route.meta.bare"
-      class="border-t border-dashed border-line pb-[calc(5rem+env(safe-area-inset-bottom))] md:pb-0"
+      class="hidden border-t border-dashed border-line md:block"
     >
       <div
         class="mx-auto flex w-full max-w-6xl flex-wrap items-center justify-between gap-x-6 gap-y-1 px-4 py-4 text-xs text-muted md:px-6"
@@ -328,6 +331,7 @@ async function signOut() {
         <MessageSquareWarning class="size-5 text-copper" />
         {{ t('feedback.footerLink') }}
       </RouterLink>
+      <p class="mt-1 px-2 text-xs text-muted md:hidden">{{ t('feedback.footerNote') }}</p>
       <hr class="my-5 border-line" />
       <div class="field">
         {{ t('prefs.language') }}

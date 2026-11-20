@@ -9,6 +9,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Ellipsis,
+  FileText,
   Share2,
   StickyNote,
   X,
@@ -516,6 +517,16 @@ watch(group, (g) => {
                     <Share2 class="size-4" aria-hidden="true" />
                     {{ t('timetable.share.action') }}
                   </DropdownMenuItem>
+                  <DropdownMenuItem as-child :class="[MENU_ITEM, 'min-[48rem]:hidden']">
+                    <a :href="program.pdfUrl" target="_blank" rel="noopener">
+                      <FileText class="size-4" aria-hidden="true" />
+                      {{ t('timetable.officialPdf') }}
+                    </a>
+                  </DropdownMenuItem>
+                  <p class="max-w-64 px-3 pb-1.5 text-xs text-muted min-[48rem]:hidden">
+                    {{ t('timetable.updatedAt', { at: formatted(program.updatedAt) }) }} ·
+                    {{ t('timetable.checkedAt', { at: formatted(timetable!.checkedAt) }) }}
+                  </p>
                 </DropdownMenuContent>
               </DropdownMenuPortal>
             </DropdownMenuRoot>
@@ -1372,7 +1383,7 @@ watch(group, (g) => {
 
 .source {
   position: sticky;
-  bottom: calc(3.5rem + 1px + env(safe-area-inset-bottom));
+  bottom: 0;
   z-index: 10;
   margin: auto -1rem 0;
   padding: 0.45rem 1rem;
@@ -1384,9 +1395,9 @@ watch(group, (g) => {
   color: var(--muted);
 }
 
-@media (min-width: 48rem) {
+@media (max-width: 47.99rem) {
   .source {
-    bottom: 0;
+    display: none;
   }
 }
 
@@ -1499,12 +1510,6 @@ watch(group, (g) => {
 @media (prefers-reduced-motion: reduce) {
   .pad.live {
     animation: none;
-  }
-}
-
-@media (max-width: 47.99rem) {
-  main.tt-page {
-    padding-bottom: calc(3.5rem + 1px + env(safe-area-inset-bottom));
   }
 }
 
