@@ -239,8 +239,8 @@ async function signOut() {
         :aria-current="active(tab.to) ? 'page' : undefined"
       >
         <span
-          class="flex items-center justify-center"
-          :class="{ 'rate-blob bg-mark px-3 py-0.5 text-on-mark': tab.to === '/rate' }"
+          class="flex h-6 items-center justify-center"
+          :class="{ 'rate-blob bg-mark px-3 text-on-mark': tab.to === '/rate' }"
         >
           <component :is="tab.icon" class="size-5" />
         </span>
@@ -255,9 +255,9 @@ async function signOut() {
           v-if="auth.user"
           :name="auth.user.displayName"
           :email="auth.user.email"
-          class="size-5 text-[0.5625rem]"
+          class="my-0.5 size-5 text-[0.5625rem]"
         />
-        <CircleUser v-else class="size-5" />
+        <CircleUser v-else class="my-0.5 size-5" />
         <span class="max-w-full truncate px-0.5">{{
           auth.user ? t('nav.account') : t('auth.signIn')
         }}</span>
@@ -276,7 +276,7 @@ async function signOut() {
             <div class="font-semibold [overflow-wrap:anywhere]">
               {{ shortName(auth.user.displayName, auth.user.email) }}
             </div>
-            <p class="mono text-xs break-all text-muted">
+            <p class="text-xs [overflow-wrap:anywhere] text-muted">
               {{ t('auth.signedInAs', { email: auth.user.email }) }}
             </p>
           </div>
@@ -335,7 +335,7 @@ async function signOut() {
       <hr class="my-5 border-line" />
       <div class="field">
         {{ t('prefs.language') }}
-        <SegmentedChips v-model="localeModel" :options="locales" />
+        <SegmentedChips v-model="localeModel" :options="locales" class="locale-chips" />
       </div>
       <div class="field mt-4">
         {{ t('prefs.theme') }}
@@ -349,5 +349,10 @@ async function signOut() {
 <style scoped>
 .rate-blob {
   border-radius: 47% 53% 44% 56% / 55% 46% 54% 45%;
+}
+
+.locale-chips {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 </style>

@@ -46,6 +46,8 @@ const MENU_ITEM =
   'flex min-h-11 cursor-pointer items-center gap-3 rounded-md px-3 text-sm font-semibold outline-none data-[highlighted]:bg-mark data-[highlighted]:text-on-mark'
 const DAYS = [1, 2, 3, 4, 5]
 const WINDOW = 3
+const HOUR_MIN = 3.4
+const HOUR_MAX = 6
 const ORDER = { ALL: 0, ODD: 1, EVEN: 2 }
 const LEVEL = { ODD: 8, EVEN: 36 }
 const { t, locale } = useI18n()
@@ -155,6 +157,16 @@ const weeks = computed(() => {
     }
   })
 })
+
+const compactMonths = computed(() =>
+  [
+    ...new Set(
+      [selectedMonday.value, addDays(selectedMonday.value, 4)].map((date) =>
+        monthShort.value.format(date).replace('.', ''),
+      ),
+    ),
+  ].join('–'),
+)
 
 const selectedIndex = computed(() => weeks.value.findIndex((w) => w.selected))
 
@@ -331,7 +343,7 @@ const span = computed(() => {
   const list = byDay.value[day.value]!
   let from = Math.min(...list.map((e) => minutes(e.lesson.start)))
   const to = Math.max(...list.map((e) => minutes(e.lesson.end)))
-  if (isToday(day.value) && nowMinutes.value >= 7 * 60 && nowMinutes.value < to) {
+  if (isToday(day.value) && nowMinutes.value >= from - 60 && nowMinutes.value < to) {
     from = Math.min(from, nowMinutes.value)
   }
   return { from: Math.floor(from / 60) * 60, to: Math.ceil(to / 60) * 60 }
@@ -405,8 +417,8 @@ function selectWeek(monday: Date) {
   day.value = sameDay(monday, thisMonday.value) && !isWeekend(now.value) ? now.value.getDay() : 1
 }
 
-onMounted(async () => {
-  timer = setInterval(() => (now.value = new Date()), 30_000)
+async function load() {
+  error.value = ''
   try {
     timetable.value = await api<Timetable>('GET', '/api/timetable')
   } catch (e) {
@@ -420,6 +432,11 @@ onMounted(async () => {
     [route.query.g, readJson<string>('timetable.group')]
       .map((g) => (typeof g === 'string' ? g.toUpperCase() : g))
       .find(known) ?? null
+}
+
+onMounted(() => {
+  timer = setInterval(() => (now.value = new Date()), 30_000)
+  load()
 })
 
 onUnmounted(() => clearInterval(timer))
@@ -434,9 +451,15 @@ watch(group, (g) => {
 
 <template>
   <main class="page-wide tt-page pt-4 md:pt-8">
-    <AppNotice v-if="error" kind="error">{{ error }}</AppNotice>
+    <AppNotice v-if="error" kind="error">
+      <p>{{ error }}</p>
+      <button class="btn btn-outline mt-3" @click="load">{{ t('common.retry') }}</button>
+    </AppNotice>
     <AppNotice v-else-if="timetable && !programs.length">{{ t('timetable.loading') }}</AppNotice>
-    <p v-else-if="!timetable" class="text-muted" role="status">{{ t('common.loading') }}</p>
+    <div v-else-if="!timetable" class="sketch" role="status">
+      <p class="eyebrow">{{ t('common.loading') }}</p>
+      <span v-for="n in 3" :key="n" aria-hidden="true"></span>
+    </div>
 
     <template v-if="programs.length">
       <section v-if="!program" class="welcome">
@@ -467,6 +490,12 @@ watch(group, (g) => {
                 @click="weekOpen = !weekOpen"
               >
                 <span class="range">{{ range(selectedMonday) }}</span>
+                <span class="compact">
+                  <span class="cdays"
+                    >{{ selectedMonday.getDate() }}–{{ dateOf(5).getDate() }}</span
+                  >
+                  <span class="cmonths">{{ compactMonths }}</span>
+                </span>
                 <ChevronDown class="icon chev" :class="{ open: weekOpen }" aria-hidden="true" />
               </button>
               <button class="step" :aria-label="t('timetable.nextWeek')" @click="stepWeek(1)">
@@ -517,7 +546,10 @@ watch(group, (g) => {
                     <Share2 class="size-4" aria-hidden="true" />
                     {{ t('timetable.share.action') }}
                   </DropdownMenuItem>
-                  <DropdownMenuItem as-child :class="[MENU_ITEM, 'min-[48rem]:hidden']">
+                  <DropdownMenuItem
+                    as-child
+                    :class="[MENU_ITEM, 'text-ink no-underline min-[48rem]:hidden']"
+                  >
                     <a :href="program.pdfUrl" target="_blank" rel="noopener">
                       <FileText class="size-4" aria-hidden="true" />
                       {{ t('timetable.officialPdf') }}
@@ -623,7 +655,14 @@ watch(group, (g) => {
         </div>
 
         <p v-if="!blocks.length" class="empty">{{ t('timetable.free') }}</p>
-        <div v-else class="axis" :style="{ minHeight: `${((span.to - span.from) / 60) * 3.4}rem` }">
+        <div
+          v-else
+          class="axis"
+          :style="{
+            minHeight: `${((span.to - span.from) / 60) * HOUR_MIN}rem`,
+            maxHeight: `${((span.to - span.from) / 60) * HOUR_MAX}rem`,
+          }"
+        >
           <span v-for="h in hours" :key="h" class="tick" :style="{ top: `${y(h)}%` }">
             <span>{{ clockLabel(h) }}</span>
           </span>
@@ -636,7 +675,7 @@ watch(group, (g) => {
               height: `${y(minutes(g.to)) - y(minutes(g.from))}%`,
             }"
           >
-            {{ t('timetable.freeGap', { from: g.from, to: g.to }) }}
+            <span>{{ t('timetable.freeGap', { from: g.from, to: g.to }) }}</span>
           </span>
           <div
             v-for="(b, i) in blocks"
@@ -755,13 +794,15 @@ watch(group, (g) => {
 <style scoped>
 .dname,
 .grp .code,
-.wk .range {
+.wk .range,
+.cdays {
   font-family: var(--font-display);
   font-weight: 600;
 }
 
 .when,
 .bit,
+.cmonths,
 .date,
 .dnum,
 .gap,
@@ -860,10 +901,17 @@ watch(group, (g) => {
 }
 
 .wk .step {
+  position: relative;
   flex: none;
   justify-content: center;
   width: 2rem;
   color: var(--muted);
+}
+
+.wk .step::before {
+  content: '';
+  position: absolute;
+  inset: 0 -0.4rem;
 }
 
 .wk .step:hover {
@@ -879,9 +927,51 @@ watch(group, (g) => {
 }
 
 .wk .range {
+  padding-inline: 0.3em;
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
+}
+
+.compact {
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.2rem;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.cdays {
+  font-size: 1.0625rem;
+}
+
+.cmonths {
+  color: var(--muted);
+  font-size: 0.5625rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.sketch {
+  padding-top: 0.5rem;
+}
+
+.sketch span {
+  display: block;
+  height: 5.5rem;
+  margin-top: 0.75rem;
+  border: 1.5px dashed var(--line);
+  border-radius: var(--wobble);
+}
+
+.sketch span:nth-of-type(2) {
+  border-radius: var(--wobble-alt);
+  opacity: 0.6;
+}
+
+.sketch span:nth-of-type(3) {
+  opacity: 0.3;
 }
 
 .icon {
@@ -1133,6 +1223,7 @@ watch(group, (g) => {
 }
 
 .answers button {
+  min-height: 2.75rem;
   padding: 0.6rem 1.1rem;
   border: 1px solid var(--line);
   border-radius: 999px;
@@ -1284,7 +1375,7 @@ watch(group, (g) => {
 .pad.live {
   background: var(--kind);
   box-shadow: 0 0 0 4px color-mix(in srgb, var(--kind) 35%, transparent);
-  animation: pulse 1.8s ease-in-out infinite;
+  animation: pulse 1.8s ease-in-out 3;
 }
 
 @keyframes pulse {
@@ -1299,6 +1390,14 @@ watch(group, (g) => {
 
 .block .big > :deep(*) {
   flex-shrink: 0;
+}
+
+.block .big :deep(.bar) {
+  position: absolute;
+  inset: auto 0 0;
+  height: 4px;
+  margin: 0;
+  border-radius: 0;
 }
 
 .block .big :deep(.meta) {
@@ -1332,6 +1431,11 @@ watch(group, (g) => {
   letter-spacing: 0.06em;
   text-transform: uppercase;
   color: var(--muted);
+}
+
+.gap > span {
+  padding: 0 0.5rem;
+  background: var(--board);
 }
 
 .now-line {
@@ -1514,14 +1618,27 @@ watch(group, (g) => {
 }
 
 @media (max-width: 51.99rem) {
-  .wk .pick .chev {
+  .wk .pick .chev,
+  .wk .range {
     display: none;
+  }
+
+  .compact {
+    display: flex;
   }
 }
 
 @media (max-width: 26rem) {
   .bar {
     gap: 0.3rem;
+  }
+
+  .grp {
+    padding: 0 0.6rem;
+  }
+
+  .par {
+    padding: 0 0.5rem;
   }
 
   .grp .icon,

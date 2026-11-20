@@ -417,7 +417,7 @@
   animation: page-in 0.32s 0.08s ease-out both;
 }
 
-@media (prefers-reduced-motion: no-preference) {
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
   .btn:not(:disabled):hover {
     animation: redraw 0.48s step-end infinite;
   }
