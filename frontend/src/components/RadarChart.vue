@@ -48,6 +48,18 @@ const criteria = computed(() =>
     .filter((criterion) => criterion.label),
 )
 const pillarAverages = computed(() => averagePillars(props.axes, props.pillars, props.scores))
+const extremes = computed(() => {
+  const scored = criteria.value.filter((criterion) => criterion.score !== null)
+  const ranked = [...scored].sort((a, b) => b.score! - a.score!)
+  const highest = ranked[0]
+  const lowest = ranked.at(-1)
+  return scored.length > 2 && highest && lowest && highest.score !== lowest.score
+    ? [
+        { ...highest, title: t('course.ratedHighest') },
+        { ...lowest, title: t('course.ratedLowest') },
+      ]
+    : []
+})
 </script>
 
 <template>
@@ -77,6 +89,7 @@ const pillarAverages = computed(() => averagePillars(props.axes, props.pillars, 
           :x="l.x"
           :y="l.y"
           class="axis"
+          :class="{ flagged: extremes.some((extreme) => extreme.n === l.n) }"
           text-anchor="middle"
           dominant-baseline="middle"
         >
@@ -93,6 +106,16 @@ const pillarAverages = computed(() => averagePillars(props.axes, props.pillars, 
           <span>{{ p.label }}</span>
           <strong>{{ p.value === null ? '—' : p.value.toFixed(1) }}</strong>
         </div>
+        <dl v-if="extremes.length" class="extremes">
+          <div v-for="extreme in extremes" :key="extreme.title">
+            <dt>{{ extreme.title }}</dt>
+            <dd class="criterion">
+              <span class="number">{{ extreme.n }}</span>
+              <span class="min-w-0 flex-1">{{ extreme.label }}</span>
+              <strong>{{ extreme.score!.toFixed(1) }}</strong>
+            </dd>
+          </div>
+        </dl>
         <details v-if="criteria.length" :open="open" class="group criteria">
           <summary
             class="flex min-h-11 cursor-pointer list-none items-center gap-1 text-sm font-medium text-mask [&::-webkit-details-marker]:hidden"
@@ -132,6 +155,39 @@ const pillarAverages = computed(() => averagePillars(props.axes, props.pillars, 
     grid-template-columns: 18rem minmax(0, 1fr);
     align-items: center;
     gap: 2rem;
+  }
+}
+
+.extremes {
+  display: grid;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0.75rem 0;
+  border-top: 1px solid var(--line);
+}
+
+.extremes dt {
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.extremes dd {
+  margin: 0;
+  padding: 0.125rem 0 0;
+  font-size: 0.875rem;
+}
+
+.extremes .number {
+  color: var(--copper);
+}
+
+@container (min-width: 36rem) {
+  .extremes {
+    display: none;
   }
 }
 
@@ -175,8 +231,21 @@ const pillarAverages = computed(() => averagePillars(props.axes, props.pillars, 
 
 .axis {
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: 12px;
+  font-weight: 500;
   fill: var(--muted);
+}
+
+.flagged {
+  fill: var(--copper);
+}
+
+@container (min-width: 36rem) {
+  .axis {
+    font-size: 10px;
+    font-weight: 400;
+    fill: var(--muted);
+  }
 }
 
 .area {

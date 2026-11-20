@@ -116,99 +116,103 @@ const subjects = computed(() =>
     <p v-else-if="!page" class="mt-4 text-muted" role="status">{{ t('common.loading') }}</p>
     <template v-if="page">
       <AppNotice v-if="page.archived">{{ t('professor.archived') }}</AppNotice>
-      <header class="mt-2 grid gap-4 lg:grid-cols-2 lg:items-center lg:gap-x-10">
-        <div class="flex items-center gap-4 md:gap-6">
-          <ProfessorAvatar
-            :name="page.fullName"
-            :photo="page.photo"
-            class="size-20 shrink-0 md:size-28"
-          />
-          <div class="min-w-0">
-            <span class="eyebrow">{{ page.department }}</span>
-            <h1 class="h1">{{ page.fullName }}</h1>
-            <p class="mt-1 text-sm text-muted">{{ page.title }}</p>
-          </div>
-        </div>
-
-        <section v-if="bio || page.cvUrl" class="max-w-prose">
-          <p v-if="bio" class="text-sm md:text-base">{{ bio }}</p>
-          <p class="flex flex-wrap items-center gap-x-2 text-xs text-muted">
-            <span v-if="bio">{{ t('professor.bioNote') }}</span>
-            <a
-              v-if="page.cvUrl"
-              :href="page.cvUrl"
-              target="_blank"
-              rel="noopener"
-              class="inline-flex min-h-11 items-center gap-1 font-medium"
-            >
-              {{ t('professor.cv') }}
-              <ExternalLink class="size-3.5" aria-hidden="true" />
-            </a>
-          </p>
-        </section>
-      </header>
-
-      <section class="score card mt-5">
-        <h2 class="sr-only">{{ t('professor.score') }}</h2>
-        <div
-          v-if="page.overall !== null"
-          class="grid gap-5 lg:grid-cols-[20rem_minmax(0,1fr)] lg:gap-10"
-        >
-          <div class="lg:self-start">
-            <p class="flex items-baseline gap-2">
-              <span class="score-value display text-6xl leading-none">{{
-                page.overall.toFixed(1)
-              }}</span>
-              <span class="mono text-sm text-muted">/ 10</span>
-            </p>
-            <p class="mt-2 text-sm text-muted">
-              {{ t('professor.basis', { ratings: page.ratings, subjects: page.subjects.length }) }}
-            </p>
-            <ul class="m-0 mt-4 grid list-none gap-2 p-0">
-              <li
-                v-for="pillar in pillars"
-                :key="pillar.label"
-                class="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 text-sm"
-              >
-                <span>{{ pillar.label }}</span>
-                <strong class="mono font-medium">
-                  {{ pillar.value === null ? '—' : pillar.value.toFixed(1) }}
-                </strong>
-                <span class="bar col-span-2 mt-1" aria-hidden="true">
-                  <span :style="{ width: `${(pillar.value ?? 0) * 10}%` }" />
-                </span>
-              </li>
-            </ul>
-          </div>
-          <div
-            v-if="page.radar && labels"
-            class="border-t border-line pt-4 lg:border-t-0 lg:border-l lg:pt-0 lg:pl-10"
-          >
-            <h3 class="eyebrow">{{ t('professor.radar') }}</h3>
-            <RadarChart
-              :scores="page.radar.scores"
-              :axes="labels.axes"
-              :pillars="[]"
-              :open="wide"
+      <div class="max-lg:flex max-lg:flex-col">
+        <header class="mt-2 grid gap-4 max-lg:contents lg:grid-cols-2 lg:items-center lg:gap-x-10">
+          <div class="flex items-center gap-4 max-lg:mt-2 md:gap-6">
+            <ProfessorAvatar
+              :name="page.fullName"
+              :photo="page.photo"
+              class="size-20 shrink-0 md:size-28"
             />
+            <div class="min-w-0">
+              <span class="eyebrow">{{ page.department }}</span>
+              <h1 class="h1">{{ page.fullName }}</h1>
+              <p class="mt-1 text-sm text-muted">{{ page.title }}</p>
+            </div>
           </div>
-        </div>
-        <template v-else>
-          <p class="display text-3xl leading-tight">{{ t('professor.fewRatings') }}</p>
-          <p class="mt-1 text-sm text-muted">{{ t('professor.fewRatingsBody') }}</p>
-          <RouterLink v-if="auth.user" :to="{ name: 'rate' }" class="btn btn-primary mt-4 w-full">
-            {{ t('nav.rate') }}
-            <ArrowRight class="size-4" aria-hidden="true" />
-          </RouterLink>
-          <RouterLink
-            v-else-if="auth.loaded"
-            :to="{ name: 'signin', query: { next: route.fullPath } }"
-            class="btn btn-outline mt-4 w-full"
+
+          <section v-if="bio || page.cvUrl" class="max-w-prose max-lg:order-1 max-lg:mt-4">
+            <p v-if="bio" class="text-sm md:text-base">{{ bio }}</p>
+            <p class="flex flex-wrap items-center gap-x-2 text-xs text-muted">
+              <span v-if="bio">{{ t('professor.bioNote') }}</span>
+              <a
+                v-if="page.cvUrl"
+                :href="page.cvUrl"
+                target="_blank"
+                rel="noopener"
+                class="inline-flex min-h-11 items-center gap-1 font-medium"
+              >
+                {{ t('professor.cv') }}
+                <ExternalLink class="size-3.5" aria-hidden="true" />
+              </a>
+            </p>
+          </section>
+        </header>
+
+        <section class="score card mt-5">
+          <h2 class="sr-only">{{ t('professor.score') }}</h2>
+          <div
+            v-if="page.overall !== null"
+            class="grid gap-5 lg:grid-cols-[20rem_minmax(0,1fr)] lg:gap-10"
           >
-            {{ t('auth.signInAction') }}
-          </RouterLink>
-        </template>
-      </section>
+            <div class="lg:self-start">
+              <p class="flex items-baseline gap-2">
+                <span class="score-value display text-6xl leading-none">{{
+                  page.overall.toFixed(1)
+                }}</span>
+                <span class="mono text-sm text-muted">/ 10</span>
+              </p>
+              <p class="mt-2 text-sm text-muted">
+                {{
+                  t('professor.basis', { ratings: page.ratings, subjects: page.subjects.length })
+                }}
+              </p>
+              <ul class="m-0 mt-4 grid list-none gap-2 p-0">
+                <li
+                  v-for="pillar in pillars"
+                  :key="pillar.label"
+                  class="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 text-sm"
+                >
+                  <span>{{ pillar.label }}</span>
+                  <strong class="mono font-medium">
+                    {{ pillar.value === null ? '—' : pillar.value.toFixed(1) }}
+                  </strong>
+                  <span class="bar col-span-2 mt-1" aria-hidden="true">
+                    <span :style="{ width: `${(pillar.value ?? 0) * 10}%` }" />
+                  </span>
+                </li>
+              </ul>
+            </div>
+            <div
+              v-if="page.radar && labels"
+              class="border-t border-line pt-4 lg:border-t-0 lg:border-l lg:pt-0 lg:pl-10"
+            >
+              <h3 class="eyebrow">{{ t('professor.radar') }}</h3>
+              <RadarChart
+                :scores="page.radar.scores"
+                :axes="labels.axes"
+                :pillars="[]"
+                :open="wide"
+              />
+            </div>
+          </div>
+          <template v-else>
+            <p class="display text-3xl leading-tight">{{ t('professor.fewRatings') }}</p>
+            <p class="mt-1 text-sm text-muted">{{ t('professor.fewRatingsBody') }}</p>
+            <RouterLink v-if="auth.user" :to="{ name: 'rate' }" class="btn btn-primary mt-4 w-full">
+              {{ t('nav.rate') }}
+              <ArrowRight class="size-4" aria-hidden="true" />
+            </RouterLink>
+            <RouterLink
+              v-else-if="auth.loaded"
+              :to="{ name: 'signin', query: { next: route.fullPath } }"
+              class="btn btn-outline mt-4 w-full"
+            >
+              {{ t('auth.signInAction') }}
+            </RouterLink>
+          </template>
+        </section>
+      </div>
 
       <RateInvite v-if="page.overall !== null" class="mt-5" />
 
@@ -250,7 +254,9 @@ const subjects = computed(() =>
             {{ missing(subject.radar?.n ?? 0) }}
           </p>
           <template v-else>
-            <p class="mono text-xs text-muted">n = {{ subject.radar.n }}</p>
+            <p class="text-xs text-muted">
+              {{ t('course.ratingsCount', { n: subject.radar.n }) }}
+            </p>
             <dl class="m-0 mt-2 text-sm">
               <div
                 v-for="pillar in subjectPillars(subject.radar.scores)"

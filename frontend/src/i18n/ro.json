@@ -405,7 +405,7 @@
   "course": {
     "subtitle": "{specialization} · An {year} · Sem. {semester}",
     "survival": "Cum se trece",
-    "survivalCount": "Cum se trece (din {n} evaluări)",
+    "survivalCount": "Cum se trece (evaluări: {n})",
     "signInPrompt": "Ai parcurs materia? Autentifică-te cu adresa {'@'}student.ugal.ro ca s-o evaluezi și să lași un sfat.",
     "teachers": "Profesori",
     "academicYear": "An universitar",
@@ -420,7 +420,10 @@
     "rateThis": "Evaluează acest curs",
     "updated": "Rezultatele se actualizează în fiecare oră.",
     "showAllTips": "Arată toate ({n})",
-    "criteria": "Toate criteriile"
+    "criteria": "Toate criteriile",
+    "ratingsCount": "Evaluări: {n}",
+    "ratedHighest": "Cel mai bine notat",
+    "ratedLowest": "Cel mai slab notat"
   },
   "professor": {
     "subjects": "Discipline predate",
@@ -428,7 +431,7 @@
     "archived": "Profesorul nu mai predă la facultate.",
     "score": "Scor general",
     "radar": "Media pe toate disciplinele",
-    "basis": "din {ratings} evaluări la {subjects} discipline",
+    "basis": "Evaluări: {ratings} · Discipline: {subjects}",
     "fewRatings": "Încă prea puține evaluări",
     "fewRatingsBody": "Scorul apare când se strâng destule evaluări. Ai avut ore cu acest profesor?",
     "bioNote": "Rezumat automat al CV-ului public.",
@@ -447,7 +450,9 @@
     "sortMost": "Cei mai evaluați",
     "few": "puține evaluări",
     "subjects": "Discipline: {n}",
-    "count": "Profesori: {n}"
+    "count": "Profesori: {n}",
+    "searchPlaceholder": "Nume, departament sau titlu",
+    "clearSearch": "Șterge căutarea"
   },
   "rateForm": {
     "anonymous": "Evaluarea este anonimă.",
@@ -485,7 +490,11 @@
     "rateAnother": "Evaluează alt curs",
     "quickHint": "4 întrebări rapide. Restul e opțional.",
     "allCriteria": "Toate cele 14 criterii",
-    "quickOnly": "Doar cele 4 rapide"
+    "quickOnly": "Doar cele 4 rapide",
+    "scaleDifficulty": "0 ușor · 10 greu",
+    "scaleHelp": "0 deloc · 10 mult",
+    "scaleStrict": "0 lejer · 10 strict",
+    "scaleQuality": "0 slab · 10 excelent"
   },
   "submissions": {
     "deviceOnly": "Vizibile doar pe acest dispozitiv (sau după restaurarea codului).",

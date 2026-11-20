@@ -108,6 +108,8 @@ const stepPanel = useTemplateRef<HTMLElement>('stepPanel')
 const scale = Array.from({ length: 11 }, (_, i) => ({ value: i, label: String(i) }))
 const rowClass =
   'grid gap-1.5 lg:grid-cols-[16rem_1fr] lg:items-center lg:gap-6 xl:grid-cols-[19rem_1fr]'
+const hintedLabel =
+  'flex flex-wrap items-baseline justify-between gap-x-3 text-sm font-medium lg:flex-col lg:justify-start'
 const yesNo = computed(() => [
   { value: 'yes' as const, label: t('rateForm.yes') },
   { value: 'no' as const, label: t('rateForm.no') },
@@ -454,9 +456,12 @@ async function submit() {
           <h2 class="h2">{{ t('rateForm.howToPass') }}</h2>
           <div class="mt-4 grid gap-5">
             <div :class="rowClass">
-              <span :id="`${fieldId}-examDifficulty`" class="text-sm font-medium">{{
-                t('rateForm.examDifficulty')
-              }}</span>
+              <span :id="`${fieldId}-examDifficulty`" :class="hintedLabel">
+                {{ t('rateForm.examDifficulty') }}
+                <span class="text-xs font-normal text-muted">{{
+                  t('rateForm.scaleDifficulty')
+                }}</span>
+              </span>
               <SegmentedChips
                 v-model="survival.examDifficulty"
                 :options="scale"
@@ -479,9 +484,10 @@ async function submit() {
               />
             </div>
             <div :class="rowClass">
-              <span :id="`${fieldId}-labsHelp`" class="text-sm font-medium">{{
-                t('rateForm.labsHelp')
-              }}</span>
+              <span :id="`${fieldId}-labsHelp`" :class="hintedLabel">
+                {{ t('rateForm.labsHelp') }}
+                <span class="text-xs font-normal text-muted">{{ t('rateForm.scaleHelp') }}</span>
+              </span>
               <SegmentedChips
                 v-model="survival.labsHelp"
                 :options="scale"
@@ -530,9 +536,10 @@ async function submit() {
               />
             </div>
             <div :class="rowClass">
-              <span :id="`${fieldId}-attendanceStrictness`" class="text-sm font-medium">{{
-                t('rateForm.attendanceStrictness')
-              }}</span>
+              <span :id="`${fieldId}-attendanceStrictness`" :class="hintedLabel">
+                {{ t('rateForm.attendanceStrictness') }}
+                <span class="text-xs font-normal text-muted">{{ t('rateForm.scaleStrict') }}</span>
+              </span>
               <SegmentedChips
                 v-model="survival.attendanceStrictness"
                 :options="scale"
@@ -596,6 +603,9 @@ async function submit() {
                 />
                 {{ t(teacherShowsAll ? 'rateForm.quickOnly' : 'rateForm.allCriteria') }}
               </button>
+              <p class="basis-full text-xs text-muted lg:basis-auto">
+                {{ t('rateForm.scaleQuality') }}
+              </p>
             </div>
             <div
               v-if="!teacherShowsAll"

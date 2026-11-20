@@ -2,7 +2,7 @@
 import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
-import { ArrowRight, Check, Loader2 } from 'lucide-vue-next'
+import { ArrowRight, Check, ChevronRight, Loader2 } from 'lucide-vue-next'
 import AppNotice from '@/components/AppNotice.vue'
 import NoteStar from '@/components/NoteStar.vue'
 import { useAuthStore } from '@/stores/auth'
@@ -184,8 +184,14 @@ onMounted(load)
           </ul>
         </section>
 
-        <details v-if="unavailable.length" :open="!rateable.length">
-          <summary class="flex min-h-11 cursor-pointer items-center text-sm font-medium text-mask">
+        <details v-if="unavailable.length" :open="!rateable.length" class="group">
+          <summary
+            class="flex min-h-11 cursor-pointer list-none items-center gap-1 text-sm font-medium text-mask [&::-webkit-details-marker]:hidden"
+          >
+            <ChevronRight
+              class="size-4 transition-transform group-open:rotate-90"
+              aria-hidden="true"
+            />
             {{ t('rate.locked', { n: unavailable.length }) }}
           </summary>
           <ul class="m-0 mt-1 list-none p-0 text-sm">
@@ -200,12 +206,17 @@ onMounted(load)
           </ul>
         </details>
 
-        <p class="text-sm text-muted">
-          {{ t('rate.pastYears') }}
-          <RouterLink :to="{ name: 'group' }">{{ t('rate.pastYearsLink') }}</RouterLink>
-          <span aria-hidden="true"> · </span>
-          <RouterLink :to="{ name: 'recovery' }">{{ t('recovery.title') }}</RouterLink>
-        </p>
+        <div class="text-sm text-muted">
+          <p>{{ t('rate.pastYears') }}</p>
+          <p class="flex flex-wrap gap-x-6 font-medium">
+            <RouterLink :to="{ name: 'group' }" class="inline-flex min-h-11 items-center">{{
+              t('rate.pastYearsLink')
+            }}</RouterLink>
+            <RouterLink :to="{ name: 'recovery' }" class="inline-flex min-h-11 items-center">{{
+              t('recovery.title')
+            }}</RouterLink>
+          </p>
+        </div>
       </div>
     </div>
   </main>
