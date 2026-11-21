@@ -40,10 +40,13 @@ function forgetSeenChanges() {
   }
 }
 
+export const opening =
+  "I consider myself a practical person. If I build something, I'd rather keep it small and have it solve one real problem. I hope today's project counts as one.\n\nWhen I was admitted here, I came as a foreigner. No connections, nobody to explain anything. Where's my timetable? Which labs matter? Which building is this? What is this professor like?"
+
 export const beats: Beat[] = [
   {
     title: 'The problem',
-    note: 'Admitted here as a foreigner, no connections, nobody explained anything: timetable, labs, buildings, professors. These questions go unanswered in group chats.',
+    note: "(Let the chat bubbles land.)\n\nYou could say: just ask in the group chat. In my experience, you'll rarely get a straight answer. So I built the thing I wish I'd had three years ago: ACIEE Advisor. It gives first-years the tools they need, and gives older students a way to help them.",
     async run(d) {
       d.hush()
       d.cursor(false)
@@ -53,7 +56,7 @@ export const beats: Beat[] = [
   },
   {
     title: 'Timetable',
-    note: 'First struggle: the timetable is a set of faculty PDFs. We read them every hour; you see your group, your week, odd or even. A class moves room, you know right away.',
+    note: "Let's start with the timetable. Officially, it's a set of faculty PDFs, and at first they confused me a lot. ACIEE Advisor reads those PDFs every hour and turns them into your group's week, with odd and even weeks already worked out.\n\n(Moved class lights up.) If a class moves to another room, you know right away.",
     async run(d) {
       d.scene(null)
       forgetSeenChanges()
@@ -83,7 +86,7 @@ export const beats: Beat[] = [
   },
   {
     title: 'Catch-up finder',
-    note: 'Missed a lab? Same lab, same teacher, another group; whatever clashes with your classes is greyed out.',
+    note: 'Missed a lab? Tap it, and you see the same lab, with the same teacher, in other groups. Anything that clashes with your own classes is greyed out. No messaging ten people, no digging through the PDF for a free slot.',
     async run(d) {
       d.scene(null)
       if (!location.pathname.startsWith('/timetable')) {
@@ -104,7 +107,7 @@ export const beats: Beat[] = [
   },
   {
     title: 'First-year guide',
-    note: 'Credits, attendance, exams, scholarships, fees. Checked against the university rules, written like an older student explains it. The guide I wish I had.',
+    note: "Next, the guide for first-years: credits, attendance, exams, scholarships, fees, all in one place. Everything is checked against the university rules, but written simply. It's the guide I wish I'd had in my first week.",
     async run(d) {
       d.scene(null)
       d.cursor(false)
@@ -125,7 +128,7 @@ export const beats: Beat[] = [
   },
   {
     title: 'Professors',
-    note: 'What to expect from professors and subjects: score, three pillars, comments. Only after 5 ratings, comments moderated.',
+    note: "Then the question everyone asks sooner or later: what is this professor actually like?\n\n(Score lights up.) Every professor gets an overall score, three pillars and a radar, built from real students' ratings. It only appears after five ratings, so no single student can be singled out.\n\n(Comments open.) Below are the comments, and each one is moderated before it appears.",
     async run(d) {
       d.scene(null)
       await d.go('/professors')
@@ -156,7 +159,7 @@ export const beats: Beat[] = [
   },
   {
     title: 'Microsoft sign-in',
-    note: 'To rate you need an account, and making one takes a tap: sign in with the university Microsoft account. Only @student.ugal.ro from UGAL’s own tenant gets in, so every rating comes from a real student. No new password, the name fills itself in.',
+    note: 'To rate, you need an account, and that takes one tap: your university Microsoft account. Only @student.ugal.ro addresses get in, so every rating comes from a real student.',
     async run(d) {
       d.scene(null)
       useAuthStore().user = null
@@ -175,7 +178,7 @@ export const beats: Beat[] = [
   },
   {
     title: 'Rating, anonymously',
-    note: 'One minute to rate. Trust: blind signature. Server confirms you are a student in this course but never sees what it signs, so it cannot link the rating to you. Not even me as admin.',
+    note: "Besides professors, you can rate the course itself, in about a minute: how hard the exam was, whether the labs help, how the teacher explains, plus a comment if you want.\n\n(Envelope scene.) The obvious question: if I'm signed in, can you see what I wrote? No. Your browser seals a random token in an envelope. The server checks that you're enrolled in the course and stamps the envelope without looking inside. This is called a blind signature. Your rating travels with that token. We can prove you're a student, but not which one. Not even me, with direct database access.",
     async run(d) {
       d.scene(null)
       removeStoredStartingWith(rateDraftPrefix)
@@ -210,7 +213,7 @@ export const beats: Beat[] = [
   },
   {
     title: 'Sharing',
-    note: 'Students have to actually come: send your week as an image, every link shows a preview card in WhatsApp and Telegram.',
+    note: 'Of course, a tool only works if students actually use it. You can send your whole week to the group as an image.\n\n(Preview cards.) And every shared link shows a proper preview card in WhatsApp or Telegram.',
     async run(d) {
       d.scene(null)
       forgetSeenChanges()
@@ -229,7 +232,7 @@ export const beats: Beat[] = [
   },
   {
     title: 'Mobile first',
-    note: 'Everything you saw was designed for the phone first. No laptop needed: on the way to class your phone is enough. Next room, the professor, a rating in a minute.',
+    note: 'All of this was designed for the phone first. On the way to class, your phone is enough: your next room, your professor, a rating in a minute.',
     async run(d) {
       d.hush()
       d.cursor(false)
@@ -239,7 +242,7 @@ export const beats: Beat[] = [
   },
   {
     title: 'How it is built',
-    note: 'Vue web app, Spring Boot on Java, PostgreSQL split in two: who you are / what was said, bridged only by the blind token. Docker on one server. AI: months of work made possible; my part was a day or two of plans, stack choice and review per feature.',
+    note: 'Under the hood: a Vue web app, with Spring Boot on Java behind it. The database is split in two: who you are, and what was said. The only bridge between them is that blind token.\n\nAI made months of work possible here. My part was planning, choosing the stack and reviewing every feature.',
     async run(d) {
       d.hush()
       d.cursor(false)
@@ -249,7 +252,7 @@ export const beats: Beat[] = [
   },
   {
     title: 'Close',
-    note: 'Live at acieeadvisor.com. Next: room finder (where is room X), AI pre-moderation of comments. Goal: no first-year figures it all out alone. Everyone here: know a first-year or sit in a group chat? Share it, scan the code. Thank you.',
+    note: "And it's live today, at acieeadvisor.com. Next on my roadmap: a 3D room finder, and AI pre-moderation, so polite comments publish right away and rude ones go to a human.\n\nThe goal is simple: no first-year should have to figure it all out alone. If you know a first-year, or you're in a group chat, scan the code and share it. I'd really appreciate it.\n\nThat's all from me. Thank you for your attention!",
     async run(d) {
       d.hush()
       d.cursor(false)

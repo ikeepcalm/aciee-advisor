@@ -2,7 +2,7 @@
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import { ChevronLeft, RotateCcw } from 'lucide-vue-next'
-import { beats } from '@/show/beats'
+import { beats, opening } from '@/show/beats'
 import { listen, send } from '@/show/relay'
 import { ROOM_PATTERN, type RemoteCommand, type ShowLang, type StageState } from '@/show/state'
 
@@ -146,7 +146,7 @@ onBeforeUnmount(() => {
         <h1 class="display text-3xl leading-tight">
           {{ current?.title ?? 'Before the first beat' }}
         </h1>
-        <p v-if="current" class="mt-2 text-base">{{ current.note }}</p>
+        <p class="mt-2 whitespace-pre-line text-base">{{ current?.note ?? opening }}</p>
       </section>
 
       <section v-if="upcoming" class="upcoming">
