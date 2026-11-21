@@ -6,4 +6,4 @@ try {
   ) {
     document.documentElement.classList.add('dark')
   }
-} catch (e) {}
+} catch {}
