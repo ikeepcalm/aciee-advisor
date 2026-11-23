@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.http.HttpStatus;
+import org.springframework.jdbc.core.RowCallbackHandler;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -28,7 +29,10 @@ import ro.aciee.advisor.domain.professor.service.ProfessorDirectory;
 
 import java.security.SecureRandom;
 import java.time.OffsetDateTime;
+import java.util.ArrayList;
 import java.util.Base64;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.Function;
@@ -54,9 +58,26 @@ public class GroupService {
 
     @Transactional(readOnly = true)
     public List<GroupSummary> currentGroups() {
-        return jdbc.sql(SELECT_GROUP + "WHERE g.year_during @> current_date ORDER BY g.code")
+        var groups = jdbc.sql(SELECT_GROUP + "WHERE g.year_during @> current_date ORDER BY g.code")
                 .query(GroupSummary.class)
                 .list();
+        var labels = new HashMap<Integer, List<Subgroup>>();
+        jdbc.sql("SELECT group_id, id, label FROM core.subgroup ORDER BY label")
+                .query((RowCallbackHandler) rs -> {
+                    var subgroup = new Subgroup();
+                    subgroup.setId(rs.getInt("id"));
+                    subgroup.setLabel(rs.getString("label"));
+                    labels.computeIfAbsent(rs.getInt("group_id"), k -> new ArrayList<>()).add(subgroup);
+                });
+        var led = new HashSet<>(jdbc.sql("""
+                        SELECT c.group_id FROM core.group_leader l JOIN core.group_leader_claim c ON c.id = l.claim_id""")
+                .query(Integer.class)
+                .list());
+        groups.forEach(g -> {
+            g.setSubgroups(labels.getOrDefault(g.getId(), List.of()));
+            g.setHasLeader(led.contains(g.getId()));
+        });
+        return groups;
     }
 
     @Transactional(readOnly = true)
@@ -143,7 +164,7 @@ public class GroupService {
     }
 
     @Transactional
-    public void claimLeadership(int groupId) {
+    public void claimLeadership(int groupId, Integer subgroupId) {
         try {
             jdbc.sql("INSERT INTO core.group_leader_claim (user_id, group_id) VALUES (core.app_user_id(), :group)")
                     .param("group", groupId)
@@ -152,13 +173,14 @@ public class GroupService {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "claim_pending");
         }
         jdbc.sql("""
-                        INSERT INTO core.membership_request (user_id, group_id, kind)
-                        SELECT core.app_user_id(), :group, 'regular'
+                        INSERT INTO core.membership_request (user_id, group_id, subgroup_id, kind)
+                        SELECT core.app_user_id(), :group, :subgroup, 'regular'
                         WHERE NOT EXISTS (SELECT 1 FROM core.group_membership m
                                           WHERE m.user_id = core.app_user_id() AND m.group_id = :group
                                             AND m.valid_during && daterange(current_date, NULL))
                         ON CONFLICT (user_id, group_id) WHERE status = 'pending' DO NOTHING""")
                 .param("group", groupId)
+                .param("subgroup", subgroupId)
                 .update();
     }
 

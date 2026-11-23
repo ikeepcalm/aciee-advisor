@@ -175,7 +175,7 @@
     "summary": "{code} · {specialization} · Year {year}",
     "subgroupSince": "Subgroup {subgroup} · member since {since}",
     "since": "Member since {since}",
-    "noGroup": "You are not in any group. Ask your group leader for the invitation link.",
+    "noGroup": "You are not in a group yet.",
     "myRequests": "My requests",
     "status": {
       "pending": "Pending",
@@ -188,13 +188,9 @@
       "historical_claim": "past year"
     },
     "claim": "I am the leader of this group",
-    "claimOther": "I am a group leader",
-    "pickGroup": "Choose the group",
     "claimSent": "The request was sent to the administrator.",
     "tabs": {
       "members": "Members",
-      "requests": "Requests ({n})",
-      "invites": "Invitations",
       "teaching": "Professors"
     },
     "occupancy": "Seats taken: {members} / {max}",
@@ -202,12 +198,9 @@
     "approve": "Approve",
     "reject": "Reject",
     "leader": "leader",
-    "newInvite": "New link",
     "expiresInDays": "Expires after (days)",
     "maxUses": "Uses",
     "generate": "Generate link",
-    "inviteOnce": "Copy the link now. You will not see it again.",
-    "activeInvites": "Active",
     "inviteLine": "{uses}/{max} · until {until}",
     "deactivate": "Deactivate",
     "joinTitle": "Join the group",
@@ -233,7 +226,40 @@
     "fixNameTitle": "Fix the name",
     "fixNameHint": "Names come from the timetable and may be shortened, like “A. Cocu”. Write the full name if you know it.",
     "fullName": "First and last name",
-    "academicTitle": "Title"
+    "academicTitle": "Title",
+    "intent": {
+      "join": "Join my group",
+      "lead": "I am the group leader"
+    },
+    "joinHow": "Ask your group leader for the invitation link and open it. There is no other way in.",
+    "findGroup": "Find your group",
+    "findGroupExample": "22C31 or calculatoare 3",
+    "noGroupFound": "No group matches. Check the code in the timetable.",
+    "subgroups": "subgroups {list}",
+    "hasLeader": "This group already has a leader. Ask them for the invitation link.",
+    "claimGroup": "Claim leadership of {code}",
+    "claimHint": "An administrator confirms it. Each group has one leader.",
+    "teachingSet": "Set: {set} of {total}",
+    "teachingMissing": "Missing: {n}",
+    "missing": "missing",
+    "filter": {
+      "missing": "Missing only",
+      "all": "All"
+    },
+    "perSubgroup": "Different per subgroup",
+    "nothingMissing": "Nothing is missing.",
+    "unsaved": "Unsaved: {n}",
+    "requests": "Requests",
+    "noSubgroup": "No subgroup",
+    "inviteTitle": "Invitation link",
+    "createInvite": "Create invitation link",
+    "inviteDefaults": "Valid for {days} days, for up to {uses} people.",
+    "copyLink": "Copy link",
+    "shareText": "Join group {code} on ACIEE Advisor",
+    "customInvite": "Other duration or limit",
+    "otherInvites": "Other active links",
+    "otherInvitesHint": "A link can be copied only on the device that created it.",
+    "sameForAll": "Same for the whole group"
   },
   "admin": {
     "leadersTitle": "Group leaders",

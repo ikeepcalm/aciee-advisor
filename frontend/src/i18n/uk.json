@@ -175,7 +175,7 @@
     "summary": "{code} · {specialization} · {year} курс",
     "subgroupSince": "Підгрупа {subgroup} · у групі з {since}",
     "since": "У групі з {since}",
-    "noGroup": "Ви не в жодній групі. Попросіть у старости посилання-запрошення.",
+    "noGroup": "Ви ще не в жодній групі.",
     "myRequests": "Мої запити",
     "status": {
       "pending": "На розгляді",
@@ -188,13 +188,9 @@
       "historical_claim": "минулий рік"
     },
     "claim": "Я староста цієї групи",
-    "claimOther": "Я староста групи",
-    "pickGroup": "Оберіть групу",
     "claimSent": "Запит надіслано адміністратору.",
     "tabs": {
       "members": "Учасники",
-      "requests": "Запити ({n})",
-      "invites": "Запрошення",
       "teaching": "Викладачі"
     },
     "occupancy": "Зайнято місць: {members} / {max}",
@@ -202,12 +198,9 @@
     "approve": "Схвалити",
     "reject": "Відхилити",
     "leader": "староста",
-    "newInvite": "Нове посилання",
     "expiresInDays": "Діє (днів)",
     "maxUses": "Використань",
     "generate": "Створити посилання",
-    "inviteOnce": "Скопіюйте посилання зараз. Вдруге ви його не побачите.",
-    "activeInvites": "Активні",
     "inviteLine": "{uses}/{max} · до {until}",
     "deactivate": "Вимкнути",
     "joinTitle": "Приєднатися до групи",
@@ -233,7 +226,40 @@
     "fixNameTitle": "Виправити ім'я",
     "fixNameHint": "Імена беруться з розкладу й можуть бути скорочені, наприклад «A. Cocu». Напишіть повне ім'я, якщо знаєте його.",
     "fullName": "Ім'я та прізвище",
-    "academicTitle": "Звання"
+    "academicTitle": "Звання",
+    "intent": {
+      "join": "Приєднатися до групи",
+      "lead": "Я староста групи"
+    },
+    "joinHow": "Попросіть у старости посилання-запрошення й відкрийте його. Іншого способу немає.",
+    "findGroup": "Знайдіть свою групу",
+    "findGroupExample": "22C31 або calculatoare 3",
+    "noGroupFound": "Такої групи немає. Перевірте код у розкладі.",
+    "subgroups": "підгрупи {list}",
+    "hasLeader": "У цієї групи вже є староста. Попросіть у нього посилання-запрошення.",
+    "claimGroup": "Стати старостою {code}",
+    "claimHint": "Запит підтверджує адміністратор. У кожної групи один староста.",
+    "teachingSet": "Заповнено: {set} з {total}",
+    "teachingMissing": "Бракує: {n}",
+    "missing": "не вказано",
+    "filter": {
+      "missing": "Лише відсутні",
+      "all": "Усі"
+    },
+    "perSubgroup": "Різні в підгрупах",
+    "nothingMissing": "Нічого не бракує.",
+    "unsaved": "Не збережено: {n}",
+    "requests": "Запити",
+    "noSubgroup": "Без підгрупи",
+    "inviteTitle": "Посилання-запрошення",
+    "createInvite": "Створити посилання-запрошення",
+    "inviteDefaults": "Діє {days} днів, щонайбільше для {uses} людей.",
+    "copyLink": "Скопіювати посилання",
+    "shareText": "Приєднуйтеся до групи {code} в ACIEE Advisor",
+    "customInvite": "Інший термін або ліміт",
+    "otherInvites": "Інші активні посилання",
+    "otherInvitesHint": "Посилання можна скопіювати лише на пристрої, де його створено.",
+    "sameForAll": "Один для всієї групи"
   },
   "admin": {
     "leadersTitle": "Старости груп",

@@ -321,3 +321,14 @@ Format: context → decision → consequences. Never rewrite an accepted ADR; su
 - The client no longer checks `keys.json` against a pinned hash. It still checks each key against its fingerprint and the issued signatures against the keys. `/rate` shows a short fingerprint of the whole `keys.json`, fetched without cookies, which is the same for everyone at a given time, so classmates can compare it and report a difference.
 
 **Consequences.** No redeploys or console calls for ratings to open. Detection of a targeted key now relies on students comparing fingerprints and on the open-source bundle, not on a hash in the build. The fingerprint changes whenever keys are added (for example when a new group appears), so comparisons only hold between students who load `/rate` around the same time.
+
+## ADR-034 — Timetable letters are subgroups, course names matched loosely
+**Context.** The first timetable sync (ADR-033) made every timetable column a group, so `22C31A` and `22C31B` became two groups with two leader positions. They are the A and B subgroups of group `22C31`. Teachers were also missed when the timetable spells a course differently from the curriculum ("Grafica asistata pe calculator" for "Grafică asistată de calculator", "Lb. Engleza" for "Limba engleză (anul 1)").
+
+**Decision.**
+- A label ending in a letter after a digit is group + subgroup (`GroupLabel`). The sync creates the group once and a `core.subgroup` row per letter (max size 60).
+- The importer fills the whole-group slot for lectures, and for a seminar, lab or project when one teacher covers every subgroup; otherwise it fills each subgroup's slot. `core.timetable_import` is keyed by (offering, component, subgroup).
+- When the exact course name does not match, the importer picks the group's course whose significant words overlap most (Jaccard ≥ 0.6, ignoring "de/pe/și", roman numerals and "anul N"), and only when that match is strictly the best (`CourseTitles`).
+- Changeset `023` deletes this year's letter-suffixed groups that have no submitted ratings, with their courses, keys, memberships and claims, so the next sync recreates them properly.
+
+**Consequences.** Locally the semester-1 coverage went from 188 to 199 of 245 slots. The rest are not in the timetable at all (several labs, projects and electives) or sit in combined cells whose teachers are in the note ("SO S1-7 / POO S8-14"); leaders set those. Anyone who had joined or claimed a letter group before `023` has to do it again.

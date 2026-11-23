@@ -25,7 +25,7 @@ class TimetableSyncTests {
     TimetableSyncService sync;
 
     @Test
-    void createsThisYearsGroupsOnTheirPlanWithTheirCoursesOnce() {
+    void createsThisYearsGroupsWithSubgroupsOnTheirPlanWithTheirCoursesOnce() {
         TestData.currentGroup(jdbc, "SYX", 1);
         var program = new TimetableProgram();
         program.setCode("an_2_CTI");
@@ -42,7 +42,7 @@ class TimetableSyncTests {
 
         var first = sync.sync(List.of(program, unknown));
 
-        assertThat(first.groups()).isEqualTo(2);
+        assertThat(first.groups()).isEqualTo(1);
         assertThat(first.courses()).isPositive();
         assertThat(jdbc.sql("""
                         SELECT count(*) FROM core.study_group g
@@ -50,12 +50,16 @@ class TimetableSyncTests {
                         JOIN core.specialization sp ON sp.id = pl.specialization_id
                         JOIN core.faculty f ON f.id = sp.faculty_id
                         JOIN core.academic_year ay ON ay.id = g.academic_year_id
-                        WHERE g.code IN ('SY21A', 'SY21B') AND ay.during @> current_date AND g.study_year = 2
+                        WHERE g.code = 'SY21' AND ay.during @> current_date AND g.study_year = 2
                           AND f.code = 'ACIEE' AND sp.name_ro = 'Calculatoare'
                           AND pl.intake @> (extract(year FROM lower(ay.during))::int - 1)
                           AND EXISTS (SELECT 1 FROM core.course_offering o WHERE o.group_id = g.id)""")
-                .query(Long.class).single()).isEqualTo(2);
-        assertThat(jdbc.sql("SELECT count(*) FROM core.study_group WHERE code = 'SY29Z'").query(Long.class).single()).isZero();
+                .query(Long.class).single()).isEqualTo(1);
+        assertThat(jdbc.sql("""
+                        SELECT string_agg(s.label, ',' ORDER BY s.label) FROM core.subgroup s
+                        JOIN core.study_group g ON g.id = s.group_id WHERE g.code = 'SY21'""").query(String.class).single())
+                .isEqualTo("A,B");
+        assertThat(jdbc.sql("SELECT count(*) FROM core.study_group WHERE code IN ('SY29Z', 'SY29')").query(Long.class).single()).isZero();
 
         var again = sync.sync(List.of(program, unknown));
 

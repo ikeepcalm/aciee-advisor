@@ -17,6 +17,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.stream.Collectors;
 
@@ -30,7 +31,8 @@ public class TeacherImportService {
     private final JdbcClient jdbc;
     private final ProfessorDirectory professorDirectory;
 
-    private record Offering(int id, String groupCode, String title, int lectureHours, int seminarHours, int labHours, int projectHours) {
+    private record Offering(int id, int groupId, String groupCode, String title, int lectureHours, int seminarHours, int labHours,
+                            int projectHours) {
         int hours(String component) {
             return switch (component) {
                 case "lecture" -> lectureHours;
@@ -41,7 +43,10 @@ public class TeacherImportService {
         }
     }
 
-    private record Slot(int offeringId, String component) {
+    private record Course(Offering offering, String component) {
+    }
+
+    private record Slot(int offeringId, String component, Integer subgroupId) {
     }
 
     private record Applied(String teacher, int professorId) {
@@ -54,7 +59,7 @@ public class TeacherImportService {
     public int importTeachers(List<TimetableProgram> programs) {
         var offerings = new HashMap<String, Offering>();
         jdbc.sql("""
-                        SELECT o.id, g.code AS group_code, o.title_snapshot AS title,
+                        SELECT o.id, o.group_id, g.code AS group_code, o.title_snapshot AS title,
                                ci.lecture_hours, ci.seminar_hours, ci.lab_hours, ci.project_hours
                         FROM core.course_offering o
                         JOIN core.study_group g ON g.id = o.group_id
@@ -64,35 +69,70 @@ public class TeacherImportService {
                 .query(Offering.class)
                 .list()
                 .forEach(o -> offerings.put(o.groupCode() + "|" + LessonNames.fold(o.title()), o));
-        var teachers = new LinkedHashMap<Slot, Set<String>>();
+        var byGroup = offerings.values().stream().collect(Collectors.groupingBy(Offering::groupCode));
+        var subgroups = new HashMap<Integer, Map<String, Integer>>();
+        jdbc.sql("""
+                        SELECT s.group_id, s.label, s.id FROM core.subgroup s
+                        JOIN core.study_group g ON g.id = s.group_id
+                        JOIN core.academic_year ay ON ay.id = g.academic_year_id
+                        WHERE ay.during @> current_date""")
+                .query((RowCallbackHandler) rs -> subgroups.computeIfAbsent(rs.getInt("group_id"), k -> new HashMap<>())
+                        .put(rs.getString("label"), rs.getInt("id")));
+        var seen = new LinkedHashMap<Course, Map<String, Set<String>>>();
         for (var program : programs) {
             for (var lesson : program.getLessons()) {
                 String component = lesson.getKind() == null ? null : COMPONENTS.get(lesson.getKind());
                 if (component == null || lesson.getTeacher() == null || lesson.getCourse() == null) {
                     continue;
                 }
-                for (String group : lesson.getGroups()) {
-                    var offering = offerings.get(group + "|" + LessonNames.fold(lesson.getCourse()));
+                for (String label : lesson.getGroups()) {
+                    var group = GroupLabel.of(label);
+                    var offering = offerings.get(group.group() + "|" + LessonNames.fold(lesson.getCourse()));
+                    if (offering == null) {
+                        var candidates = byGroup.getOrDefault(group.group(), List.of());
+                        int index = CourseTitles.match(lesson.getCourse(), candidates.stream().map(Offering::title).toList());
+                        offering = index < 0 ? null : candidates.get(index);
+                    }
                     if (offering != null && offering.hours(component) > 0) {
-                        teachers.computeIfAbsent(new Slot(offering.id(), component), k -> new TreeSet<>()).add(lesson.getTeacher().trim());
+                        seen.computeIfAbsent(new Course(offering, component), k -> new TreeMap<>())
+                                .computeIfAbsent(Objects.requireNonNullElse(group.subgroup(), ""), k -> new TreeSet<>())
+                                .add(lesson.getTeacher().trim());
                     }
                 }
             }
         }
-        if (teachers.isEmpty()) {
+        if (seen.isEmpty()) {
             return 0;
         }
         var clusterOf = new HashMap<String, TeacherNames.Cluster>();
         TeacherNames.cluster(programs.stream().flatMap(p -> p.getLessons().stream())
                         .map(l -> l.getTeacher() == null ? null : l.getTeacher().trim()).filter(Objects::nonNull).toList())
                 .forEach(c -> c.variants().forEach(v -> clusterOf.put(v.raw(), c)));
+        var teachers = new LinkedHashMap<Slot, Set<String>>();
+        seen.forEach((course, bySubgroup) -> {
+            var all = bySubgroup.values().stream().flatMap(Set::stream).collect(Collectors.toCollection(TreeSet::new));
+            var labels = subgroups.getOrDefault(course.offering().groupId(), Map.of());
+            boolean oneTeacher = all.stream().map(clusterOf::get).filter(Objects::nonNull).distinct().count() == 1;
+            boolean wholeGroup = course.component().equals("lecture") || labels.isEmpty() || bySubgroup.containsKey("")
+                    || (oneTeacher && bySubgroup.keySet().containsAll(labels.keySet()));
+            if (wholeGroup) {
+                teachers.put(new Slot(course.offering().id(), course.component(), null), all);
+                return;
+            }
+            bySubgroup.forEach((label, names) -> {
+                Integer subgroupId = labels.get(label);
+                if (subgroupId != null) {
+                    teachers.put(new Slot(course.offering().id(), course.component(), subgroupId), names);
+                }
+            });
+        });
         var applied = new HashMap<Slot, Applied>();
         var aliases = new HashMap<String, Set<Integer>>();
         jdbc.sql("""
-                        SELECT i.offering_id, i.component, i.teacher, i.professor_id, p.archived_at IS NULL AS active
+                        SELECT i.offering_id, i.component, i.subgroup_id, i.teacher, i.professor_id, p.archived_at IS NULL AS active
                         FROM core.timetable_import i JOIN core.professor p ON p.id = i.professor_id""")
                 .query((RowCallbackHandler) rs -> {
-                    applied.put(new Slot(rs.getInt("offering_id"), rs.getString("component")),
+                    applied.put(new Slot(rs.getInt("offering_id"), rs.getString("component"), (Integer) rs.getObject("subgroup_id")),
                             new Applied(rs.getString("teacher"), rs.getInt("professor_id")));
                     if (rs.getBoolean("active")) {
                         for (String raw : rs.getString("teacher").split(" / ")) {
@@ -102,12 +142,13 @@ public class TeacherImportService {
                 });
         var current = new HashMap<Slot, Integer>();
         jdbc.sql("""
-                        SELECT DISTINCT ON (offering_id, component) offering_id, component, professor_id
+                        SELECT DISTINCT ON (offering_id, component, subgroup_id) offering_id, component, subgroup_id, professor_id
                         FROM core.teaching_assignment
-                        WHERE subgroup_id IS NULL AND valid_during && daterange(current_date, NULL) AND offering_id IN (:ids)
-                        ORDER BY offering_id, component, lower(valid_during) DESC""")
+                        WHERE valid_during && daterange(current_date, NULL) AND offering_id IN (:ids)
+                        ORDER BY offering_id, component, subgroup_id, lower(valid_during) DESC""")
                 .param("ids", teachers.keySet().stream().map(Slot::offeringId).distinct().toList())
-                .query((RowCallbackHandler) rs -> current.put(new Slot(rs.getInt("offering_id"), rs.getString("component")),
+                .query((RowCallbackHandler) rs -> current.put(
+                        new Slot(rs.getInt("offering_id"), rs.getString("component"), (Integer) rs.getObject("subgroup_id")),
                         rs.getInt("professor_id")));
         var known = new ArrayList<>(jdbc.sql("SELECT id, full_name FROM core.professor WHERE archived_at IS NULL")
                 .query(Professor.class)
@@ -143,12 +184,13 @@ public class TeacherImportService {
                 changed++;
             }
             jdbc.sql("""
-                            INSERT INTO core.timetable_import (offering_id, component, teacher, professor_id)
-                            VALUES (:offering, :component, :teacher, :professor)
-                            ON CONFLICT (offering_id, component) DO UPDATE
+                            INSERT INTO core.timetable_import (offering_id, component, subgroup_id, teacher, professor_id)
+                            VALUES (:offering, :component, :subgroup, :teacher, :professor)
+                            ON CONFLICT ON CONSTRAINT timetable_import_slot_key DO UPDATE
                             SET teacher = excluded.teacher, professor_id = excluded.professor_id, applied_at = now()""")
                     .param("offering", slot.offeringId())
                     .param("component", slot.component())
+                    .param("subgroup", slot.subgroupId())
                     .param("teacher", teacher)
                     .param("professor", professorId)
                     .update();
@@ -177,22 +219,25 @@ public class TeacherImportService {
 
     private void end(Slot slot) {
         var match = """
-                offering_id = :offering AND component = :component AND subgroup_id IS NULL
+                offering_id = :offering AND component = :component
+                  AND subgroup_id IS NOT DISTINCT FROM CAST(:subgroup AS integer)
                   AND valid_during && daterange(current_date, NULL)""";
         jdbc.sql("DELETE FROM core.teaching_assignment WHERE lower(valid_during) >= current_date AND " + match)
                 .param("offering", slot.offeringId())
                 .param("component", slot.component())
+                .param("subgroup", slot.subgroupId())
                 .update();
         jdbc.sql("UPDATE core.teaching_assignment SET valid_during = daterange(lower(valid_during), current_date) WHERE " + match)
                 .param("offering", slot.offeringId())
                 .param("component", slot.component())
+                .param("subgroup", slot.subgroupId())
                 .update();
     }
 
     private void start(Slot slot, int professorId) {
         jdbc.sql("""
-                        INSERT INTO core.teaching_assignment (offering_id, group_id, professor_id, component, valid_during)
-                        SELECT o.id, o.group_id, :professor, :component,
+                        INSERT INTO core.teaching_assignment (offering_id, group_id, professor_id, component, subgroup_id, valid_during)
+                        SELECT o.id, o.group_id, :professor, :component, :subgroup,
                                daterange(greatest(current_date, lower(ay.during)), upper(ay.during))
                         FROM core.course_offering o
                         JOIN core.study_group g ON g.id = o.group_id
@@ -200,6 +245,7 @@ public class TeacherImportService {
                         WHERE o.id = :offering""")
                 .param("offering", slot.offeringId())
                 .param("component", slot.component())
+                .param("subgroup", slot.subgroupId())
                 .param("professor", professorId)
                 .update();
     }

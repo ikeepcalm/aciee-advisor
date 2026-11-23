@@ -155,6 +155,24 @@ class GroupFlowTests {
     }
 
     @Test
+    void leaderClaimsWithASubgroupAndTheGroupListShowsSubgroupsAndLeader() throws Exception {
+        int leaderId = account("leader");
+        send(post("/api/groups/%d/leader-claims".formatted(groupId)).contentType(MediaType.APPLICATION_JSON)
+                .content("{\"subgroupId\":%d}".formatted(subgroupId)), leaderId).andExpect(status().isAccepted());
+        send(get("/api/groups"), leaderId)
+                .andExpect(jsonPath("$[?(@.id == %d)].hasLeader".formatted(groupId)).value(org.hamcrest.Matchers.hasItem(false)))
+                .andExpect(jsonPath("$[?(@.id == %d)].subgroups[0].label".formatted(groupId)).value(org.hamcrest.Matchers.hasItem("1")));
+
+        approveClaim(groupId, prefix);
+
+        send(get("/api/groups/mine"), leaderId)
+                .andExpect(jsonPath("$.memberships[0].subgroup").value("1"))
+                .andExpect(jsonPath("$.memberships[0].leader").value(true));
+        send(get("/api/groups"), leaderId)
+                .andExpect(jsonPath("$[?(@.id == %d)].hasLeader".formatted(groupId)).value(org.hamcrest.Matchers.hasItem(true)));
+    }
+
+    @Test
     void leaderAddsAMissingProfessorAndFixesOnlyUnconfirmedNamesOfTheirGroup() throws Exception {
         int leaderId = account("leader");
         becomeLeader(leaderId, groupId, prefix);

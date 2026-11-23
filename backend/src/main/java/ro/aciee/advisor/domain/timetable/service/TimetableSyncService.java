@@ -61,21 +61,36 @@ public class TimetableSyncService {
         if (program.getGroups() == null || program.getGroups().isEmpty()) {
             return 0;
         }
-        return jdbc.sql("""
+        var labels = program.getGroups().stream().map(GroupLabel::of).toList();
+        int created = jdbc.sql("""
                         INSERT INTO core.study_group (plan_id, academic_year_id, study_year, code, max_size)
-                        SELECT pl.id, ay.id, :year, t.group_code, 40
+                        SELECT pl.id, ay.id, :year, t.group_code, 60
                         FROM core.academic_year ay
                         JOIN core.specialization sp ON sp.name_ro = :specialization
                         JOIN core.faculty f ON f.id = sp.faculty_id AND f.code = 'ACIEE'
                         JOIN core.study_plan pl ON pl.specialization_id = sp.id
                          AND pl.intake @> (extract(year FROM lower(ay.during))::int - :year + 1)
-                        CROSS JOIN unnest(CAST(:codes AS text[])) AS t(group_code)
+                        CROSS JOIN (SELECT DISTINCT unnest(CAST(:codes AS text[])) AS group_code) t
                         WHERE ay.during @> current_date AND length(t.group_code) <= 16
                         ON CONFLICT (academic_year_id, code) DO NOTHING""")
                 .param("year", program.getYear())
                 .param("specialization", program.getName())
-                .param("codes", program.getGroups().toArray(String[]::new))
+                .param("codes", labels.stream().map(GroupLabel::group).toArray(String[]::new))
                 .update();
+        var split = labels.stream().filter(l -> l.subgroup() != null).toList();
+        if (!split.isEmpty()) {
+            jdbc.sql("""
+                            INSERT INTO core.subgroup (group_id, label)
+                            SELECT g.id, t.subgroup
+                            FROM unnest(CAST(:codes AS text[]), CAST(:subgroups AS text[])) AS t(group_code, subgroup)
+                            JOIN core.study_group g ON g.code = t.group_code
+                            JOIN core.academic_year ay ON ay.id = g.academic_year_id AND ay.during @> current_date
+                            ON CONFLICT (group_id, label) DO NOTHING""")
+                    .param("codes", split.stream().map(GroupLabel::group).toArray(String[]::new))
+                    .param("subgroups", split.stream().map(GroupLabel::subgroup).toArray(String[]::new))
+                    .update();
+        }
+        return created;
     }
 
     private void createKeys() {

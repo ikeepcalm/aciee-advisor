@@ -175,7 +175,7 @@
     "summary": "{code} · {specialization} · Anul {year}",
     "subgroupSince": "Subgrupa {subgroup} · membru din {since}",
     "since": "Membru din {since}",
-    "noGroup": "Nu faci parte din nicio grupă. Cere linkul de invitație șefului de grupă.",
+    "noGroup": "Nu faci parte încă din nicio grupă.",
     "myRequests": "Cererile mele",
     "status": {
       "pending": "În așteptare",
@@ -188,13 +188,9 @@
       "historical_claim": "istoric"
     },
     "claim": "Sunt șeful acestei grupe",
-    "claimOther": "Sunt șef de grupă",
-    "pickGroup": "Alege grupa",
     "claimSent": "Cererea a fost trimisă administratorului.",
     "tabs": {
       "members": "Membri",
-      "requests": "Cereri ({n})",
-      "invites": "Invitații",
       "teaching": "Profesori"
     },
     "occupancy": "Locuri ocupate: {members} / {max}",
@@ -202,12 +198,9 @@
     "approve": "Aprobă",
     "reject": "Respinge",
     "leader": "șef",
-    "newInvite": "Link nou",
     "expiresInDays": "Expiră după (zile)",
     "maxUses": "Utilizări",
     "generate": "Generează link",
-    "inviteOnce": "Copiază linkul acum. Nu îl vei mai putea vedea.",
-    "activeInvites": "Active",
     "inviteLine": "{uses}/{max} · până {until}",
     "deactivate": "Dezactivează",
     "joinTitle": "Alătură-te grupei",
@@ -233,7 +226,40 @@
     "fixNameTitle": "Corectează numele",
     "fixNameHint": "Numele vin din orar și pot fi prescurtate, de exemplu „A. Cocu”. Scrie numele întreg dacă îl știi.",
     "fullName": "Nume și prenume",
-    "academicTitle": "Titlu"
+    "academicTitle": "Titlu",
+    "intent": {
+      "join": "Intru în grupa mea",
+      "lead": "Sunt șef de grupă"
+    },
+    "joinHow": "Cere linkul de invitație șefului de grupă și deschide-l. Altă cale nu există.",
+    "findGroup": "Găsește-ți grupa",
+    "findGroupExample": "22C31 sau calculatoare 3",
+    "noGroupFound": "Nicio grupă nu se potrivește. Verifică codul din orar.",
+    "subgroups": "subgrupele {list}",
+    "hasLeader": "Grupa are deja un șef. Cere-i linkul de invitație.",
+    "claimGroup": "Cer să fiu șeful grupei {code}",
+    "claimHint": "Un administrator confirmă cererea. Fiecare grupă are un singur șef.",
+    "teachingSet": "Completate: {set} din {total}",
+    "teachingMissing": "Lipsesc: {n}",
+    "missing": "lipsește",
+    "filter": {
+      "missing": "Doar ce lipsește",
+      "all": "Toate"
+    },
+    "perSubgroup": "Diferit pe subgrupe",
+    "nothingMissing": "Nu lipsește nimic.",
+    "unsaved": "Nesalvate: {n}",
+    "requests": "Cereri",
+    "noSubgroup": "Fără subgrupă",
+    "inviteTitle": "Link de invitație",
+    "createInvite": "Creează linkul de invitație",
+    "inviteDefaults": "Valabil {days} zile, pentru cel mult {uses} persoane.",
+    "copyLink": "Copiază linkul",
+    "shareText": "Intră în grupa {code} pe ACIEE Advisor",
+    "customInvite": "Altă durată sau limită",
+    "otherInvites": "Alte linkuri active",
+    "otherInvitesHint": "Un link poate fi copiat doar de pe dispozitivul pe care a fost creat.",
+    "sameForAll": "Același pentru toată grupa"
   },
   "admin": {
     "leadersTitle": "Șefi de grupă",

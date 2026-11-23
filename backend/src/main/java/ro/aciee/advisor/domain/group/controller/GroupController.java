@@ -19,6 +19,7 @@ import ro.aciee.advisor.domain.group.model.Invite;
 import ro.aciee.advisor.domain.group.model.InviteBody;
 import ro.aciee.advisor.domain.group.model.InvitePreview;
 import ro.aciee.advisor.domain.group.model.JoinBody;
+import ro.aciee.advisor.domain.group.model.LeaderClaimBody;
 import ro.aciee.advisor.domain.group.model.MyGroups;
 import ro.aciee.advisor.domain.group.model.NewProfessor;
 import ro.aciee.advisor.domain.group.model.PendingRequests;
@@ -59,8 +60,8 @@ public class GroupController {
 
     @PostMapping("/{groupId}/leader-claims")
     @ResponseStatus(HttpStatus.ACCEPTED)
-    public void claimLeadership(@PathVariable int groupId) {
-        groupService.claimLeadership(groupId);
+    public void claimLeadership(@PathVariable int groupId, @RequestBody(required = false) LeaderClaimBody body) {
+        groupService.claimLeadership(groupId, body == null ? null : body.getSubgroupId());
     }
 
     @GetMapping("/{groupId}/requests")

@@ -2,11 +2,12 @@
 import { computed, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { TabsContent, TabsList, TabsRoot, TabsTrigger } from 'reka-ui'
-import { Check, Copy, Pencil, UserPlus } from 'lucide-vue-next'
-import ComboSelect from '@/components/ComboSelect.vue'
 import AppNotice from '@/components/AppNotice.vue'
-import AppSheet from '@/components/AppSheet.vue'
-import { api, describeError } from '@/api'
+import GroupPeople from '@/components/group/GroupPeople.vue'
+import GroupPicker from '@/components/group/GroupPicker.vue'
+import GroupTeaching from '@/components/group/GroupTeaching.vue'
+import { api } from '@/api'
+import { useRun, type GroupSummary, type JoinRequest } from '@/group'
 
 interface Membership {
   groupId: number
@@ -19,139 +20,23 @@ interface Membership {
   until: string | null
   leader: boolean
 }
-interface JoinRequest {
-  id: number
-  email: string
-  displayName: string | null
-  groupCode: string
-  academicYear: string
-  kind: string
-  subgroup: string | null
-  status: string
-}
-interface GroupSummary {
-  id: number
-  code: string
-  specialization: string
-  studyYear: number
-  academicYear: string
-}
-interface RosterEntry {
-  email: string
-  displayName: string | null
-  subgroup: string | null
-  since: string
-  leader: boolean
-}
-interface Invite {
-  id: number
-  expiresAt: string
-  maxUses: number
-  uses: number
-}
-interface TeachingSlot {
-  offeringId: number
-  title: string
-  semesterNo: number
-  component: string
-  subgroupId: number | null
-  subgroup: string | null
-  professorId: number | null
-}
-interface ProfessorOption {
-  id: number
-  label: string
-  fullName: string
-  renamable: boolean
-}
 
 const { t, d } = useI18n()
+const { error, notice, run } = useRun()
 const memberships = ref<Membership[]>([])
 const requests = ref<JoinRequest[]>([])
 const groups = ref<GroupSummary[]>([])
-const claimGroupId = ref<number | null>(null)
-const pending = ref<{ requests: JoinRequest[]; members: number; maxSize: number }>({
-  requests: [],
-  members: 0,
-  maxSize: 0,
-})
-const roster = ref<RosterEntry[]>([])
-const invites = ref<Invite[]>([])
-const teaching = ref<{
-  slots: TeachingSlot[]
-  professors: ProfessorOption[]
-  titles: { code: string; label: string }[]
-}>({
-  slots: [],
-  professors: [],
-  titles: [],
-})
-const nameForm = ref<{
-  slot: number | null
-  professorId: number | null
-  fullName: string
-  titleCode: string
-} | null>(null)
-const nameError = ref('')
-const nameSaving = ref(false)
-const namesVersion = ref(0)
-const inviteDays = ref(7)
-const inviteUses = ref(30)
-const newInviteLink = ref('')
-const error = ref('')
-const notice = ref('')
+const pendingCount = ref(0)
 const loaded = ref(false)
-const linkCopied = ref(false)
 
 const today = new Date().toISOString().slice(0, 10)
 const current = computed(() =>
   memberships.value.find((m) => m.since <= today && (!m.until || today < m.until)),
 )
 const leads = computed(() => current.value?.leader === true)
-const groupOptions = computed(() =>
-  groups.value.map((g) => ({
-    value: g.id,
-    label: `${g.code} · ${g.specialization} · ${g.academicYear}`,
-  })),
-)
-const professorOptions = computed(() =>
-  teaching.value.professors.map((p) => ({ value: p.id, label: p.label })),
-)
-const renamable = computed(
-  () => new Set(teaching.value.professors.filter((p) => p.renamable).map((p) => p.id)),
-)
-const nameFormOpen = computed({
-  get: () => nameForm.value !== null,
-  set: () => (nameForm.value = null),
-})
-const isNewCourse = (index: number) =>
-  index === 0 ||
-  teaching.value.slots[index - 1]!.offeringId !== teaching.value.slots[index]!.offeringId ||
-  teaching.value.slots[index - 1]!.component !== teaching.value.slots[index]!.component
-
-async function copyInviteLink() {
-  try {
-    await navigator.clipboard.writeText(newInviteLink.value)
-    linkCopied.value = true
-    setTimeout(() => (linkCopied.value = false), 2000)
-  } catch {
-    linkCopied.value = false
-  }
-}
 
 function date(value: string) {
   return d(new Date(value), 'short')
-}
-
-async function run(action: () => Promise<unknown>, success = '') {
-  error.value = ''
-  notice.value = ''
-  try {
-    await action()
-    notice.value = success
-  } catch (e) {
-    error.value = describeError(t, e)
-  }
 }
 
 async function load() {
@@ -164,97 +49,15 @@ async function load() {
   loaded.value = true
   if (!current.value) {
     groups.value = await api<GroupSummary[]>('GET', '/api/groups')
-  } else if (leads.value) {
-    await loadLeaderTabs(current.value.groupId)
   }
 }
 
-async function loadLeaderTabs(groupId: number) {
-  ;[pending.value, roster.value, invites.value, teaching.value] = await Promise.all([
-    api<typeof pending.value>('GET', `/api/groups/${groupId}/requests`),
-    api<RosterEntry[]>('GET', `/api/groups/${groupId}/members`),
-    api<Invite[]>('GET', `/api/groups/${groupId}/invites`),
-    api<typeof teaching.value>('GET', `/api/groups/${groupId}/teaching`),
-  ])
-}
-
-function claim(groupId: number) {
-  return run(async () => {
-    await api('POST', `/api/groups/${groupId}/leader-claims`)
+async function claim(groupId: number, subgroupId: number | null) {
+  await run(async () => {
+    await api('POST', `/api/groups/${groupId}/leader-claims`, { subgroupId })
     await load()
   }, t('group.claimSent'))
-}
-
-function decide(requestId: number, decision: 'approve' | 'reject') {
-  return run(async () => {
-    await api('POST', `/api/groups/requests/${requestId}/${decision}`)
-    const groupId = current.value!.groupId
-    ;[pending.value, roster.value] = await Promise.all([
-      api<typeof pending.value>('GET', `/api/groups/${groupId}/requests`),
-      api<RosterEntry[]>('GET', `/api/groups/${groupId}/members`),
-    ])
-  })
-}
-
-function createInvite(groupId: number) {
-  return run(async () => {
-    const created = await api<{ token: string }>('POST', `/api/groups/${groupId}/invites`, {
-      days: inviteDays.value,
-      maxUses: inviteUses.value,
-    })
-    newInviteLink.value = `${location.origin}/join/${created.token}`
-    linkCopied.value = false
-    invites.value = await api<Invite[]>('GET', `/api/groups/${groupId}/invites`)
-  })
-}
-
-function deactivate(inviteId: number) {
-  return run(async () => {
-    await api('PATCH', `/api/groups/invites/${inviteId}`)
-    invites.value = await api<Invite[]>('GET', `/api/groups/${current.value!.groupId}/invites`)
-  })
-}
-
-function saveTeaching(groupId: number) {
-  return run(async () => {
-    await api('PUT', `/api/groups/${groupId}/teaching`, teaching.value.slots)
-    teaching.value = await api<typeof teaching.value>('GET', `/api/groups/${groupId}/teaching`)
-  }, t('group.teachingSaved'))
-}
-
-function openNameForm(slot: number | null, professorId: number | null) {
-  const titles = teaching.value.titles
-  nameError.value = ''
-  nameForm.value = {
-    slot,
-    professorId,
-    fullName: teaching.value.professors.find((p) => p.id === professorId)?.fullName ?? '',
-    titleCode: (titles.find((title) => title.code === 'cadru') ?? titles[0])?.code ?? '',
-  }
-}
-
-async function saveName(groupId: number) {
-  const form = nameForm.value!
-  nameError.value = ''
-  nameSaving.value = true
-  try {
-    const saved = await api<ProfessorOption>(
-      form.professorId ? 'PATCH' : 'POST',
-      `/api/groups/${groupId}/professors${form.professorId ? `/${form.professorId}` : ''}`,
-      { fullName: form.fullName, titleCode: form.titleCode },
-    )
-    const fresh = await api<typeof teaching.value>('GET', `/api/groups/${groupId}/teaching`)
-    teaching.value = { ...fresh, slots: teaching.value.slots }
-    if (form.slot !== null) {
-      teaching.value.slots[form.slot]!.professorId = saved.id
-    }
-    namesVersion.value++
-    nameForm.value = null
-  } catch (e) {
-    nameError.value = describeError(t, e)
-  } finally {
-    nameSaving.value = false
-  }
+  window.scrollTo({ top: 0 })
 }
 
 onMounted(() => run(load))
@@ -291,34 +94,10 @@ onMounted(() => run(load))
           :class="leads ? 'btn-outline' : 'btn-primary'"
           >{{ t('rate.title') }}</RouterLink
         >
-        <button v-if="!leads" class="btn btn-ghost" @click="claim(current.groupId)">
+        <button v-if="!leads" class="btn btn-ghost" @click="claim(current.groupId, null)">
           {{ t('group.claim') }}
         </button>
       </div>
-    </section>
-    <section v-else-if="loaded" class="card mt-6 grid gap-2">
-      <p>{{ t('group.noGroup') }}</p>
-      <details>
-        <summary class="flex min-h-11 cursor-pointer items-center text-sm font-medium text-mask">
-          {{ t('group.claimOther') }}
-        </summary>
-        <div class="grid gap-3 pt-1">
-          <ComboSelect
-            id="claim-group"
-            v-model="claimGroupId"
-            :options="groupOptions"
-            :placeholder="t('group.pickGroup')"
-            :aria-label="t('group.pickGroup')"
-          />
-          <button
-            class="btn btn-outline justify-self-start"
-            :disabled="!claimGroupId"
-            @click="claim(claimGroupId!)"
-          >
-            {{ t('group.sendRequest') }}
-          </button>
-        </div>
-      </details>
     </section>
 
     <section v-if="requests.length" class="mt-8">
@@ -335,229 +114,32 @@ onMounted(() => run(load))
       </p>
     </section>
 
-    <TabsRoot v-if="leads" default-value="requests" class="mt-8">
-      <TabsList
-        class="flex gap-1 overflow-x-auto border-b border-line"
-        :aria-label="t('group.leader')"
-      >
+    <GroupPicker v-if="loaded && !current" :groups="groups" @claim="claim" />
+
+    <TabsRoot v-if="current && leads" default-value="people" class="mt-8">
+      <TabsList class="flex gap-1 border-b border-line" :aria-label="t('group.leader')">
         <TabsTrigger
-          v-for="tab in ['members', 'requests', 'invites', 'teaching']"
+          v-for="tab in ['people', 'teaching']"
           :key="tab"
           :value="tab"
-          class="-mb-px min-h-11 border-b-2 border-transparent px-3 text-sm font-medium whitespace-nowrap text-muted data-[state=active]:border-copper data-[state=active]:text-ink"
+          class="-mb-px flex min-h-11 items-center gap-2 border-b-2 border-transparent px-3 text-sm font-medium whitespace-nowrap text-muted data-[state=active]:border-copper data-[state=active]:text-ink"
         >
-          {{ t(`group.tabs.${tab}`, { n: pending.requests.length }) }}
+          {{ t(tab === 'people' ? 'group.tabs.members' : 'group.tabs.teaching') }}
+          <span v-if="tab === 'people' && pendingCount" class="tag bg-mark text-on-mark">{{
+            pendingCount
+          }}</span>
         </TabsTrigger>
       </TabsList>
-
-      <TabsContent value="members" class="pt-4">
-        <p
-          v-for="m in roster"
-          :key="m.email"
-          class="flex flex-wrap items-center gap-2 border-b border-line py-2 text-sm"
-        >
-          <span class="[overflow-wrap:anywhere]">{{ m.displayName ?? m.email }}</span>
-          <span v-if="m.displayName" class="text-xs text-muted [overflow-wrap:anywhere]">{{
-            m.email
-          }}</span>
-          <span v-if="m.subgroup" class="mono text-xs text-muted">{{ m.subgroup }}</span>
-          <span v-if="m.leader" class="tag bg-mask text-on-mask">{{ t('group.leader') }}</span>
-        </p>
+      <TabsContent value="people" force-mount class="pt-5 data-[state=inactive]:hidden">
+        <GroupPeople
+          :group-id="current.groupId"
+          :group-code="current.groupCode"
+          @pending="pendingCount = $event"
+        />
       </TabsContent>
-
-      <TabsContent value="requests" class="pt-4">
-        <p v-if="!pending.requests.length" class="text-sm text-muted">
-          {{ t('group.noRequests') }}
-        </p>
-        <div
-          v-for="r in pending.requests"
-          :key="r.id"
-          class="card mb-2 flex flex-wrap items-center gap-x-3 gap-y-2"
-        >
-          <div class="min-w-0 basis-full text-sm sm:flex-1 sm:basis-0">
-            <div class="font-semibold [overflow-wrap:anywhere]">{{ r.displayName ?? r.email }}</div>
-            <div v-if="r.displayName" class="text-xs text-muted [overflow-wrap:anywhere]">
-              {{ r.email }}
-            </div>
-            <div class="text-muted">
-              {{ t(`group.kind.${r.kind}`)
-              }}<span v-if="r.subgroup"> · {{ t('group.subgroup') }} {{ r.subgroup }}</span>
-            </div>
-          </div>
-          <button class="btn btn-primary btn-sm" @click="decide(r.id, 'approve')">
-            {{ t('group.approve') }}
-          </button>
-          <button class="btn btn-ghost btn-sm text-muted" @click="decide(r.id, 'reject')">
-            {{ t('group.reject') }}
-          </button>
-        </div>
-        <p class="mono mt-3 text-xs text-muted">
-          {{ t('group.occupancy', { members: pending.members, max: pending.maxSize }) }}
-        </p>
-      </TabsContent>
-
-      <TabsContent value="invites" class="grid gap-4 pt-4">
-        <div class="card grid gap-4">
-          <h3 class="h2 text-base">{{ t('group.newInvite') }}</h3>
-          <div class="grid grid-cols-2 gap-4">
-            <label class="field" for="invite-days">
-              {{ t('group.expiresInDays') }}
-              <input
-                id="invite-days"
-                v-model.number="inviteDays"
-                type="number"
-                min="1"
-                max="30"
-                class="input"
-              />
-            </label>
-            <label class="field" for="invite-uses">
-              {{ t('group.maxUses') }}
-              <input
-                id="invite-uses"
-                v-model.number="inviteUses"
-                type="number"
-                min="1"
-                max="200"
-                class="input"
-              />
-            </label>
-          </div>
-          <button
-            class="btn btn-primary justify-self-start"
-            @click="createInvite(current!.groupId)"
-          >
-            {{ t('group.generate') }}
-          </button>
-          <AppNotice v-if="newInviteLink" kind="warn" class="my-0">
-            {{ t('group.inviteOnce') }}
-            <code class="mono mt-1 block text-xs break-all select-all">{{ newInviteLink }}</code>
-            <button class="btn btn-outline mt-2" @click="copyInviteLink">
-              <component :is="linkCopied ? Check : Copy" class="size-4" aria-hidden="true" />
-              <span aria-live="polite">{{
-                linkCopied ? t('recovery.copied') : t('recovery.copy')
-              }}</span>
-            </button>
-          </AppNotice>
-        </div>
-        <h3 class="eyebrow">{{ t('group.activeInvites') }}</h3>
-        <p
-          v-for="i in invites"
-          :key="i.id"
-          class="mono flex items-center justify-between gap-2 border-b border-line py-1 text-xs"
-        >
-          {{ t('group.inviteLine', { uses: i.uses, max: i.maxUses, until: date(i.expiresAt) }) }}
-          <button class="btn btn-ghost btn-sm font-sans" @click="deactivate(i.id)">
-            {{ t('group.deactivate') }}
-          </button>
-        </p>
-      </TabsContent>
-
-      <TabsContent value="teaching" class="pt-4">
-        <p v-if="!teaching.slots.length" class="text-sm text-muted">{{ t('group.noTeaching') }}</p>
-        <template v-else>
-          <p class="quote max-w-prose text-sm text-muted">{{ t('group.teachingAuto') }}</p>
-          <button
-            type="button"
-            class="btn btn-ghost btn-sm mt-1 mb-4 px-2"
-            @click="openNameForm(null, null)"
-          >
-            <UserPlus class="size-4" aria-hidden="true" />
-            {{ t('group.addProfessorTitle') }}
-          </button>
-        </template>
-        <template
-          v-for="(slot, index) in teaching.slots"
-          :key="`${slot.offeringId}-${slot.component}-${slot.subgroupId}`"
-        >
-          <h3 v-if="isNewCourse(index)" class="h2 mt-6 text-lg first:mt-0">
-            {{ slot.title }}
-            <span class="tag ml-1 bg-board text-muted">{{
-              t(`group.component.${slot.component}`)
-            }}</span>
-          </h3>
-          <div class="field mt-3">
-            <label :for="`teacher-${index}`">
-              {{
-                slot.subgroup ? `${t('group.subgroup')} ${slot.subgroup}` : t('group.wholeGroup')
-              }}
-            </label>
-            <ComboSelect
-              :id="`teacher-${index}`"
-              :key="namesVersion"
-              v-model="slot.professorId"
-              :options="professorOptions"
-              :placeholder="t('group.pickProfessor')"
-              clearable
-            >
-              <template #footer>
-                <button
-                  type="button"
-                  class="btn btn-ghost w-full justify-start rounded-none border-t border-line px-4"
-                  @click="openNameForm(index, null)"
-                >
-                  <UserPlus class="size-4" aria-hidden="true" />
-                  {{ t('group.addProfessor') }}
-                </button>
-              </template>
-            </ComboSelect>
-            <button
-              v-if="slot.professorId !== null && renamable.has(slot.professorId)"
-              type="button"
-              class="btn btn-ghost btn-sm -mt-1 justify-self-start px-2"
-              @click="openNameForm(index, slot.professorId)"
-            >
-              <Pencil class="size-3.5" aria-hidden="true" />
-              {{ t('group.fixName') }}
-            </button>
-          </div>
-        </template>
-        <div v-if="teaching.slots.length" class="card action-bar mt-6 flex justify-end">
-          <button class="btn btn-primary w-full sm:w-auto" @click="saveTeaching(current!.groupId)">
-            {{ t('admin.save') }}
-          </button>
-        </div>
+      <TabsContent value="teaching" force-mount class="pt-5 data-[state=inactive]:hidden">
+        <GroupTeaching :group-id="current.groupId" />
       </TabsContent>
     </TabsRoot>
-
-    <AppSheet
-      v-model="nameFormOpen"
-      :title="t(nameForm?.professorId ? 'group.fixNameTitle' : 'group.addProfessorTitle')"
-    >
-      <form v-if="nameForm" class="grid gap-4" @submit.prevent="saveName(current!.groupId)">
-        <p class="text-sm text-muted">
-          {{ t(nameForm.professorId ? 'group.fixNameHint' : 'group.addProfessorHint') }}
-        </p>
-        <label class="field" for="professor-name">
-          {{ t('group.fullName') }}
-          <input
-            id="professor-name"
-            v-model.trim="nameForm.fullName"
-            class="input"
-            autocomplete="off"
-            autocapitalize="words"
-            required
-            minlength="3"
-            maxlength="200"
-            :aria-invalid="!!nameError"
-            aria-describedby="professor-name-error"
-          />
-        </label>
-        <label v-if="!nameForm.professorId" class="field" for="professor-title">
-          {{ t('group.academicTitle') }}
-          <select id="professor-title" v-model="nameForm.titleCode" class="input">
-            <option v-for="title in teaching.titles" :key="title.code" :value="title.code">
-              {{ title.label }}
-            </option>
-          </select>
-        </label>
-        <AppNotice v-if="nameError" id="professor-name-error" kind="error" class="my-0">{{
-          nameError
-        }}</AppNotice>
-        <button class="btn btn-primary" :disabled="nameSaving">
-          {{ t(nameForm.professorId ? 'admin.save' : 'group.addProfessorTitle') }}
-        </button>
-      </form>
-    </AppSheet>
   </main>
 </template>
