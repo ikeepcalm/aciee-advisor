@@ -688,5 +688,33 @@
     "back": "Înapoi la pagină",
     "footerLink": "Raportează o problemă",
     "footerNote": "Proiect studențesc neoficial, nu un site al UGAL."
+  },
+  "footer": {
+    "free": "Gratuit și așa va rămâne: fără reclame, fără funcții plătite.",
+    "source": "Cod sursă deschis (AGPL-3.0) pe GitHub",
+    "dataTitle": "Datele tale",
+    "account": {
+      "lead": "Ce conține contul tău.",
+      "text": "Adresa ta {'@'}student.ugal.ro, un nume afișat, un hash al parolei (sau ID-ul contului tău Microsoft) și grupele în care intri."
+    },
+    "ratings": {
+      "lead": "Evaluările nu sunt legate de tine.",
+      "text": "Evaluările și comentariile sunt stocate fără nicio legătură cu contul tău."
+    },
+    "tokens": {
+      "lead": "Tokenurile de evaluare sunt criptate.",
+      "text": "Sunt păstrate criptat, cu o cheie pe care o are doar dispozitivul tău sau codul de recuperare."
+    },
+    "tracking": {
+      "lead": "Fără urmărire.",
+      "text": "Doar cookie-urile necesare autentificării; fără analytics, reclame sau trackere. Limba și tema rămân în browserul tău."
+    },
+    "useful": "Ți-a fost de folos?",
+    "coffee": "Fă-mi cinste cu o cafea",
+    "reportNote": "Mesajul tău ajunge la noi prin e-mail.",
+    "stats": {
+      "students": "Studenți înscriși",
+      "ratings": "Evaluări trimise"
+    }
   }
 }

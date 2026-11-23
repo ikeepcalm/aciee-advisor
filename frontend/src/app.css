@@ -19,6 +19,7 @@
   --kind-p: #86680c;
   --kind-x: #5e6272;
   --mark: #ffe270;
+  --band: #1c2724;
   --on-mark: var(--ink);
   --wobble: 90px 7px 80px 8px / 7px 70px 8px 60px;
   --wobble-alt: 8px 80px 7px 90px / 60px 8px 70px 7px;
@@ -45,6 +46,10 @@
   --mark: #f0d568;
   --on-mark: #1c2724;
   color-scheme: dark;
+}
+
+:root.dark {
+  --band: #121a17;
 }
 
 @font-face {

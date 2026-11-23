@@ -688,5 +688,33 @@
     "back": "Back to the page",
     "footerLink": "Report a problem",
     "footerNote": "An unofficial student project, not a UGAL website."
+  },
+  "footer": {
+    "free": "Free, and it will stay free: no ads, no paid features.",
+    "source": "Open source (AGPL-3.0) on GitHub",
+    "dataTitle": "Your data",
+    "account": {
+      "lead": "What your account holds.",
+      "text": "Your {'@'}student.ugal.ro email, a display name, a password hash (or your Microsoft account ID) and the groups you join."
+    },
+    "ratings": {
+      "lead": "Ratings are not tied to you.",
+      "text": "Ratings and comments are stored with no link to your account."
+    },
+    "tokens": {
+      "lead": "Rating tokens are encrypted.",
+      "text": "They are kept encrypted with a key only your device or recovery code holds."
+    },
+    "tracking": {
+      "lead": "No tracking.",
+      "text": "Only the cookies sign-in needs; no analytics, ads or trackers. Language and theme stay in your browser."
+    },
+    "useful": "Found it useful?",
+    "coffee": "Buy me a coffee",
+    "reportNote": "Your message is sent to us by email.",
+    "stats": {
+      "students": "Students signed up",
+      "ratings": "Ratings submitted"
+    }
   }
 }

@@ -19,6 +19,7 @@ import ro.aciee.advisor.domain.catalog.model.ProfessorSubject;
 import ro.aciee.advisor.domain.catalog.model.PublishedText;
 import ro.aciee.advisor.domain.catalog.model.Radar;
 import ro.aciee.advisor.domain.catalog.model.Specialization;
+import ro.aciee.advisor.domain.catalog.model.Stats;
 import ro.aciee.advisor.domain.catalog.model.Survival;
 import ro.aciee.advisor.domain.catalog.model.YearOption;
 
@@ -68,6 +69,16 @@ public class CatalogService {
     };
 
     private final JdbcClient jdbc;
+
+    @Transactional(readOnly = true)
+    public Stats stats() {
+        return jdbc.sql("""
+                        SELECT (SELECT count(*) FROM core.user_account a WHERE a.disabled_at IS NULL
+                                AND NOT EXISTS (SELECT 1 FROM core.email_verification v WHERE v.user_id = a.id)) AS students,
+                               (SELECT coalesce(sum(n), 0) FROM anon.course_survival) AS ratings""")
+                .query(Stats.class)
+                .single();
+    }
 
     @Transactional(readOnly = true)
     public Lookups lookups() {

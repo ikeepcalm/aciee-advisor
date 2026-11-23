@@ -33,6 +33,18 @@ class ProfessorProfileTests {
     CalendarService calendar;
 
     @Test
+    void statsCountActiveAccountsAndAggregatedRatings() {
+        long accounts = jdbc.sql("""
+                SELECT count(*) FROM core.user_account a WHERE a.disabled_at IS NULL
+                  AND NOT EXISTS (SELECT 1 FROM core.email_verification v WHERE v.user_id = a.id)""").query(Long.class).single();
+
+        var stats = catalog.stats();
+
+        assertThat(stats.getStudents()).isEqualTo(accounts);
+        assertThat(stats.getRatings()).isNotNegative();
+    }
+
+    @Test
     void matchesTheCvProfileWhateverTheNameOrderOrDiacritics() {
         jdbc.sql("""
                 INSERT INTO core.professor_profile (name_key, bio_ro, bio_en, photo, cv_url)

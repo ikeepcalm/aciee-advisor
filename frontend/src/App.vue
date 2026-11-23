@@ -24,6 +24,7 @@ import BrandMark from '@/components/BrandMark.vue'
 import SegmentedChips from '@/components/SegmentedChips.vue'
 import AppSheet from '@/components/AppSheet.vue'
 import UserAvatar from '@/components/UserAvatar.vue'
+import AppFooter from '@/components/AppFooter.vue'
 import AppNotice from '@/components/AppNotice.vue'
 import { shortName } from '@/person'
 import { describeError } from '@/api'
@@ -203,23 +204,7 @@ async function signOut() {
 
     <RouterView class="flex-1" />
 
-    <footer
-      v-if="!route.meta.bare"
-      class="hidden border-t border-dashed border-line md:block"
-    >
-      <div
-        class="mx-auto flex w-full max-w-6xl flex-wrap items-center justify-between gap-x-6 gap-y-1 px-4 py-4 text-xs text-muted md:px-6"
-      >
-        <span>{{ t('feedback.footerNote') }}</span>
-        <RouterLink
-          :to="feedbackLink"
-          class="inline-flex min-h-11 items-center gap-1.5 font-semibold text-mask"
-        >
-          <MessageSquareWarning class="size-4" aria-hidden="true" />
-          {{ t('feedback.footerLink') }}
-        </RouterLink>
-      </div>
-    </footer>
+    <AppFooter v-if="!route.meta.bare" :feedback-link="feedbackLink" />
 
     <nav
       v-if="!route.meta.bare"
