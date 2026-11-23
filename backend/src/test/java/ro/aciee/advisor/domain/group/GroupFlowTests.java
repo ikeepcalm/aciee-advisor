@@ -76,16 +76,9 @@ class GroupFlowTests {
                 .andExpect(status().isForbidden());
 
         send(get("/api/groups/invites/" + token), studentId).andExpect(jsonPath("$.subgroups[0].label").value("1"));
-        join(token, studentId).andExpect(status().isAccepted());
-        join(token, studentId).andExpect(jsonPath("$.detail").value("request_pending"));
-
-        int requestId = idOf(send(get("/api/groups/%d/requests".formatted(groupId)), leaderId), "$.requests[0].id");
-        send(post("/api/groups/requests/%d/approve".formatted(requestId)), studentId).andExpect(status().isForbidden());
-        send(post("/api/groups/requests/%d/reject".formatted(requestId)), studentId).andExpect(status().isForbidden());
-        send(post("/api/groups/requests/%d/approve".formatted(requestId)), leaderId).andExpect(status().isNoContent());
-        send(post("/api/groups/requests/%d/approve".formatted(requestId)), leaderId)
-                .andExpect(jsonPath("$.detail").value("already_decided"));
+        join(token, studentId).andExpect(status().isNoContent());
         join(token, studentId).andExpect(jsonPath("$.detail").value("already_member"));
+        send(get("/api/groups/%d/requests".formatted(groupId)), leaderId).andExpect(jsonPath("$.requests.length()").value(0));
 
         send(get("/api/groups/mine"), studentId)
                 .andExpect(jsonPath("$.memberships[0].subgroup").value("1"))
@@ -94,25 +87,50 @@ class GroupFlowTests {
     }
 
     @Test
+    void leaderApprovesADirectRequest() throws Exception {
+        int studentId = account("student");
+        request(groupId, studentId).andExpect(jsonPath("$.detail").value("no_leader"));
+        int leaderId = account("leader");
+        becomeLeader(leaderId, groupId, prefix);
+
+        send(post("/api/groups/%d/requests".formatted(groupId)), studentId).andExpect(jsonPath("$.detail").value("invalid_subgroup"));
+        request(groupId, studentId).andExpect(status().isAccepted());
+        request(groupId, studentId).andExpect(jsonPath("$.detail").value("request_pending"));
+        int otherGroup = TestData.currentGroup(jdbc, "o" + prefix, 5);
+        becomeLeader(account("other"), otherGroup, "o" + prefix);
+        send(post("/api/groups/%d/requests".formatted(otherGroup)), studentId).andExpect(jsonPath("$.detail").value("request_pending"));
+
+        int requestId = idOf(send(get("/api/groups/%d/requests".formatted(groupId)), leaderId), "$.requests[0].id");
+        send(post("/api/groups/requests/%d/approve".formatted(requestId)), studentId).andExpect(status().isForbidden());
+        send(post("/api/groups/requests/%d/reject".formatted(requestId)), studentId).andExpect(status().isForbidden());
+        send(post("/api/groups/requests/%d/approve".formatted(requestId)), leaderId).andExpect(status().isNoContent());
+        send(post("/api/groups/requests/%d/approve".formatted(requestId)), leaderId)
+                .andExpect(jsonPath("$.detail").value("already_decided"));
+        request(groupId, studentId).andExpect(jsonPath("$.detail").value("already_in_group"));
+        send(get("/api/groups/mine"), studentId).andExpect(jsonPath("$.memberships[0].subgroup").value("1"));
+    }
+
+    @Test
     void fullGroupAndUsedUpInviteAreRefused() throws Exception {
         int leaderId = account("leader");
         becomeLeader(leaderId, groupId, prefix);
         String token = JsonPath.read(send(post("/api/groups/%d/invites".formatted(groupId))
-                        .contentType(MediaType.APPLICATION_JSON).content("{\"days\":1,\"maxUses\":2}"), leaderId)
+                        .contentType(MediaType.APPLICATION_JSON).content("{\"days\":1,\"maxUses\":1}"), leaderId)
                 .andReturn().getResponse().getContentAsString(), "$.token");
 
-        int first = account("first");
-        int second = account("second");
-        join(token, first).andExpect(status().isAccepted());
-        join(token, second).andExpect(status().isAccepted());
-        join(token, account("third")).andExpect(jsonPath("$.detail").value("invite_used_up"));
+        int waiting = account("waiting");
+        request(groupId, waiting).andExpect(status().isAccepted());
+        join(token, account("first")).andExpect(status().isNoContent());
+        join(token, account("second")).andExpect(jsonPath("$.detail").value("invite_used_up"));
 
-        var pending = send(get("/api/groups/%d/requests".formatted(groupId)), leaderId).andReturn().getResponse().getContentAsString();
-        int firstRequest = JsonPath.<Integer>read(pending, "$.requests[0].id");
-        int secondRequest = JsonPath.<Integer>read(pending, "$.requests[1].id");
-        send(post("/api/groups/requests/%d/approve".formatted(firstRequest)), leaderId).andExpect(status().isNoContent());
-        send(post("/api/groups/requests/%d/approve".formatted(secondRequest)), leaderId)
+        int requestId = idOf(send(get("/api/groups/%d/requests".formatted(groupId)), leaderId), "$.requests[0].id");
+        send(post("/api/groups/requests/%d/approve".formatted(requestId)), leaderId)
                 .andExpect(jsonPath("$.detail").value("group_full"));
+
+        String more = JsonPath.read(send(post("/api/groups/%d/invites".formatted(groupId))
+                        .contentType(MediaType.APPLICATION_JSON).content("{\"days\":1,\"maxUses\":5}"), leaderId)
+                .andReturn().getResponse().getContentAsString(), "$.token");
+        join(more, waiting).andExpect(jsonPath("$.detail").value("group_full"));
     }
 
     @Test
@@ -291,6 +309,11 @@ class GroupFlowTests {
     private ResultActions join(String token, int userId) throws Exception {
         return send(post("/api/groups/join").contentType(MediaType.APPLICATION_JSON)
                 .content("{\"token\":\"%s\",\"subgroupId\":%d}".formatted(token, subgroupId)), userId);
+    }
+
+    private ResultActions request(int group, int userId) throws Exception {
+        return send(post("/api/groups/%d/requests".formatted(group)).contentType(MediaType.APPLICATION_JSON)
+                .content("{\"subgroupId\":%d}".formatted(subgroupId)), userId);
     }
 
     private ResultActions send(MockHttpServletRequestBuilder request, int userId) throws Exception {

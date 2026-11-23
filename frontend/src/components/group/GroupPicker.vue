@@ -6,7 +6,10 @@ import SegmentedChips from '@/components/SegmentedChips.vue'
 import { matchesGroup, type GroupSummary } from '@/group'
 
 const props = defineProps<{ groups: GroupSummary[] }>()
-const emit = defineEmits<{ claim: [groupId: number, subgroupId: number | null] }>()
+const emit = defineEmits<{
+  claim: [groupId: number, subgroupId: number | null]
+  request: [groupId: number, subgroupId: number | null]
+}>()
 const { t } = useI18n()
 const intent = ref<'join' | 'lead' | null>(null)
 const query = ref('')
@@ -15,6 +18,8 @@ const subgroupId = ref<number | null>(null)
 watch(pickedId, () => (subgroupId.value = null))
 
 const picked = computed(() => props.groups.find((group) => group.id === pickedId.value))
+// joining needs a leader to approve; leading needs the seat to be free
+const canAct = computed(() => (intent.value === 'join') === !!picked.value?.hasLeader)
 const sections = computed(() => {
   const found = props.groups
     .filter((group) => matchesGroup(group, query.value))
@@ -64,7 +69,7 @@ const sections = computed(() => {
     <p v-if="intent === 'join'" class="max-w-prose text-sm text-muted">{{ t('group.joinHow') }}</p>
   </section>
 
-  <section v-if="intent === 'lead'" class="mt-6">
+  <section v-if="intent" class="mt-6">
     <label class="field" for="group-search">
       {{ t('group.findGroup') }}
       <input
@@ -100,11 +105,14 @@ const sections = computed(() => {
         <strong class="mono">{{ picked.code }}</strong> · {{ picked.specialization }} ·
         {{ t('catalog.year', { n: picked.studyYear })
         }}<template v-if="picked.subgroups?.length">
-          · {{ t('group.subgroups', { list: picked.subgroups.map((s) => s.label).join(', ') }) }}</template
+          ·
+          {{
+            t('group.subgroups', { list: picked.subgroups.map((s) => s.label).join(', ') })
+          }}</template
         >
       </p>
-      <AppNotice v-if="picked.hasLeader" kind="warn" class="my-0">{{
-        t('group.hasLeader')
+      <AppNotice v-if="!canAct" kind="warn" class="my-0">{{
+        t(intent === 'join' ? 'group.noLeaderYet' : 'group.hasLeader')
       }}</AppNotice>
       <template v-else>
         <div v-if="picked.subgroups?.length" class="field">
@@ -118,11 +126,19 @@ const sections = computed(() => {
         <button
           class="btn btn-primary w-full"
           :disabled="!!picked.subgroups?.length && subgroupId === null"
-          @click="emit('claim', picked.id, subgroupId)"
+          @click="
+            intent === 'join'
+              ? emit('request', picked.id, subgroupId)
+              : emit('claim', picked.id, subgroupId)
+          "
         >
-          {{ t('group.claimGroup', { code: picked.code }) }}
+          {{
+            t(intent === 'join' ? 'group.requestJoin' : 'group.claimGroup', { code: picked.code })
+          }}
         </button>
-        <p class="text-xs text-muted">{{ t('group.claimHint') }}</p>
+        <p class="text-xs text-muted">
+          {{ t(intent === 'join' ? 'group.requestHint' : 'group.claimHint') }}
+        </p>
       </template>
     </div>
   </section>

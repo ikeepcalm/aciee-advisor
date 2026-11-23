@@ -117,49 +117,71 @@ public class GroupService {
 
     @Transactional
     public void join(String token, Integer subgroupId) {
-        var invite = jdbc.sql("""
-                        SELECT i.id, i.group_id, i.max_uses, i.expires_at > now() AS live,
-                               upper(ay.during) > current_date AS year_open,
-                               EXISTS (SELECT 1 FROM core.group_membership m
-                                       WHERE m.user_id = core.app_user_id() AND m.group_id = i.group_id
-                                         AND m.valid_during && daterange(current_date, NULL)) AS member
-                        FROM core.group_invite i
-                        JOIN core.study_group g ON g.id = i.group_id
-                        JOIN core.academic_year ay ON ay.id = g.academic_year_id
-                        WHERE i.token_hash = sha256(convert_to(:token, 'UTF8'))
-                        FOR NO KEY UPDATE OF i""")
-                .param("token", token)
-                .query()
-                .listOfRows();
-        if (invite.isEmpty() || !(Boolean) invite.getFirst().get("live")) {
-            throw new ResponseStatusException(HttpStatus.GONE, "invite_expired");
-        }
-        var row = invite.getFirst();
-        if (!(Boolean) row.get("year_open")) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "year_ended");
-        }
-        if ((Boolean) row.get("member")) {
+        String outcome;
+        try {
+            outcome = jdbc.sql("SELECT core.join_by_invite(:token, :subgroup)")
+                    .param("token", token)
+                    .param("subgroup", subgroupId)
+                    .query(String.class)
+                    .single();
+        } catch (DataIntegrityViolationException e) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "already_member");
         }
-        long uses = jdbc.sql("SELECT core.invite_uses(:id)")
-                .param("id", row.get("id"))
-                .query(Long.class)
-                .single();
-        if (uses >= ((Number) row.get("max_uses")).intValue()) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "invite_used_up");
+        switch (outcome) {
+            case "joined" -> {
+            }
+            case "invite_expired" -> throw new ResponseStatusException(HttpStatus.GONE, outcome);
+            case "invalid_subgroup" -> throw new ResponseStatusException(HttpStatus.BAD_REQUEST, outcome);
+            default -> throw new ResponseStatusException(HttpStatus.CONFLICT, outcome);
         }
+    }
+
+    @Transactional
+    public void requestToJoin(int groupId, Integer subgroupId) {
+        var group = jdbc.sql("""
+                        SELECT EXISTS (SELECT 1 FROM core.group_leader l
+                                       JOIN core.group_leader_claim c ON c.id = l.claim_id WHERE c.group_id = g.id) AS led,
+                               EXISTS (SELECT 1 FROM core.subgroup s WHERE s.group_id = g.id) AS has_subgroups,
+                               EXISTS (SELECT 1 FROM core.group_membership m
+                                       WHERE m.user_id = core.app_user_id()
+                                         AND m.valid_during && daterange(current_date, NULL)) AS in_group
+                        FROM core.study_group g
+                        JOIN core.academic_year ay ON ay.id = g.academic_year_id
+                        WHERE g.id = :group AND ay.during @> current_date""")
+                .param("group", groupId)
+                .query()
+                .listOfRows();
+        if (group.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "year_ended");
+        }
+        var row = group.getFirst();
+        if ((Boolean) row.get("in_group")) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "already_in_group");
+        }
+        if (!(Boolean) row.get("led")) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "no_leader");
+        }
+        if ((Boolean) row.get("has_subgroups") && subgroupId == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "invalid_subgroup");
+        }
+        int inserted;
         try {
-            jdbc.sql("""
-                            INSERT INTO core.membership_request (user_id, group_id, subgroup_id, kind, invite_id)
-                            VALUES (core.app_user_id(), :group, :subgroup, 'regular', :invite)""")
-                    .param("group", row.get("group_id"))
+            // shortcut: two parallel requests can both pass the NOT EXISTS; only the first approval succeeds, so no harm
+            inserted = jdbc.sql("""
+                            INSERT INTO core.membership_request (user_id, group_id, subgroup_id, kind)
+                            SELECT core.app_user_id(), :group, :subgroup, 'regular'
+                            WHERE NOT EXISTS (SELECT 1 FROM core.membership_request r
+                                              WHERE r.user_id = core.app_user_id() AND r.status = 'pending' AND r.kind = 'regular')""")
+                    .param("group", groupId)
                     .param("subgroup", subgroupId)
-                    .param("invite", row.get("id"))
                     .update();
         } catch (DuplicateKeyException e) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "request_pending");
         } catch (DataIntegrityViolationException e) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "invalid_subgroup");
+        }
+        if (inserted == 0) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "request_pending");
         }
     }
 

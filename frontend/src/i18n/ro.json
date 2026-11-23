@@ -146,7 +146,9 @@
     "microsoft_failed": "Autentificarea cu Microsoft nu a reușit. Încearcă din nou.",
     "name_too_long": "Numele poate avea cel mult 80 de caractere.",
     "feedback_busy": "Prea multe mesaje acum. Încearcă din nou peste o oră.",
-    "feedback_unavailable": "Mesajele nu pot fi trimise acum. Încearcă mai târziu."
+    "feedback_unavailable": "Mesajele nu pot fi trimise acum. Încearcă mai târziu.",
+    "no_leader": "Grupa nu are încă un șef care să aprobe cererea.",
+    "already_in_group": "Ești deja într-o grupă anul acesta."
   },
   "nav": {
     "groups": "Grupa mea",
@@ -205,9 +207,9 @@
     "deactivate": "Dezactivează",
     "joinTitle": "Alătură-te grupei",
     "subgroup": "Subgrupa",
-    "sendRequest": "Trimite cererea",
-    "joinHint": "Șeful de grupă îți va aproba cererea.",
-    "joinSent": "Cererea a fost trimisă.",
+    "sendRequest": "Intră în grupă",
+    "joinHint": "Intri imediat, fără aprobare.",
+    "joinSent": "Acum ești membru al grupei.",
     "component": {
       "lecture": "Curs",
       "seminar": "Seminar",
@@ -231,12 +233,12 @@
       "join": "Intru în grupa mea",
       "lead": "Sunt șef de grupă"
     },
-    "joinHow": "Cere linkul de invitație șefului de grupă și deschide-l. Altă cale nu există.",
+    "joinHow": "Găsește-ți grupa mai jos și trimite o cerere șefului de grupă. Cu linkul de invitație de la șef intri imediat.",
     "findGroup": "Găsește-ți grupa",
     "findGroupExample": "22C31 sau calculatoare 3",
     "noGroupFound": "Nicio grupă nu se potrivește. Verifică codul din orar.",
     "subgroups": "subgrupele {list}",
-    "hasLeader": "Grupa are deja un șef. Cere-i linkul de invitație.",
+    "hasLeader": "Grupa are deja un șef. Alege „Intru în grupa mea” ca să-i trimiți o cerere.",
     "claimGroup": "Cer să fiu șeful grupei {code}",
     "claimHint": "Un administrator confirmă cererea. Fiecare grupă are un singur șef.",
     "teachingSet": "Completate: {set} din {total}",
@@ -259,7 +261,11 @@
     "customInvite": "Altă durată sau limită",
     "otherInvites": "Alte linkuri active",
     "otherInvitesHint": "Un link poate fi copiat doar de pe dispozitivul pe care a fost creat.",
-    "sameForAll": "Același pentru toată grupa"
+    "sameForAll": "Același pentru toată grupa",
+    "noLeaderYet": "Grupa nu are încă un șef, deci nimeni nu poate aproba cererea. Roagă-ți șeful să revendice grupa sau revendic-o tu dacă ești șeful.",
+    "requestJoin": "Cere să intri în {code}",
+    "requestHint": "Șeful de grupă aprobă cererea. Poți avea o singură cerere în așteptare.",
+    "requestSent": "Cererea a fost trimisă șefului de grupă."
   },
   "admin": {
     "leadersTitle": "Șefi de grupă",

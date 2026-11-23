@@ -146,7 +146,9 @@
     "microsoft_failed": "Signing in with Microsoft failed. Try again.",
     "name_too_long": "A name can have at most 80 characters.",
     "feedback_busy": "Too many messages right now. Please try again in an hour.",
-    "feedback_unavailable": "Messages cannot be sent right now. Please try again later."
+    "feedback_unavailable": "Messages cannot be sent right now. Please try again later.",
+    "no_leader": "This group has no leader yet to approve the request.",
+    "already_in_group": "You are already in a group this year."
   },
   "nav": {
     "groups": "My group",
@@ -205,9 +207,9 @@
     "deactivate": "Deactivate",
     "joinTitle": "Join the group",
     "subgroup": "Subgroup",
-    "sendRequest": "Send request",
-    "joinHint": "Your group leader will approve the request.",
-    "joinSent": "The request was sent.",
+    "sendRequest": "Join the group",
+    "joinHint": "You join right away, no approval needed.",
+    "joinSent": "You are now a member of the group.",
     "component": {
       "lecture": "Lecture",
       "seminar": "Seminar",
@@ -231,12 +233,12 @@
       "join": "Join my group",
       "lead": "I am the group leader"
     },
-    "joinHow": "Ask your group leader for the invitation link and open it. There is no other way in.",
+    "joinHow": "Find your group below and send your group leader a request. With an invitation link from your leader you join right away.",
     "findGroup": "Find your group",
     "findGroupExample": "22C31 or calculatoare 3",
     "noGroupFound": "No group matches. Check the code in the timetable.",
     "subgroups": "subgroups {list}",
-    "hasLeader": "This group already has a leader. Ask them for the invitation link.",
+    "hasLeader": "This group already has a leader. Choose \"Join my group\" to send them a request.",
     "claimGroup": "Claim leadership of {code}",
     "claimHint": "An administrator confirms it. Each group has one leader.",
     "teachingSet": "Set: {set} of {total}",
@@ -259,7 +261,11 @@
     "customInvite": "Other duration or limit",
     "otherInvites": "Other active links",
     "otherInvitesHint": "A link can be copied only on the device that created it.",
-    "sameForAll": "Same for the whole group"
+    "sameForAll": "Same for the whole group",
+    "noLeaderYet": "This group has no leader yet, so nobody can approve a request. Ask your leader to claim the group first, or claim it yourself if you are the leader.",
+    "requestJoin": "Request to join {code}",
+    "requestHint": "Your group leader approves the request. You can have one pending request at a time.",
+    "requestSent": "The request was sent to your group leader."
   },
   "admin": {
     "leadersTitle": "Group leaders",

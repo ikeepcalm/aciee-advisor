@@ -80,7 +80,7 @@ async function submit() {
       <p class="text-center text-xs text-muted">{{ t('group.joinHint') }}</p>
     </form>
     <template v-if="sent">
-      <AppNotice kind="success">{{ t('group.joinSent') }} {{ t('group.joinHint') }}</AppNotice>
+      <AppNotice kind="success">{{ t('group.joinSent') }}</AppNotice>
       <RouterLink :to="{ name: 'group' }" class="btn btn-primary mt-2 w-full">{{
         t('nav.groups')
       }}</RouterLink>

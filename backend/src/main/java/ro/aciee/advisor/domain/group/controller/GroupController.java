@@ -53,9 +53,15 @@ public class GroupController {
     }
 
     @PostMapping("/join")
-    @ResponseStatus(HttpStatus.ACCEPTED)
+    @ResponseStatus(HttpStatus.NO_CONTENT)
     public void join(@Valid @RequestBody JoinBody body) {
         groupService.join(body.getToken(), body.getSubgroupId());
+    }
+
+    @PostMapping("/{groupId}/requests")
+    @ResponseStatus(HttpStatus.ACCEPTED)
+    public void requestToJoin(@PathVariable int groupId, @RequestBody(required = false) LeaderClaimBody body) {
+        groupService.requestToJoin(groupId, body == null ? null : body.getSubgroupId());
     }
 
     @PostMapping("/{groupId}/leader-claims")

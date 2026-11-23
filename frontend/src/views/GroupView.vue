@@ -60,6 +60,14 @@ async function claim(groupId: number, subgroupId: number | null) {
   window.scrollTo({ top: 0 })
 }
 
+async function request(groupId: number, subgroupId: number | null) {
+  await run(async () => {
+    await api('POST', `/api/groups/${groupId}/requests`, { subgroupId })
+    await load()
+  }, t('group.requestSent'))
+  window.scrollTo({ top: 0 })
+}
+
 onMounted(() => run(load))
 </script>
 
@@ -114,7 +122,7 @@ onMounted(() => run(load))
       </p>
     </section>
 
-    <GroupPicker v-if="loaded && !current" :groups="groups" @claim="claim" />
+    <GroupPicker v-if="loaded && !current" :groups="groups" @claim="claim" @request="request" />
 
     <TabsRoot v-if="current && leads" default-value="people" class="mt-8">
       <TabsList class="flex gap-1 border-b border-line" :aria-label="t('group.leader')">

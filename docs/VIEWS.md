@@ -654,9 +654,9 @@ Join via invite link (`/join/:inviteToken`):
 | Subgrupa                             |
 | ( ) 1   (•) 2                        |
 |                                      |
-| [      Trimite cererea           ]   |
-| Șeful de grupă îți va aproba         |
-| cererea.                             |
+| [      Intră în grupă            ]   |
+| Intri imediat, fără aprobare.        |
+|                                      |
 +--------------------------------------+
 ```
 
@@ -670,13 +670,14 @@ Join via invite link (`/join/:inviteToken`):
 
 | Control | Calls | Validation and states |
 |---|---|---|
-| Trimite cererea (invite) | `POST /api/groups/join` with the invite token and subgroup | Invite unknown or `expires_at` passed: "Linkul de invitație a expirat." Uses ≥ `max_uses` (counted under `FOR NO KEY UPDATE`): "Linkul a atins numărul maxim de utilizări." Already a pending request for the group (partial UQ): "Ai deja o cerere în așteptare." |
+| Intră în grupă (invite) | `POST /api/groups/join` with the invite token and subgroup → `core.join_by_invite` | Joins at once: the invite is the leader's approval, so the function writes an approved request (`decided_by` = invite creator, or approves the student's pending one) and the membership. Invite unknown or `expires_at` passed: "Linkul de invitație a expirat." Uses ≥ `max_uses` (counted under `FOR NO KEY UPDATE`): "Linkul a atins numărul maxim de utilizări." Group full: "Grupa a atins numărul maxim de membri." Already in a group this period: "Studentul este deja membru al altei grupe în această perioadă." |
+| Cere să intri în {grupă} (picker) | `POST /api/groups/:id/requests` with the subgroup | Only for a current group that has a leader ("Grupa nu are încă un șef care să aprobe cererea."), only for a student in no group ("Ești deja într-o grupă anul acesta."), one pending regular request per student across all groups ("Ai deja o cerere în așteptare."). The leader approves it in the requests list. |
 | Cere acces la o grupă anterioară | form: academic year, group code, subgroup → `POST /api/groups/requests` with `kind` = historical claim | Approved by a leader (ARCHITECTURE §4). Approval yields tokens for that group's past offerings (ADR-005). |
 | Refac un curs cu altă grupă | form: group, offering → `POST /api/groups/requests` with `offering_id` | On approval becomes an `offering_enrolment` for that offering only. |
 | Sunt șeful acestei grupe | `POST /api/groups/:id/leader-claims` | Creates `core.group_leader_claim` (`pending`) for an admin. "Cererea a fost trimisă administratorului." |
 
 **States**
-- No group: the page shows only "Nu faci parte din nicio grupă. Cere linkul de invitație șefului de grupă." plus the historical and repeat buttons.
+- No group: the page offers a group picker to request to join a led group or claim leadership of an unled one, plus the historical and repeat buttons.
 - Rejected request: "Respinsă" with no reason (none is stored).
 
 ### 11.2 Group leader view

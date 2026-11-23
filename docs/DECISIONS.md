@@ -84,7 +84,7 @@ Format: context → decision → consequences. Never rewrite an accepted ADR; su
 
 **Decision.**
 - An admin approves group-leader claims.
-- Leaders approve join requests that arrive through expiring, capped invite links.
+- Students without a group request to join a led group from the picker and the leader approves. An expiring, capped invite link is the leader's approval given in advance: opening it joins at once.
 - Groups have a size cap, and every approval is audited.
 - Leadership is scoped to a group and an academic year.
 - `group_membership.source` reserves `university_sync` for a future integration.
