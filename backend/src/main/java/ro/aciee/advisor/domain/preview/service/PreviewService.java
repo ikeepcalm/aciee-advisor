@@ -67,7 +67,7 @@ public class PreviewService {
             default -> PreviewPage.HOME;
         };
         if (page == PreviewPage.PREVIEW) {
-            return new PreviewCard(page.getEyebrow(), page.getTitle(), List.of(), page.getNote(), "/preview", "/preview/og-en.jpg", page);
+            return new PreviewCard(page.getEyebrow(), page.getTitle(), List.of(), page.getNote(), "/preview", "/preview/og-ro.jpg", page);
         }
         return page == PreviewPage.TIMETABLE ? timetableCard(path, group) : pageCard(page, path);
     }
@@ -183,8 +183,8 @@ public class PreviewService {
         String description = HtmlUtils.htmlEscape(card.description(), "UTF-8");
         boolean video = card.getPage() == PreviewPage.PREVIEW;
         String extra = video ? """
-                <meta property="og:video" content="%1$s/preview/loop-en.mp4">
-                <meta property="og:video:secure_url" content="%1$s/preview/loop-en.mp4">
+                <meta property="og:video" content="%1$s/preview/loop-ro.mp4">
+                <meta property="og:video:secure_url" content="%1$s/preview/loop-ro.mp4">
                 <meta property="og:video:type" content="video/mp4">
                 <meta property="og:video:width" content="1280">
                 <meta property="og:video:height" content="720">
@@ -212,7 +212,7 @@ public class PreviewService {
                 <body><a href="%3$s">%1$s</a></body>
                 </html>
                 """.formatted(title, description, HtmlUtils.htmlEscape(url, "UTF-8"), HtmlUtils.htmlEscape(image, "UTF-8"), SITE,
-                video ? "en" : "ro", video ? "video.other" : "website", video ? "en_US" : "ro_RO", extra);
+                "ro", video ? "video.other" : "website", "ro_RO", extra);
     }
 
     private String score(double value) {

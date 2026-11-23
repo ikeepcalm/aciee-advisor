@@ -18,8 +18,8 @@ public enum PreviewPage {
             "Prezență, examene, taxe. Ce nu-ți spune nimeni în prima săptămână."),
     RATE("Evaluează", "Spune cum a fost la curs",
             "Răspunsurile tale rămân anonime. Îi ajuți pe cei care vin după tine."),
-    PREVIEW("30-second tour", "ACIEE Advisor in 30 seconds",
-            "Your group's timetable, honest course ratings and a first-year guide, made by an ACIEE student. Anonymous by design.");
+    PREVIEW("Tur de 30 de secunde", "ACIEE Advisor în 30 de secunde",
+            "Orarul grupei tale, evaluări sincere ale cursurilor și un ghid de anul I, făcute de un student ACIEE. Anonim din construcție.");
 
     private final String eyebrow;
     private final String title;

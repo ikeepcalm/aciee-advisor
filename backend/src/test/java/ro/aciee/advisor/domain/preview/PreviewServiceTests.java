@@ -39,9 +39,9 @@ class PreviewServiceTests {
     void previewPageCarriesTheLoopVideoInEnglish() {
         String html = previews.html(previews.cardForPath("/preview"));
 
-        assertThat(html).contains("<html lang=\"en\">", "content=\"video.other\"", "content=\"en_US\"",
-                "og:video\" content=\"https://acieeadvisor.ro/preview/loop-en.mp4\"",
-                "og:image\" content=\"https://acieeadvisor.ro/preview/og-en.jpg\"");
+        assertThat(html).contains("<html lang=\"ro\">", "content=\"video.other\"", "content=\"ro_RO\"",
+                "og:video\" content=\"https://acieeadvisor.ro/preview/loop-ro.mp4\"",
+                "og:image\" content=\"https://acieeadvisor.ro/preview/og-ro.jpg\"");
         assertThat(previews.html(previews.cardForPath("/courses"))).doesNotContain("og:video").contains("content=\"website\"");
     }
 
