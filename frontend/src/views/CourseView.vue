@@ -8,7 +8,8 @@ import RadarChart from '@/components/RadarChart.vue'
 import ReportButton from '@/components/ReportButton.vue'
 import CommentList from '@/components/CommentList.vue'
 import RateInvite from '@/components/RateInvite.vue'
-import { api, describeError, lookups, type Lookups } from '@/api'
+import { ApiError, api, describeError, lookups, type Lookups } from '@/api'
+import { showNotFound } from '@/router'
 import { useAuthStore } from '@/stores/auth'
 import { localTokens } from '@/crypto/tokens'
 
@@ -79,6 +80,7 @@ async function load(year?: number | null) {
       `/api/catalog/courses/${itemId}${year ? `?year=${year}` : ''}`,
     )
   } catch (e) {
+    if (!page.value && e instanceof ApiError && e.status === 404) return showNotFound()
     error.value = describeError(t, e)
   }
 }

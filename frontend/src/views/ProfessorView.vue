@@ -9,7 +9,8 @@ import CommentList from '@/components/CommentList.vue'
 import RateInvite from '@/components/RateInvite.vue'
 import ProfessorAvatar from '@/components/ProfessorAvatar.vue'
 import SegmentedChips from '@/components/SegmentedChips.vue'
-import { api, describeError, lookups, type Lookups, type ProfessorPage } from '@/api'
+import { ApiError, api, describeError, lookups, type Lookups, type ProfessorPage } from '@/api'
+import { showNotFound } from '@/router'
 import { useAuthStore } from '@/stores/auth'
 import { academicYear, pillarAverages } from '@/professors'
 
@@ -33,6 +34,7 @@ async function load() {
       lookups(),
     ])
   } catch (e) {
+    if (e instanceof ApiError && e.status === 404) return showNotFound()
     error.value = describeError(t, e)
   }
 }

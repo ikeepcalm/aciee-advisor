@@ -696,6 +696,11 @@
     "note": "Demo with fictional data",
     "video": "Silent video tour of ACIEE Advisor"
   },
+  "notFound": {
+    "title": "This page skipped class.",
+    "body": "The link is wrong or the page has moved. Try one of these.",
+    "guide": "First-year guide"
+  },
   "feedback": {
     "eyebrow": "Help us fix it",
     "title": "Report a problem",

@@ -201,7 +201,7 @@ async function signOut() {
 
     <RouterView class="flex-1" />
 
-    <AppFooter v-if="!route.meta.bare" :feedback-link="feedbackLink" />
+    <AppFooter v-if="!route.meta.bare && !route.meta.noFooter" :feedback-link="feedbackLink" />
 
     <nav
       v-if="!route.meta.bare"

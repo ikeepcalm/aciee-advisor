@@ -696,6 +696,11 @@
     "note": "Demo cu date fictive",
     "video": "Tur video fără sunet prin ACIEE Advisor"
   },
+  "notFound": {
+    "title": "Pagina asta a chiulit.",
+    "body": "Linkul e greșit sau pagina s-a mutat. Încearcă una dintre acestea.",
+    "guide": "Ghidul pentru anul I"
+  },
   "feedback": {
     "eyebrow": "Ajută-ne să reparăm",
     "title": "Raportează o problemă",

@@ -145,6 +145,13 @@ const router = createRouter({
       path: '/forbidden',
       name: 'forbidden',
       component: () => import('../views/ForbiddenView.vue'),
+      meta: { noFooter: true },
+    },
+    {
+      path: '/:pathMatch(.*)*',
+      name: 'not-found',
+      component: () => import('../views/NotFoundView.vue'),
+      meta: { noFooter: true },
     },
   ],
 })
@@ -169,5 +176,15 @@ router.beforeEach(async (to) => {
     return { name: 'forbidden' }
   }
 })
+
+export function showNotFound() {
+  const { path, query, hash } = router.currentRoute.value
+  return router.replace({
+    name: 'not-found',
+    params: { pathMatch: path.slice(1).split('/') },
+    query,
+    hash,
+  })
+}
 
 export default router
