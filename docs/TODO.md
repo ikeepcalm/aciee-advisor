@@ -55,9 +55,9 @@ AI review checking (plan agreed, not built): Gemini free tier; harsh-but-fair pu
 ## Before ratings open on an environment
 
 - [ ] Enter the 2026-2027 semesters in Admin → semester (from the official calendar, HS 59/2026): semester 1 `during` `[2026-09-28,2027-02-15)`, `breaks` `{[2026-12-19,2027-01-11)}`, `rating_opens_at` 2027-01-23; semester 2 `during` `[2027-02-22,2027-07-31)`, `breaks` `{[2027-04-30,2027-05-10)}`, `rating_opens_at` 2027-06-05. Odd/even weeks and the calendar feed depend on these.
-- [ ] `POST /api/admin/semesters/{id}/token-keys` for each semester to be rated.
-- [ ] Put the base64 SHA-256 of that environment's `/anon/keys.json` into `frontend/src/crypto/pinned-keys.json` and redeploy the frontend. **The file is empty today, so no student on a deployed environment can get rating tokens until this is done.**
-- [ ] Repeat both steps whenever a new batch of keys is created.
+- [ ] Decide when semester 1 opens for ratings (`rating_opens_at`): now, or after the semester (2027-01-23). Past-year ratings are not possible yet (no historical-claim flow).
+- [ ] After the semesters exist, press Admin → study groups → "Sync from timetable" (or wait for the hourly run): it creates this year's Calculatoare and Automatică groups, their courses, teachers and signing keys. Other programmes need their curriculum seeded first.
+- [ ] Back up the `token-keys` volume once the keys exist.
 
 ## Microsoft sign-in (code done, off by default; DEPLOY.md "Microsoft sign-in")
 

@@ -51,7 +51,7 @@ Rows written in one transaction share `xmin`. Rows written in back-to-back trans
 **Keys.** One RSA-2048 key pair per offering.
 - Keys are created in one batch per semester, before its ratings open (DEPLOY.md, "Signing keys"). Issuance never creates a key, so the key list is fixed for the whole term.
 - Private keys live in a keystore on the app host (one PKCS#8 file per key in the `token-keys` volume), never in the database. The public half is in `anon.offering_key`, which the ident role may read and insert.
-- Public keys are published at `/anon/keys.json`. After each batch the base64 SHA-256 of that file goes into `frontend/src/crypto/pinned-keys.json` (one entry per environment), and the client refuses a `keys.json` whose hash is not listed. Development builds skip the check.
+- Public keys are published at `/anon/keys.json`, fetched without cookies. The client checks every key against its fingerprint, and `/rate` shows a short fingerprint of the whole file (`XXXX-XXXX`) that is the same for every student at a given time, so classmates can compare it. The build-time pin of the file's hash was dropped in ADR-033.
 - The client rejects any key that is not in that list. This prevents per-user tagging keys.
 
 **Flow:**
@@ -71,7 +71,7 @@ Rows written in one transaction share `xmin`. Rows written in back-to-back trans
 ### Residual risks
 
 These are stated openly, not hidden:
-- An operator who ships modified JavaScript, or who logs IPs and timing, can link submissions to students. This is mitigated by publishing the bundle hash and key list, but not eliminated.
+- An operator who ships modified JavaScript, or who logs IPs and timing, can link submissions to students. This is mitigated by the open-source bundle and the key-list fingerprint students can compare (ADR-033), but not eliminated.
 - The operator holds the signing keys and could mint ballots. This is an integrity limit, not an anonymity one.
 - A student removed after tokens are issued keeps their tokens.
 - `token_issuance` reveals which offerings a student received tokens for (already derivable from memberships). It does not reveal what or whom they rated, or whether they rated at all.
@@ -80,7 +80,7 @@ These are stated openly, not hidden:
 - Writing style can identify an author. Moderators reject identifying details.
 
 ### Claim
-> Submissions are stored with no user identifier and no join key to one: no table, column or foreign key connects a rating to an account. Against a database leak this holds except for the ordering and small-offering cases above. It does not hold against deliberately modified client code or network logging, which we reduce by publishing the bundle hash and signing-key list.
+> Submissions are stored with no user identifier and no join key to one: no table, column or foreign key connects a rating to an account. Against a database leak this holds except for the ordering and small-offering cases above. It does not hold against deliberately modified client code or network logging, which we reduce with the open-source bundle and the comparable signing-key fingerprint.
 
 ## 4. Database
 

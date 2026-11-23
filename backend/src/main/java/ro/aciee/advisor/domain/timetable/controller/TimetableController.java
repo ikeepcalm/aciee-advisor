@@ -7,12 +7,15 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RestController;
+import ro.aciee.advisor.domain.timetable.model.SyncResult;
 import ro.aciee.advisor.domain.timetable.model.Timetable;
 import ro.aciee.advisor.domain.timetable.model.TimetableChange;
 import ro.aciee.advisor.domain.timetable.service.CalendarService;
 import ro.aciee.advisor.domain.timetable.service.TimetableChangeService;
 import ro.aciee.advisor.domain.timetable.service.TimetableService;
+import ro.aciee.advisor.domain.timetable.service.TimetableSyncService;
 
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
@@ -25,6 +28,12 @@ public class TimetableController {
     private final TimetableService timetableService;
     private final CalendarService calendarService;
     private final TimetableChangeService timetableChangeService;
+    private final TimetableSyncService timetableSyncService;
+
+    @PostMapping("/api/admin/timetable/sync")
+    public SyncResult sync() {
+        return timetableSyncService.sync();
+    }
 
     @GetMapping("/api/timetable")
     public Timetable timetable() {

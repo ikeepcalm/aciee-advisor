@@ -312,3 +312,12 @@ Format: context → decision → consequences. Never rewrite an accepted ADR; su
 - The demo app, its nginx site and its DNS record are removed by hand (TODO.md).
 
 **Consequences.** One environment to run. The recordings show fictional data and the UI as of 2026-11-23; they go stale as the UI changes and have to be re-recorded from that commit if needed. Restore tests now use a scratch database instead of the demo.
+
+## ADR-033 — Signing keys created automatically, build-time key pin dropped
+**Context.** Ratings needed four manual steps per environment: call `POST /api/admin/semesters/{id}/token-keys`, hash `/anon/keys.json`, commit that hash to `frontend/src/crypto/pinned-keys.json`, redeploy. Any group added later meant repeating all four, and until then nobody could get tokens. The pin stops the server from handing one student a key of their own (which would link their ratings to them), but only for someone who also trusts the JavaScript bundle, which the same server ships; ARCHITECTURE §3 already lists modified JavaScript as an attack it cannot fully stop.
+
+**Decision.**
+- The hourly timetable sync, and an Admin "Sync from timetable" button, create this year's missing groups from the timetable's group codes (only programmes whose specialisation and plan are seeded), generate their courses, import teachers (ADR-031), and start a background job that creates a key for every current-year offering without one.
+- The client no longer checks `keys.json` against a pinned hash. It still checks each key against its fingerprint and the issued signatures against the keys. `/rate` shows a short fingerprint of the whole `keys.json`, fetched without cookies, which is the same for everyone at a given time, so classmates can compare it and report a difference.
+
+**Consequences.** No redeploys or console calls for ratings to open. Detection of a targeted key now relies on students comparing fingerprints and on the open-source bundle, not on a hash in the build. The fingerprint changes whenever keys are added (for example when a new group appears), so comparisons only hold between students who load `/rate` around the same time.

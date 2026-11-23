@@ -8,6 +8,7 @@ import NoteStar from '@/components/NoteStar.vue'
 import { useAuthStore } from '@/stores/auth'
 import {
   issueTokens,
+  keySetFingerprint,
   localMaster,
   localTokens,
   pendingOfferings,
@@ -25,6 +26,7 @@ const tokens = ref(new Map<number, boolean>())
 const error = ref('')
 const retryable = ref(false)
 const busy = ref(false)
+const fingerprint = ref('')
 
 const rateable = computed(() =>
   (offerings.value ?? []).filter((offering) => tokens.value.has(offering.offeringId)),
@@ -84,7 +86,12 @@ async function load() {
   }
 }
 
-onMounted(load)
+onMounted(() => {
+  load()
+  keySetFingerprint()
+    .then((value) => (fingerprint.value = value))
+    .catch(() => {})
+})
 </script>
 
 <template>
@@ -215,6 +222,10 @@ onMounted(load)
             <RouterLink :to="{ name: 'recovery' }" class="inline-flex min-h-11 items-center">{{
               t('recovery.title')
             }}</RouterLink>
+          </p>
+          <p v-if="fingerprint" class="mt-2 text-xs">
+            {{ t('rate.keys') }} <span class="mono font-medium text-ink">{{ fingerprint }}</span>.
+            {{ t('rate.keysHint') }}
           </p>
         </div>
       </div>

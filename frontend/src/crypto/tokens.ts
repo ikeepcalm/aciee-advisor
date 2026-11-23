@@ -1,7 +1,6 @@
 import { api, ApiError } from '@/api'
 import { blind, finalize, tokenMessage } from '@/crypto/blindRsa'
 import { fromBase64, openVault, sealVault, toBase64, type StoredToken } from '@/crypto/vault'
-import pinnedKeys from '@/crypto/pinned-keys.json'
 
 export interface RateableOffering {
   offeringId: number
@@ -135,13 +134,19 @@ async function sha256Base64(bytes: Uint8Array<ArrayBuffer>): Promise<string> {
   return toBase64(new Uint8Array(await crypto.subtle.digest('SHA-256', bytes)))
 }
 
+export async function keySetFingerprint(): Promise<string> {
+  const body = await (await fetch('/anon/keys.json', { credentials: 'omit' })).arrayBuffer()
+  const hex = [...new Uint8Array(await crypto.subtle.digest('SHA-256', body)).slice(0, 4)]
+    .map((b) => b.toString(16).padStart(2, '0'))
+    .join('')
+    .toUpperCase()
+  return `${hex.slice(0, 4)}-${hex.slice(4)}`
+}
+
 async function publishedKeys(): Promise<Map<number, PublishedKey>> {
   const body = new Uint8Array(
     await (await fetch('/anon/keys.json', { credentials: 'omit' })).arrayBuffer(),
   )
-  if (!import.meta.env.DEV && !(pinnedKeys as string[]).includes(await sha256Base64(body))) {
-    throw new UnknownKeyError('keys.json does not match a pinned hash')
-  }
   const keys: PublishedKey[] = JSON.parse(new TextDecoder().decode(body))
   for (const key of keys) {
     if ((await sha256Base64(fromBase64(key.publicKey))) !== key.fingerprint) {

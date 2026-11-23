@@ -6,7 +6,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import ro.aciee.advisor.domain.timetable.service.CalendarService;
 import ro.aciee.advisor.domain.timetable.service.CourseLinkService;
-import ro.aciee.advisor.domain.timetable.service.TeacherImportService;
+import ro.aciee.advisor.domain.timetable.service.TimetableSyncService;
 import ro.aciee.advisor.domain.timetable.service.TimetableChangeService;
 import ro.aciee.advisor.domain.timetable.service.TimetableService;
 
@@ -22,7 +22,7 @@ public class TimetableRefreshTask {
     private final TimetableChangeService timetableChangeService;
     private final CourseLinkService courseLinkService;
     private final CalendarService calendarService;
-    private final TeacherImportService teacherImportService;
+    private final TimetableSyncService timetableSyncService;
 
     @Scheduled(initialDelay = 0, fixedDelay = 1, timeUnit = TimeUnit.HOURS)
     public void refresh() throws InterruptedException {
@@ -45,12 +45,9 @@ public class TimetableRefreshTask {
             }
         }
         try {
-            int imported = teacherImportService.importTeachers(timetableService.current().getPrograms());
-            if (imported > 0) {
-                log.info("Imported {} teaching assignments from the timetable", imported);
-            }
+            log.info("Timetable sync: {}", timetableSyncService.sync());
         } catch (RuntimeException e) {
-            log.warn("Teachers not imported from the timetable: {}", e.toString());
+            log.warn("Timetable sync failed: {}", e.toString());
         }
     }
 }

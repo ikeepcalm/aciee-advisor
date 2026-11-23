@@ -348,7 +348,9 @@
     "name": "Nume",
     "actions": "Acțiuni",
     "empty": "Nimic încă. Apasă Adaugă pentru primul rând.",
-    "deleteConfirm": "Apasă din nou pentru a șterge"
+    "deleteConfirm": "Apasă din nou pentru a șterge",
+    "sync": "Sincronizează din orar",
+    "synced": "Din orar: {groups} grupe noi, {courses} cursuri, {teachers} profesori atribuiți. Chei de semnare de creat: {keysPending}, se fac în fundal."
   },
   "rate": {
     "allDone": "Gata, mulțumim!",
@@ -364,12 +366,14 @@
     "opensLater": "Se deschide în curând",
     "otherDevice": "Tokenul a fost obținut pe alt dispozitiv. Restaurează codul de recuperare pe acesta.",
     "noGroup": "Nu faci parte din nicio grupă. Alătură-te grupei tale ca să poți evalua.",
-    "pastYears": "Lipsesc cursuri din anii trecuți? Cere acces la grupa de atunci:",
+    "pastYears": "Deocamdată poți evalua doar cursurile din anul acesta; anii trecuți vor veni mai târziu. Lipsește un curs? Verifică dacă ești în grupa potrivită:",
     "pastYearsLink": "Grupa mea",
     "issueFailed": "Nu am putut obține tokenurile. Reîncearcă.",
     "unknownKey": "Cheie de semnare necunoscută. Nu trimite evaluarea și anunță administratorul.",
     "semester": "Semestrul {n}",
-    "action": "Evaluează"
+    "action": "Evaluează",
+    "keys": "Cheile de semnare",
+    "keysHint": "Sunt aceleași pentru toți. Dacă un coleg vede altele, anunță-ne."
   },
   "recovery": {
     "restoreWhy": "Ai deja un cod de pe alt dispozitiv. Introdu-l ca să continui aici.",

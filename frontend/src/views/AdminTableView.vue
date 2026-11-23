@@ -7,7 +7,7 @@ import ComboSelect from '@/components/ComboSelect.vue'
 import DateRangeField from '@/components/DateRangeField.vue'
 import AppNotice from '@/components/AppNotice.vue'
 import AppSheet from '@/components/AppSheet.vue'
-import { Plus, Trash2 } from 'lucide-vue-next'
+import { Plus, RefreshCw, Trash2 } from 'lucide-vue-next'
 import { api, describeError } from '@/api'
 import { parseRanges } from '@/dateRange'
 
@@ -178,6 +178,25 @@ async function remove() {
   }
 }
 
+const syncing = ref(false)
+
+async function syncTimetable() {
+  error.value = ''
+  notice.value = ''
+  syncing.value = true
+  try {
+    notice.value = t(
+      'admin.synced',
+      await api<Record<string, number>>('POST', '/api/admin/timetable/sync'),
+    )
+    await load()
+  } catch (e) {
+    error.value = describeError(t, e)
+  } finally {
+    syncing.value = false
+  }
+}
+
 async function act(method: string, path: string, done = '') {
   error.value = ''
   notice.value = ''
@@ -216,6 +235,16 @@ watch(search, () => {
         :placeholder="t('admin.search')"
         :aria-label="t('admin.search')"
       />
+      <button
+        v-if="['study_group', 'course_offering', 'teaching_assignment', 'professor'].includes(key)"
+        type="button"
+        class="btn btn-outline"
+        :disabled="syncing"
+        @click="syncTimetable"
+      >
+        <RefreshCw class="size-4" :class="{ 'animate-spin': syncing }" aria-hidden="true" />
+        {{ t('admin.sync') }}
+      </button>
       <button type="button" class="btn btn-primary" @click="openForm(null)">
         <Plus class="size-4" aria-hidden="true" />
         {{ t('admin.add') }}
