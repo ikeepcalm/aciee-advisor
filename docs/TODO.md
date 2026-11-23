@@ -55,7 +55,7 @@ AI review checking (plan agreed, not built): Gemini free tier; harsh-but-fair pu
 ## Before ratings open on an environment
 
 - [ ] Enter the 2026-2027 semesters in Admin → semester (from the official calendar, HS 59/2026): semester 1 `during` `[2026-09-28,2027-02-15)`, `breaks` `{[2026-12-19,2027-01-11)}`, `rating_opens_at` 2027-01-23; semester 2 `during` `[2027-02-22,2027-07-31)`, `breaks` `{[2027-04-30,2027-05-10)}`, `rating_opens_at` 2027-06-05. Odd/even weeks and the calendar feed depend on these.
-- [ ] Decide when semester 1 opens for ratings (`rating_opens_at`): now, or after the semester (2027-01-23). Past-year ratings are not possible yet (no historical-claim flow).
+- [ ] Decide when semester 1 opens for ratings (`rating_opens_at`): now, or after the semester (2027-01-23). Past years open automatically through the current group (ADR-035).
 - [ ] After the semesters exist, press Admin → study groups → "Sync from timetable" (or wait for the hourly run): it creates this year's Calculatoare and Automatică groups, their courses, teachers and signing keys. Other programmes need their curriculum seeded first.
 - [ ] Back up the `token-keys` volume once the keys exist.
 

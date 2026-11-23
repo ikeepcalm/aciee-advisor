@@ -6,6 +6,7 @@ import ro.aciee.advisor.domain.timetable.model.Timetable;
 import ro.aciee.advisor.domain.timetable.model.TimetableProgram;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -95,19 +96,36 @@ public class TimetableService {
             if (response.statusCode() != 200) {
                 throw new IOException("status " + response.statusCode());
             }
-            var pdf = body.readNBytes(MAX_PDF_BYTES + 1);
-            if (pdf.length > MAX_PDF_BYTES) {
-                throw new IOException("larger than " + MAX_PDF_BYTES + " bytes");
-            }
-            var program = TimetableParser.parse(pdf);
-            program.setCode(code);
-            program.setYear(Integer.parseInt(link.group(2)));
-            program.setName(PROGRAM_NAMES.getOrDefault(link.group(3), link.group(3).replace('_', ' ')));
-            program.setPdfUrl(uri.toString());
+            var program = parse(body, uri, code, Integer.parseInt(link.group(2)), link.group(3));
             program.setUpdatedAt(lastModified(response));
-            LessonNames.attachCourseNames(program);
             return program;
         }
+    }
+
+    // kept out of lastGood: an archived an_1_CTI must never replace this year's an_1_CTI
+    public TimetableProgram archived(int startYear, int semester, int studyYear, String program) throws IOException, InterruptedException {
+        var uri = SITE.resolve("/files/studenti/orare/%d_%d/sem%d/an_%d_%s.pdf".formatted(startYear, startYear + 1, semester, studyYear, program));
+        var response = http.send(request(uri).build(), HttpResponse.BodyHandlers.ofInputStream());
+        try (var body = response.body()) {
+            if (response.statusCode() != 200) {
+                return null;
+            }
+            return parse(body, uri, "an_" + studyYear + "_" + program, studyYear, program);
+        }
+    }
+
+    private static TimetableProgram parse(InputStream body, URI uri, String code, int year, String program) throws IOException {
+        var pdf = body.readNBytes(MAX_PDF_BYTES + 1);
+        if (pdf.length > MAX_PDF_BYTES) {
+            throw new IOException("larger than " + MAX_PDF_BYTES + " bytes");
+        }
+        var parsed = TimetableParser.parse(pdf);
+        parsed.setCode(code);
+        parsed.setYear(year);
+        parsed.setName(PROGRAM_NAMES.getOrDefault(program, program.replace('_', ' ')));
+        parsed.setPdfUrl(uri.toString());
+        LessonNames.attachCourseNames(parsed);
+        return parsed;
     }
 
     private static Instant lastModified(HttpResponse<?> response) {

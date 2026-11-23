@@ -42,8 +42,10 @@ public class TokenService {
                    EXISTS (SELECT 1 FROM ident.token_issuance t WHERE t.user_id = core.app_user_id() AND t.offering_id = o.offering_id) AS issued
             FROM core.offering_v o
             JOIN core.group_v g ON g.id = o.group_id
+            JOIN core.study_group sg ON sg.id = o.group_id
             LEFT JOIN anon.offering_key k ON k.offering_id = o.offering_id AND k.active
-            WHERE EXISTS (SELECT 1 FROM core.group_membership m WHERE m.user_id = core.app_user_id() AND m.group_id = o.group_id)
+            WHERE EXISTS (SELECT 1 FROM core.group_membership m
+                          WHERE m.user_id = core.app_user_id() AND m.group_id IN (o.group_id, sg.successor_id))
                OR EXISTS (SELECT 1 FROM core.offering_enrolment e WHERE e.user_id = core.app_user_id() AND e.offering_id = o.offering_id)
             ORDER BY o.rating_opens_at NULLS LAST, o.semester_no, o.title_snapshot, o.offering_id""";
 

@@ -332,3 +332,13 @@ Format: context → decision → consequences. Never rewrite an accepted ADR; su
 - Changeset `023` deletes this year's letter-suffixed groups that have no submitted ratings, with their courses, keys, memberships and claims, so the next sync recreates them properly.
 
 **Consequences.** Locally the semester-1 coverage went from 188 to 199 of 245 slots. The rest are not in the timetable at all (several labs, projects and electives) or sit in combined cells whose teachers are in the note ("SO S1-7 / POO S8-14"); leaders set those. Anyone who had joined or claimed a letter group before `023` has to do it again.
+
+## ADR-035 — Past years rated through the current group
+**Context.** Students in year 2 and above want to rate the courses they already finished, but the database only held this year's groups, and nothing records which group a student was in before. The faculty keeps past timetables online under `/files/studenti/orare/YYYY_YYYY/semN/`.
+
+**Decision.**
+- The timetable sync creates the earlier academic years, their two semesters (open for rating) and one group per earlier year for each current group, by changing the study-year digit of its code (22C31 → 22C21, 22C11). Each such group points at the current group through `study_group.successor_id`, and gets its courses from the same study plan.
+- A member of a group may rate the courses of every group that points at it. No request or approval.
+- Past teachers are imported once per app start from the archived PDFs of the matching programme and year, with the same importer as this year, assignments spanning the whole past year. Course-name matching also understands acronyms (POO, PCLP II) and numbered parts (I/II).
+
+**Consequences.** Year 1 had more groups than year 3 for some cohorts, so a student may land on a group whose lab teachers they never had; the rating form's "did you have this teacher" step covers it, and an admin can correct the assignments. Leaders cannot yet edit past-year teachers. The first `/rate` visit after this change issues tokens for all past courses at once, so the past groups must not be restructured afterwards.

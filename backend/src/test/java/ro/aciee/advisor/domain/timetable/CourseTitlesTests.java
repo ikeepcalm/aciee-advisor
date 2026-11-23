@@ -21,6 +21,22 @@ class CourseTitlesTests {
     }
 
     @Test
+    void matchesAbbreviationsAndPicksTheRightPartOfANumberedCourse() {
+        var numbered = List.of("Programarea calculatoarelor și limbaje de programare I",
+                "Programarea calculatoarelor și limbaje de programare II", "Informatică aplicată I", "Informatică aplicată II",
+                "Calculatoare numerice I", "Calculatoare numerice II", "Teoria probabilităților și statistică matematică",
+                "Limba engleză (anul 1)");
+        assertThat(CourseTitles.match("Calculatoare numerice I", numbered)).isEqualTo(4);
+        assertThat(CourseTitles.match("Calculatoare numerice II", numbered)).isEqualTo(5);
+        assertThat(CourseTitles.match("Programarea Calculatoarelor si Limbaje de Programare I", numbered)).isZero();
+        assertThat(CourseTitles.match("PCLP II", numbered)).isEqualTo(1);
+        assertThat(CourseTitles.match("IA2", numbered)).isEqualTo(3);
+        assertThat(CourseTitles.match("TPSM", numbered)).isEqualTo(6);
+        assertThat(CourseTitles.match("Engleză", numbered)).isEqualTo(7);
+        assertThat(CourseTitles.match("POO", titles)).isEqualTo(5);
+    }
+
+    @Test
     void leavesUnclearOrUnrelatedNamesUnmatched() {
         assertThat(CourseTitles.match("Sport", titles)).isEqualTo(-1);
         assertThat(CourseTitles.match("Sisteme de operare", titles)).isEqualTo(-1);

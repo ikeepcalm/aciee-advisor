@@ -9,6 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 import ro.aciee.advisor.domain.professor.service.ProfessorDirectory;
 import ro.aciee.advisor.domain.timetable.model.TimetableProgram;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.IdentityHashMap;
@@ -55,8 +56,27 @@ public class TeacherImportService {
     private record Professor(int id, String fullName) {
     }
 
+    private record Year(int id, LocalDate asOf) {
+    }
+
     @Transactional
     public int importTeachers(List<TimetableProgram> programs) {
+        return importTeachers(programs, null);
+    }
+
+    // a past year starts its assignments on its first day; this year starts them today
+    @Transactional
+    public int importTeachers(List<TimetableProgram> programs, Integer academicYearId) {
+        var year = jdbc.sql("""
+                        SELECT id, CASE WHEN during @> current_date THEN current_date ELSE lower(during) END AS as_of
+                        FROM core.academic_year WHERE CASE WHEN CAST(:year AS integer) IS NULL THEN during @> current_date ELSE id = :year END""")
+                .param("year", academicYearId)
+                .query(Year.class)
+                .optional()
+                .orElse(null);
+        if (year == null) {
+            return 0;
+        }
         var offerings = new HashMap<String, Offering>();
         jdbc.sql("""
                         SELECT o.id, o.group_id, g.code AS group_code, o.title_snapshot AS title,
@@ -65,7 +85,8 @@ public class TeacherImportService {
                         JOIN core.study_group g ON g.id = o.group_id
                         JOIN core.academic_year ay ON ay.id = g.academic_year_id
                         JOIN core.curriculum_item ci ON ci.id = o.curriculum_item_id
-                        WHERE ay.during @> current_date""")
+                        WHERE ay.id = :year""")
+                .param("year", year.id())
                 .query(Offering.class)
                 .list()
                 .forEach(o -> offerings.put(o.groupCode() + "|" + LessonNames.fold(o.title()), o));
@@ -74,8 +95,8 @@ public class TeacherImportService {
         jdbc.sql("""
                         SELECT s.group_id, s.label, s.id FROM core.subgroup s
                         JOIN core.study_group g ON g.id = s.group_id
-                        JOIN core.academic_year ay ON ay.id = g.academic_year_id
-                        WHERE ay.during @> current_date""")
+                        WHERE g.academic_year_id = :year""")
+                .param("year", year.id())
                 .query((RowCallbackHandler) rs -> subgroups.computeIfAbsent(rs.getInt("group_id"), k -> new HashMap<>())
                         .put(rs.getString("label"), rs.getInt("id")));
         var seen = new LinkedHashMap<Course, Map<String, Set<String>>>();
@@ -144,8 +165,9 @@ public class TeacherImportService {
         jdbc.sql("""
                         SELECT DISTINCT ON (offering_id, component, subgroup_id) offering_id, component, subgroup_id, professor_id
                         FROM core.teaching_assignment
-                        WHERE valid_during && daterange(current_date, NULL) AND offering_id IN (:ids)
+                        WHERE valid_during && daterange(:asOf, NULL) AND offering_id IN (:ids)
                         ORDER BY offering_id, component, subgroup_id, lower(valid_during) DESC""")
+                .param("asOf", year.asOf())
                 .param("ids", teachers.keySet().stream().map(Slot::offeringId).distinct().toList())
                 .query((RowCallbackHandler) rs -> current.put(
                         new Slot(rs.getInt("offering_id"), rs.getString("component"), (Integer) rs.getObject("subgroup_id")),
@@ -179,8 +201,8 @@ public class TeacherImportService {
                 continue;
             }
             if (!professorId.equals(now)) {
-                end(slot);
-                start(slot, professorId);
+                end(slot, year.asOf());
+                start(slot, professorId, year.asOf());
                 changed++;
             }
             jdbc.sql("""
@@ -217,28 +239,30 @@ public class TeacherImportService {
         return id;
     }
 
-    private void end(Slot slot) {
+    private void end(Slot slot, LocalDate asOf) {
         var match = """
                 offering_id = :offering AND component = :component
                   AND subgroup_id IS NOT DISTINCT FROM CAST(:subgroup AS integer)
-                  AND valid_during && daterange(current_date, NULL)""";
-        jdbc.sql("DELETE FROM core.teaching_assignment WHERE lower(valid_during) >= current_date AND " + match)
+                  AND valid_during && daterange(:asOf, NULL)""";
+        jdbc.sql("DELETE FROM core.teaching_assignment WHERE lower(valid_during) >= :asOf AND " + match)
                 .param("offering", slot.offeringId())
                 .param("component", slot.component())
                 .param("subgroup", slot.subgroupId())
+                .param("asOf", asOf)
                 .update();
-        jdbc.sql("UPDATE core.teaching_assignment SET valid_during = daterange(lower(valid_during), current_date) WHERE " + match)
+        jdbc.sql("UPDATE core.teaching_assignment SET valid_during = daterange(lower(valid_during), :asOf) WHERE " + match)
                 .param("offering", slot.offeringId())
                 .param("component", slot.component())
                 .param("subgroup", slot.subgroupId())
+                .param("asOf", asOf)
                 .update();
     }
 
-    private void start(Slot slot, int professorId) {
+    private void start(Slot slot, int professorId, LocalDate asOf) {
         jdbc.sql("""
                         INSERT INTO core.teaching_assignment (offering_id, group_id, professor_id, component, subgroup_id, valid_during)
                         SELECT o.id, o.group_id, :professor, :component, :subgroup,
-                               daterange(greatest(current_date, lower(ay.during)), upper(ay.during))
+                               daterange(greatest(CAST(:asOf AS date), lower(ay.during)), upper(ay.during))
                         FROM core.course_offering o
                         JOIN core.study_group g ON g.id = o.group_id
                         JOIN core.academic_year ay ON ay.id = g.academic_year_id
@@ -247,6 +271,7 @@ public class TeacherImportService {
                 .param("component", slot.component())
                 .param("subgroup", slot.subgroupId())
                 .param("professor", professorId)
+                .param("asOf", asOf)
                 .update();
     }
 }
