@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { api } from '@/api'
+import { useRoute } from 'vue-router'
+import { api, rememberNext } from '@/api'
 
 const { t } = useI18n()
+const route = useRoute()
 const enabled = ref(false)
 
 onMounted(async () => {
@@ -21,7 +23,11 @@ onMounted(async () => {
     >
       {{ t('auth.or') }}
     </p>
-    <a href="/api/auth/oauth2/microsoft" class="btn btn-outline w-full">
+    <a
+      href="/api/auth/oauth2/microsoft"
+      class="btn btn-outline w-full"
+      @click="rememberNext(route.query)"
+    >
       <svg viewBox="0 0 16 16" class="size-4" aria-hidden="true">
         <rect width="7" height="7" fill="#f25022" />
         <rect x="9" width="7" height="7" fill="#7fba00" />

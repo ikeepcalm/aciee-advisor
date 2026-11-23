@@ -48,7 +48,7 @@ class MicrosoftSignInTests {
 
         var session = signIn(UGAL, oid, email);
 
-        assertThat(session.getRedirect()).isEqualTo("/");
+        assertThat(session.getRedirect()).isEqualTo("/signin");
         int userId = (Integer) session.principal();
         assertThat(jdbc.sql("SELECT entra_oid = :oid AND password_hash IS NULL FROM core.user_account WHERE id = :id")
                 .param("oid", oid).param("id", userId).query(Boolean.class).single()).isTrue();
@@ -108,7 +108,7 @@ class MicrosoftSignInTests {
     void anOverlongMicrosoftNameIsSkippedWithoutFailingTheSignIn() throws Exception {
         var email = "ms" + RUN.incrementAndGet() + "@student.ugal.ro";
         var result = signIn(UGAL, UUID.randomUUID(), email, "x".repeat(81));
-        assertThat(result.getRedirect()).isEqualTo("/");
+        assertThat(result.getRedirect()).isEqualTo("/signin");
         assertThat(name((Integer) result.principal())).isNull();
     }
 

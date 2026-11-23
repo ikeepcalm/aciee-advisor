@@ -96,6 +96,23 @@ export function safeNext(query: LocationQuery, fallback = '/'): string {
     : fallback
 }
 
+// Microsoft sign-in leaves the SPA, so the page to return to waits in this tab's storage.
+export function rememberNext(query: LocationQuery) {
+  try {
+    sessionStorage.setItem('signin-next', safeNext(query))
+  } catch {}
+}
+
+export function takeNext(): string {
+  try {
+    const next = sessionStorage.getItem('signin-next')
+    sessionStorage.removeItem('signin-next')
+    return safeNext({ next })
+  } catch {
+    return '/'
+  }
+}
+
 export interface PublicComment {
   id: string
   body: string

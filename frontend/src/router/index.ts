@@ -1,7 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import HomeView from '../views/HomeView.vue'
 import { useAuthStore } from '@/stores/auth'
-import { safeNext } from '@/api'
+import { safeNext, takeNext } from '@/api'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -164,7 +164,7 @@ router.beforeEach(async (to) => {
   }
   await auth.load()
   if (to.meta.guestOnly) {
-    return auth.user ? safeNext(to.query) : undefined
+    return auth.user ? safeNext(to.query, takeNext()) : undefined
   }
   if (!auth.user) {
     return { name: 'signin', query: { next: to.fullPath } }

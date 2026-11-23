@@ -40,7 +40,7 @@ public class MicrosoftSignInHandler implements AuthenticationSuccessHandler, Aut
             var email = user.getEmail() != null ? user.getEmail() : user.getPreferredUsername();
             var account = accountService.signInWithMicrosoft(UUID.fromString(user.getClaimAsString("oid")), email, user.getFullName());
             sessionService.start(account, request, response);
-            response.sendRedirect("/");
+            response.sendRedirect("/signin");
         } catch (ResponseStatusException e) {
             signOut(request);
             response.sendRedirect("/signin?error=" + e.getReason());
