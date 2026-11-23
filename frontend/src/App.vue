@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, defineAsyncComponent, ref, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { RouterLink, RouterView, useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import {
@@ -28,9 +28,6 @@ import AppFooter from '@/components/AppFooter.vue'
 import AppNotice from '@/components/AppNotice.vue'
 import { shortName } from '@/person'
 import { describeError } from '@/api'
-import { showRoom } from '@/show/state'
-
-const ShowLayer = defineAsyncComponent(() => import('@/show/ShowLayer.vue'))
 
 const { t, locale } = useI18n()
 const auth = useAuthStore()
@@ -327,7 +324,6 @@ async function signOut() {
         <SegmentedChips v-model="themeModel" :options="themes" />
       </div>
     </AppSheet>
-    <ShowLayer v-if="showRoom && !route.meta.bare" :room="showRoom" />
   </div>
 </template>
 

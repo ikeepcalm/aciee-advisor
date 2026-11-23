@@ -36,6 +36,16 @@ class PreviewServiceTests {
     }
 
     @Test
+    void previewPageCarriesTheLoopVideoInEnglish() {
+        String html = previews.html(previews.cardForPath("/preview"));
+
+        assertThat(html).contains("<html lang=\"en\">", "content=\"video.other\"", "content=\"en_US\"",
+                "og:video\" content=\"https://acieeadvisor.ro/preview/loop-en.mp4\"",
+                "og:image\" content=\"https://acieeadvisor.ro/preview/og-en.jpg\"");
+        assertThat(previews.html(previews.cardForPath("/courses"))).doesNotContain("og:video").contains("content=\"website\"");
+    }
+
+    @Test
     void courseBelowThresholdShowsNoNumbers() {
         var page = course("Baze de date");
         var survival = new Survival();

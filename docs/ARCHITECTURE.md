@@ -206,5 +206,5 @@ docs/        specification, architecture, roadmap, decisions, AI log, explain-pl
 ```
 
 ## 8. Operations
-- Two environments (DEPLOY.md): `acieeadvisor.ro` holds real data with no fixtures; `demo.acieeadvisor.ro` is seeded with one account per role. A nightly reset of the demo is not automated yet: redeploying with a fresh volume resets it.
+- One environment (DEPLOY.md): `acieeadvisor.com` holds real data with no fixtures. The demo environment was retired on 2026-11-23; its pitch show survives as recorded videos at `/preview`.
 - A nightly `pg_dump` runs in the `backup` service; copying it off the server and a tested restore are required before launch.

@@ -686,6 +686,16 @@
     "catchUp": "Cu laboratoare nerecuperate nu intri în examen.",
     "catchUpLink": "Vezi regulile"
   },
+  "preview": {
+    "title": "Vezi cum funcționează",
+    "titleMark": "în 30 de secunde.",
+    "lede": "Gratuit și open source, făcut pentru studenții ACIEE: evaluări anonime, orarele grupelor și un ghid pentru anul I.",
+    "open": "Deschide ACIEE Advisor",
+    "tour": "Vezi turul complet (2 min)",
+    "short": "Înapoi la varianta scurtă",
+    "note": "Demo cu date fictive",
+    "video": "Tur video fără sunet prin ACIEE Advisor"
+  },
   "feedback": {
     "eyebrow": "Ajută-ne să reparăm",
     "title": "Raportează o problemă",

@@ -63,8 +63,12 @@ public class PreviewService {
             case "timetable", "orar" -> PreviewPage.TIMETABLE;
             case "guide" -> PreviewPage.GUIDE;
             case "rate" -> PreviewPage.RATE;
+            case "preview" -> PreviewPage.PREVIEW;
             default -> PreviewPage.HOME;
         };
+        if (page == PreviewPage.PREVIEW) {
+            return new PreviewCard(page.getEyebrow(), page.getTitle(), List.of(), page.getNote(), "/preview", "/preview/og-en.jpg", page);
+        }
         return page == PreviewPage.TIMETABLE ? timetableCard(path, group) : pageCard(page, path);
     }
 
@@ -177,17 +181,25 @@ public class PreviewService {
         String image = publicUrl + card.getImagePath();
         String title = HtmlUtils.htmlEscape(card.getTitle() + " · " + SITE, "UTF-8");
         String description = HtmlUtils.htmlEscape(card.description(), "UTF-8");
+        boolean video = card.getPage() == PreviewPage.PREVIEW;
+        String extra = video ? """
+                <meta property="og:video" content="%1$s/preview/loop-en.mp4">
+                <meta property="og:video:secure_url" content="%1$s/preview/loop-en.mp4">
+                <meta property="og:video:type" content="video/mp4">
+                <meta property="og:video:width" content="1280">
+                <meta property="og:video:height" content="720">
+                """.formatted(HtmlUtils.htmlEscape(publicUrl, "UTF-8")) : "";
         return """
                 <!doctype html>
-                <html lang="ro">
+                <html lang="%6$s">
                 <head>
                 <meta charset="utf-8">
                 <title>%1$s</title>
                 <meta name="description" content="%2$s">
                 <link rel="canonical" href="%3$s">
-                <meta property="og:type" content="website">
+                <meta property="og:type" content="%7$s">
                 <meta property="og:site_name" content="%5$s">
-                <meta property="og:locale" content="ro_RO">
+                <meta property="og:locale" content="%8$s">
                 <meta property="og:title" content="%1$s">
                 <meta property="og:description" content="%2$s">
                 <meta property="og:url" content="%3$s">
@@ -195,11 +207,12 @@ public class PreviewService {
                 <meta property="og:image:width" content="1200">
                 <meta property="og:image:height" content="630">
                 <meta property="og:image:alt" content="%1$s">
-                <meta name="twitter:card" content="summary_large_image">
+                %9$s<meta name="twitter:card" content="summary_large_image">
                 </head>
                 <body><a href="%3$s">%1$s</a></body>
                 </html>
-                """.formatted(title, description, HtmlUtils.htmlEscape(url, "UTF-8"), HtmlUtils.htmlEscape(image, "UTF-8"), SITE);
+                """.formatted(title, description, HtmlUtils.htmlEscape(url, "UTF-8"), HtmlUtils.htmlEscape(image, "UTF-8"), SITE,
+                video ? "en" : "ro", video ? "video.other" : "website", video ? "en_US" : "ro_RO", extra);
     }
 
     private String score(double value) {

@@ -45,13 +45,12 @@ AI review checking (plan agreed, not built): Gemini free tier; harsh-but-fair pu
 ## Deploy (DEPLOY.md)
 
 - [x] Buy the domain: `acieeadvisor.com`; `.ro` later if registration as a non-resident works.
-- [x] Choose a mail provider: Resend (SMTP 587, user `resend`, API key as password); DKIM and `send` records in DNS. Still to add: `_dmarc` TXT and the `demo` A record.
-- [ ] Create the environments for `acieeadvisor.com` (context `prod`) and `demo.acieeadvisor.com` (context `fixtures`) with every variable in DEPLOY.md, including `ACIEE_REPORT_PASSWORD`, which the app now uses for the report pool.
-  - [x] 2026-11-16: prod is live at https://acieeadvisor.com with Resend mail. Demo environment not created yet.
+- [x] Choose a mail provider: Resend (SMTP 587, user `resend`, API key as password); DKIM and `send` records in DNS. Still to add: `_dmarc` TXT.
+- [x] Create the environment for `acieeadvisor.com` (context `prod`) with every variable in DEPLOY.md: live since 2026-11-16 with Resend mail.
+- [ ] Retire the demo (2026-11-23): stop and delete the Coolify app `aciee-advisor-demo`, remove the host nginx site `acieeadvisor-demo` and its certificate, and delete the `demo` DNS record. The show code is gone from the repo; the recordings are at `/preview`.
 - [x] First deploy, then grant yourself `admin` with the `psql` line in DEPLOY.md "First admin".
 - [x] Send a verification code from our own domain to a real `@student.ugal.ro` inbox (Resend, 2026-11-16: arrived).
-- [ ] Copy the `backups` **and** `token-keys` volumes off the server (object storage or a cron sync to another machine), then test a restore into the demo resource.
-- [ ] Nightly demo reset (ARCHITECTURE §8): not built yet; decide between a scheduled redeploy with a fresh volume and a cron job that drops and recreates the demo database.
+- [ ] Copy the `backups` **and** `token-keys` volumes off the server (object storage or a cron sync to another machine), then test a restore into a scratch database.
 
 ## Before ratings open on an environment
 
@@ -62,7 +61,7 @@ AI review checking (plan agreed, not built): Gemini free tier; harsh-but-fair pu
 
 ## Microsoft sign-in (code done, off by default; DEPLOY.md "Microsoft sign-in")
 
-- [ ] Register the app in the UGAL Entra directory (single tenant) with the redirect URIs for prod, demo and localhost.
+- [ ] Register the app in the UGAL Entra directory (single tenant) with the redirect URIs for prod and localhost.
 - [ ] Create a client secret; set `ENTRA_CLIENT_ID`, `ENTRA_CLIENT_SECRET` and `SPRING_PROFILES_ACTIVE=microsoft`.
 - [ ] If students cannot consent themselves ("Need admin approval"), ask UGAL IT to grant consent once.
 - [ ] Sign in with a real student account; also sign in with Microsoft to an existing password account and check the two link.
@@ -115,4 +114,4 @@ From ROADMAP.md: exact check-in dates per stage, and whether the faculty publish
 
 - [ ] Fill the Commit column in `docs/AI_LOG.md` (all rows say "—").
 - [ ] Stage 6 defence (40 %): rehearse explaining and changing any part by hand, especially the blind-signature flow, RLS, the Stage 4 numbers (`docs/explain-plans/README.md`) and the changeset `018` fix with its `OFFSET 0`.
-- [ ] Freeze Dec 7, then demo environment check, rehearsal and a backup video (W7).
+- [ ] Freeze Dec 7, then rehearsal (W7). The backup video exists: `/preview` (`frontend/public/preview/tour-*.mp4`).

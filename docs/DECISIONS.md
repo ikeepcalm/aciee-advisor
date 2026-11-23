@@ -301,3 +301,14 @@ Format: context → decision → consequences. Never rewrite an accepted ADR; su
 - Group leaders may now set lecture teachers, add a missing professor (deduplicated on `core.name_key`), and fix the name of an unconfirmed professor who teaches their group this year. Any admin create or edit of a professor sets `name_confirmed = true`, which locks the name against leaders. The slug never changes, so links stay valid. All writes go through the audit triggers.
 
 **Consequences.** About half the lessons match an offering by name; the rest need an admin to align titles or a leader to pick the teacher. Typos beyond one edit and two people with the same surname and initial still produce duplicate or merged professors that only an admin can fix (there is no merge tool yet). Imported assignments start on the import day, like a leader's.
+
+## ADR-032 — Demo environment and live show replaced by recordings
+**Context.** The demo environment (`demo.acieeadvisor.com`, `demo` Liquibase context) existed to run the phone-steered pitch show (`/show`, `/show/remote`, an SSE relay under the `show` Spring profile) on 2026-11-22. After the pitch it costs a second app, database and nginx site, and its code (about 30 files) had to keep up with every page it drove. The owner wants a shareable link that shows the product in action on social media.
+
+**Decision.**
+- The show was recorded headlessly at 1440×810 from Chrome's screencast frames (the built-in Playwright recorder was too soft for text), in English and Romanian. Each beat was held until the stage reported it had finished, plus time to read the caption. The output is a 29.5 s highlight loop and the full 2:17 tour per language, H.264 at 720p, in `frontend/public/preview/` (about 16 MB).
+- `/preview` plays the loop and offers the full tour. Link-preview bots get English tags for it: `og:type video.other` and `og:video` pointing at the loop (Discord and some others play it inline), and a designed 1200×630 `og:image` for the platforms that show only a still (X and Facebook show only the first frame of a GIF, so a GIF would not have helped).
+- The show code, the relay, the `show` profile, the `demo` fixture changeset and `docs/SHOW.md` are deleted (the last commit that had them is `4185a7e`). `frame-ancestors` goes back to `'none'`, since the remote's preview iframe was its only use.
+- The demo app, its nginx site and its DNS record are removed by hand (TODO.md).
+
+**Consequences.** One environment to run. The recordings show fictional data and the UI as of 2026-11-23; they go stale as the UI changes and have to be re-recorded from that commit if needed. Restore tests now use a scratch database instead of the demo.

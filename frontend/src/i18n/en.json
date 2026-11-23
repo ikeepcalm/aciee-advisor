@@ -686,6 +686,16 @@
     "catchUp": "With labs you have not made up, you cannot sit the exam.",
     "catchUpLink": "See the rules"
   },
+  "preview": {
+    "title": "See how it works",
+    "titleMark": "in 30 seconds.",
+    "lede": "Free and open source, made for ACIEE students: anonymous ratings, group timetables and a first-year guide.",
+    "open": "Open ACIEE Advisor",
+    "tour": "Watch the full tour (2 min)",
+    "short": "Back to the short version",
+    "note": "Demo with fictional data",
+    "video": "Silent video tour of ACIEE Advisor"
+  },
   "feedback": {
     "eyebrow": "Help us fix it",
     "title": "Report a problem",
