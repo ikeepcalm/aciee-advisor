@@ -382,14 +382,13 @@
     "empty": "Nimic încă. Apasă Adaugă pentru primul rând.",
     "deleteConfirm": "Apasă din nou pentru a șterge",
     "sync": "Sincronizează din orar",
-    "synced": "Din orar: {groups} grupe noi, {courses} cursuri, {teachers} profesori atribuiți. Chei de semnare de creat: {keysPending}, se fac în fundal."
+    "synced": "Din orar: {groups} grupe noi, {pastGroups} grupe din anii anteriori, {courses} cursuri, {teachers} profesori atribuiți. Chei de semnare rămase de creat: {keysPending}, se fac în fundal."
   },
   "rate": {
     "allDone": "Gata, mulțumim!",
     "locked": "Încă nedeschise ({n})",
     "done": "Evaluate",
     "toRate": "De evaluat",
-    "nextUp": "Urmează",
     "progress": "{done} din {total} evaluate",
     "title": "Evaluează",
     "loading": "Pregătim tokenurile…",
@@ -398,14 +397,24 @@
     "opensLater": "Se deschide în curând",
     "otherDevice": "Tokenul a fost obținut pe alt dispozitiv. Restaurează codul de recuperare pe acesta.",
     "noGroup": "Nu faci parte din nicio grupă. Alătură-te grupei tale ca să poți evalua.",
-    "pastYears": "Deocamdată poți evalua doar cursurile din anul acesta; anii trecuți vor veni mai târziu. Lipsește un curs? Verifică dacă ești în grupa potrivită:",
+    "pastYears": "Poți evalua toate cursurile din programul tău de până acum. Lipsește un curs? Verifică dacă ești în grupa potrivită:",
     "pastYearsLink": "Grupa mea",
     "issueFailed": "Nu am putut obține tokenurile. Reîncearcă.",
     "unknownKey": "Cheie de semnare necunoscută. Nu trimite evaluarea și anunță administratorul.",
     "semester": "Semestrul {n}",
     "action": "Evaluează",
     "keys": "Cheile de semnare",
-    "keysHint": "Sunt aceleași pentru toți. Dacă un coleg vede altele, anunță-ne."
+    "keysHint": "Sunt aceleași pentru toți. Dacă un coleg vede altele, anunță-ne.",
+    "hidden": "Nu l-am făcut ({n})",
+    "unhide": "Pune-l înapoi",
+    "deck": {
+      "draw": "Trage un bilet",
+      "pile": "{n} bilete în teanc",
+      "yours": "Biletul tău",
+      "another": "Altul",
+      "notTaken": "Nu l-am făcut",
+      "swipe": "Glisează la dreapta ca să evaluezi, la stânga pentru alt bilet"
+    }
   },
   "recovery": {
     "restoreWhy": "Ai deja un cod de pe alt dispozitiv. Introdu-l ca să continui aici.",

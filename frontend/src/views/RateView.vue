@@ -5,6 +5,8 @@ import { useI18n } from 'vue-i18n'
 import { ArrowRight, Check, ChevronRight, Loader2 } from 'lucide-vue-next'
 import AppNotice from '@/components/AppNotice.vue'
 import NoteStar from '@/components/NoteStar.vue'
+import RateDeck from '@/components/RateDeck.vue'
+import { readStored, writeStored } from '@/storage'
 import { useAuthStore } from '@/stores/auth'
 import {
   issueTokens,
@@ -28,11 +30,53 @@ const retryable = ref(false)
 const busy = ref(false)
 const fingerprint = ref('')
 
-const rateable = computed(() =>
+// shortcut: hidden courses live in this browser only; move them into the token vault if students ask for it on every device
+const hiddenKey = `rate-hidden:${userId}`
+function readHidden(): number[] {
+  try {
+    return JSON.parse(readStored(hiddenKey) ?? '[]')
+  } catch {
+    return []
+  }
+}
+const hidden = ref(new Set<number>(readHidden()))
+function setHidden(id: number, hide: boolean) {
+  const next = new Set(hidden.value)
+  if (hide) next.add(id)
+  else next.delete(id)
+  hidden.value = next
+  writeStored(hiddenKey, JSON.stringify([...next]))
+}
+
+const issued = computed(() =>
   (offerings.value ?? []).filter((offering) => tokens.value.has(offering.offeringId)),
+)
+const notTaken = computed(() =>
+  issued.value.filter(
+    (offering) => !tokens.value.get(offering.offeringId) && hidden.value.has(offering.offeringId),
+  ),
+)
+const rateable = computed(() =>
+  issued.value.filter(
+    (offering) => tokens.value.get(offering.offeringId) || !hidden.value.has(offering.offeringId),
+  ),
 )
 const pending = computed(() =>
   rateable.value.filter((offering) => !tokens.value.get(offering.offeringId)),
+)
+const pendingByYear = computed(() => {
+  const years = new Map<string, RateableOffering[]>()
+  for (const offering of pending.value) {
+    years.set(offering.academicYear, [...(years.get(offering.academicYear) ?? []), offering])
+  }
+  return [...years].sort(([a], [b]) => b.localeCompare(a))
+})
+const tickets = computed(() =>
+  pending.value.map((offering) => ({
+    id: offering.offeringId,
+    title: offering.title,
+    term: term(offering),
+  })),
 )
 const finished = computed(() =>
   rateable.value.filter((offering) => tokens.value.get(offering.offeringId)),
@@ -40,7 +84,6 @@ const finished = computed(() =>
 const unavailable = computed(() =>
   (offerings.value ?? []).filter((offering) => !tokens.value.has(offering.offeringId)),
 )
-const nextUp = computed(() => pending.value[0])
 const allDone = computed(() => rateable.value.length > 0 && !pending.value.length)
 
 function term(offering: RateableOffering) {
@@ -112,10 +155,7 @@ onMounted(() => {
       <p>{{ t('rate.noGroup') }}</p>
       <RouterLink :to="{ name: 'group' }" class="btn btn-primary">{{ t('nav.groups') }}</RouterLink>
     </section>
-    <div
-      v-else-if="offerings"
-      class="mt-5 grid gap-8 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:items-start lg:gap-12"
-    >
+    <div v-else-if="offerings" class="mt-5 grid gap-8 lg:grid-cols-2 lg:items-start lg:gap-12">
       <section v-if="rateable.length" class="grid gap-4 lg:sticky lg:top-20">
         <div>
           <p class="flex items-baseline justify-between gap-3 text-sm font-medium">
@@ -136,28 +176,23 @@ onMounted(() => {
             ></div>
           </div>
         </div>
-        <RouterLink
-          v-if="nextUp"
-          :to="`/rate/${nextUp.offeringId}`"
-          class="card grid gap-3 border-ink p-5 text-ink no-underline shadow-[3px_4px_0_color-mix(in_srgb,var(--ink)_28%,transparent)] hover:border-mask"
-        >
-          <span class="eyebrow mb-0">{{ t('rate.nextUp') }}</span>
-          <strong class="display text-2xl leading-tight [overflow-wrap:anywhere]">{{
-            nextUp.title
-          }}</strong>
-          <span class="mono text-xs text-muted">{{ term(nextUp) }}</span>
-          <span class="btn btn-primary w-full">
-            {{ t('rate.action') }} <ArrowRight class="size-4" aria-hidden="true" />
-          </span>
-        </RouterLink>
+        <RateDeck
+          v-if="pending.length"
+          class="mt-2"
+          :tickets="tickets"
+          :user-id="userId"
+          @hide="setHidden($event, true)"
+        />
         <NoteStar v-else-if="allDone" class="mx-auto mt-2 size-20" />
       </section>
 
       <div class="grid gap-8" :class="{ 'lg:col-span-2': !rateable.length }">
-        <section v-if="pending.length > 1">
-          <h2 class="eyebrow mb-3">{{ t('rate.toRate') }}</h2>
+        <section v-for="[year, courses] in pendingByYear" :key="year">
+          <h2 class="eyebrow mb-3">
+            {{ t('rate.toRate') }} · <span class="mono not-italic">{{ year }}</span>
+          </h2>
           <ul class="m-0 grid list-none gap-2 p-0">
-            <li v-for="offering in pending.slice(1)" :key="offering.offeringId">
+            <li v-for="offering in courses" :key="offering.offeringId">
               <RouterLink :to="`/rate/${offering.offeringId}`" class="row-link min-h-14 py-3">
                 <span class="min-w-0 flex-1">
                   <strong class="block font-semibold [overflow-wrap:anywhere]">{{
@@ -190,6 +225,30 @@ onMounted(() => {
             </li>
           </ul>
         </section>
+
+        <details v-if="notTaken.length" class="group">
+          <summary
+            class="flex min-h-11 cursor-pointer list-none items-center gap-1 text-sm font-medium text-mask [&::-webkit-details-marker]:hidden"
+          >
+            <ChevronRight
+              class="size-4 transition-transform group-open:rotate-90"
+              aria-hidden="true"
+            />
+            {{ t('rate.hidden', { n: notTaken.length }) }}
+          </summary>
+          <ul class="m-0 mt-1 list-none p-0 text-sm">
+            <li
+              v-for="offering in notTaken"
+              :key="offering.offeringId"
+              class="flex flex-wrap items-center justify-between gap-x-3 border-t border-line py-1"
+            >
+              <span class="font-medium [overflow-wrap:anywhere]">{{ offering.title }}</span>
+              <button class="btn btn-ghost min-h-11" @click="setHidden(offering.offeringId, false)">
+                {{ t('rate.unhide') }}
+              </button>
+            </li>
+          </ul>
+        </details>
 
         <details v-if="unavailable.length" :open="!rateable.length" class="group">
           <summary
@@ -224,7 +283,8 @@ onMounted(() => {
             }}</RouterLink>
           </p>
           <p v-if="fingerprint" class="mt-2 text-xs">
-            {{ t('rate.keys') }} <span class="mono font-medium text-ink">{{ fingerprint }}</span>.
+            {{ t('rate.keys') }} <span class="mono font-medium text-ink">{{ fingerprint }}</span
+            >.
             {{ t('rate.keysHint') }}
           </p>
         </div>

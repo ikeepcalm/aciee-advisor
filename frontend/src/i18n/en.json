@@ -382,14 +382,13 @@
     "empty": "Nothing here yet. Use Add to create the first one.",
     "deleteConfirm": "Click again to delete",
     "sync": "Sync from timetable",
-    "synced": "From the timetable: {groups} new groups, {courses} courses, {teachers} teachers assigned. Signing keys still to create: {keysPending}, made in the background."
+    "synced": "From the timetable: {groups} new groups, {pastGroups} groups from earlier years, {courses} courses, {teachers} teachers assigned. Signing keys still to create: {keysPending}, made in the background."
   },
   "rate": {
     "allDone": "All done, thank you!",
     "locked": "Not open yet ({n})",
     "done": "Rated",
     "toRate": "To rate",
-    "nextUp": "Up next",
     "progress": "{done} of {total} rated",
     "title": "Rate",
     "loading": "Preparing your tokens…",
@@ -398,14 +397,24 @@
     "opensLater": "Opens soon",
     "otherDevice": "The token was issued on another device. Restore your recovery code on this one.",
     "noGroup": "You are not in any group. Join your group to be able to rate.",
-    "pastYears": "For now you can rate only this year's courses; past years will come later. A course is missing? Check that you are in the right group:",
+    "pastYears": "You can rate every course of your study programme so far. A course is missing? Check that you are in the right group:",
     "pastYearsLink": "My group",
     "issueFailed": "We could not get the tokens. Try again.",
     "unknownKey": "Unknown signing key. Do not submit the rating and tell the administrator.",
     "semester": "Semester {n}",
     "action": "Rate",
     "keys": "Signing keys",
-    "keysHint": "They are the same for everyone. If a classmate sees different ones, report it."
+    "keysHint": "They are the same for everyone. If a classmate sees different ones, report it.",
+    "hidden": "Didn't take ({n})",
+    "unhide": "Put back",
+    "deck": {
+      "draw": "Draw a ticket",
+      "pile": "{n} tickets in the pile",
+      "yours": "Your ticket",
+      "another": "Another",
+      "notTaken": "Didn't take it",
+      "swipe": "Swipe right to rate, left for another ticket"
+    }
   },
   "recovery": {
     "restoreWhy": "You already have a code from another device. Enter it to continue here.",
