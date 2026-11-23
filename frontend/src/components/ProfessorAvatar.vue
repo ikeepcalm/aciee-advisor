@@ -22,7 +22,11 @@ const initials = computed(() => {
       class="size-full object-cover object-top"
       @error="broken = true"
     />
-    <span v-else class="initials">{{ initials }}</span>
+    <svg v-else viewBox="0 0 100 100" class="initials size-full">
+      <text x="50" y="54" text-anchor="middle" dominant-baseline="middle" font-size="44">
+        {{ initials }}
+      </text>
+    </svg>
   </span>
 </template>
 
@@ -31,7 +35,6 @@ const initials = computed(() => {
   display: grid;
   place-items: center;
   overflow: hidden;
-  container-type: inline-size;
   border: 1.5px solid var(--ink);
   border-radius: 47% 53% 44% 56% / 55% 46% 54% 45%;
   color: var(--on-mark);
@@ -42,9 +45,8 @@ const initials = computed(() => {
 
 .initials {
   font-family: var(--font-display);
-  font-size: 44cqw;
   font-weight: 700;
-  line-height: 1;
+  fill: currentColor;
   rotate: 2deg;
 }
 </style>
