@@ -26,9 +26,9 @@ BEGIN
                WHERE m.user_id = me AND m.valid_during && daterange(current_date, NULL)) THEN
         RETURN 'already_member';
     END IF;
-    IF CASE WHEN target_subgroup IS NULL
-            THEN EXISTS (SELECT 1 FROM core.subgroup s WHERE s.group_id = invite.group_id)
-            ELSE NOT EXISTS (SELECT 1 FROM core.subgroup s WHERE s.id = target_subgroup AND s.group_id = invite.group_id) END THEN
+    IF (target_subgroup IS NULL AND EXISTS (SELECT 1 FROM core.subgroup s WHERE s.group_id = invite.group_id))
+       OR (target_subgroup IS NOT NULL
+           AND NOT EXISTS (SELECT 1 FROM core.subgroup s WHERE s.id = target_subgroup AND s.group_id = invite.group_id)) THEN
         RETURN 'invalid_subgroup';
     END IF;
     IF core.invite_uses(invite.id) >= invite.max_uses THEN
