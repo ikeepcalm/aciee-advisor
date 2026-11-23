@@ -20,7 +20,9 @@ import ro.aciee.advisor.domain.group.model.InviteBody;
 import ro.aciee.advisor.domain.group.model.InvitePreview;
 import ro.aciee.advisor.domain.group.model.JoinBody;
 import ro.aciee.advisor.domain.group.model.MyGroups;
+import ro.aciee.advisor.domain.group.model.NewProfessor;
 import ro.aciee.advisor.domain.group.model.PendingRequests;
+import ro.aciee.advisor.domain.group.model.ProfessorOption;
 import ro.aciee.advisor.domain.group.model.RosterEntry;
 import ro.aciee.advisor.domain.group.model.TeachingSlot;
 import ro.aciee.advisor.domain.group.service.GroupService;
@@ -92,6 +94,16 @@ public class GroupController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void assignTeachers(@PathVariable int groupId, @RequestBody List<TeachingSlot> changes) {
         groupService.assignTeachers(groupId, changes);
+    }
+
+    @PostMapping("/{groupId}/professors")
+    public ProfessorOption addProfessor(@PathVariable int groupId, @RequestBody NewProfessor body) {
+        return groupService.addProfessor(groupId, body);
+    }
+
+    @PatchMapping("/{groupId}/professors/{professorId}")
+    public ProfessorOption renameProfessor(@PathVariable int groupId, @PathVariable int professorId, @RequestBody NewProfessor body) {
+        return groupService.renameProfessor(groupId, professorId, body);
     }
 
     @GetMapping("/{groupId}/invites")

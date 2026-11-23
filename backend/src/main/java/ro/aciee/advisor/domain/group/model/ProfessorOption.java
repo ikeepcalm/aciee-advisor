@@ -10,4 +10,6 @@ import lombok.Setter;
 public class ProfessorOption {
     private int id;
     private String label;
+    private String fullName;
+    private boolean renamable;
 }

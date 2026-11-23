@@ -23,6 +23,7 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -133,19 +134,71 @@ class GroupFlowTests {
                 .formatted(itemId, groupId));
 
         send(get("/api/groups/%d/teaching".formatted(groupId)), leaderId)
-                .andExpect(jsonPath("$.slots.length()").value(2))
+                .andExpect(jsonPath("$.slots.length()").value(3))
+                .andExpect(jsonPath("$.slots[0].component").value("lecture"))
                 .andExpect(jsonPath("$.slots[0].subgroup").doesNotExist())
-                .andExpect(jsonPath("$.slots[1].component").value("lab"))
-                .andExpect(jsonPath("$.slots[1].subgroup").value("1"))
-                .andExpect(jsonPath("$.slots[1].professorId").doesNotExist());
+                .andExpect(jsonPath("$.slots[2].component").value("lab"))
+                .andExpect(jsonPath("$.slots[2].subgroup").value("1"))
+                .andExpect(jsonPath("$.slots[2].professorId").doesNotExist());
         assign(offeringId, "lab", first, leaderId).andExpect(status().isNoContent());
         assign(offeringId, "lab", second, leaderId).andExpect(status().isNoContent());
-        send(get("/api/groups/%d/teaching".formatted(groupId)), leaderId).andExpect(jsonPath("$.slots[1].professorId").value(second));
+        send(get("/api/groups/%d/teaching".formatted(groupId)), leaderId).andExpect(jsonPath("$.slots[2].professorId").value(second));
         assertThat(jdbc.sql("SELECT count(*) FROM core.teaching_assignment WHERE offering_id = :id").param("id", offeringId)
                 .query(Long.class).single()).isEqualTo(1);
 
         assign(offeringId, "lecture", first, leaderId).andExpect(jsonPath("$.detail").value("invalid_slot"));
+        send(put("/api/groups/%d/teaching".formatted(groupId)).contentType(MediaType.APPLICATION_JSON)
+                .content("[{\"offeringId\":%d,\"component\":\"lecture\",\"professorId\":%d}]".formatted(offeringId, first)), leaderId)
+                .andExpect(status().isNoContent());
+        send(get("/api/groups/%d/teaching".formatted(groupId)), leaderId).andExpect(jsonPath("$.slots[0].professorId").value(first));
         assign(offeringId, "lab", first, account("student")).andExpect(status().isForbidden());
+    }
+
+    @Test
+    void leaderAddsAMissingProfessorAndFixesOnlyUnconfirmedNamesOfTheirGroup() throws Exception {
+        int leaderId = account("leader");
+        becomeLeader(leaderId, groupId, prefix);
+        int departmentId = insert("""
+                INSERT INTO core.department (faculty_id, name_ro)
+                SELECT id, 'Calculatoare' FROM core.faculty WHERE code = '%s' RETURNING id""".formatted(prefix));
+        int confirmed = insert(professor("Elena Popa", departmentId));
+        int subjectId = insert("INSERT INTO core.subject (code, name_ro) VALUES ('%s', 'Rețele') RETURNING id".formatted(prefix));
+        int itemId = insert("""
+                INSERT INTO core.curriculum_item (plan_id, subject_id, study_year, semester_no, lecture_hours)
+                SELECT plan_id, %d, 3, 1, 2 FROM core.study_group WHERE id = %d RETURNING id""".formatted(subjectId, groupId));
+        int offeringId = insert("""
+                INSERT INTO core.course_offering (curriculum_item_id, group_id, plan_id, study_year, title_snapshot)
+                SELECT %d, id, plan_id, study_year, 'Rețele' FROM core.study_group WHERE id = %d RETURNING id"""
+                .formatted(itemId, groupId));
+        String surname = "Zamfir" + prefix.replaceAll("[0-9]", "") + "x";
+
+        int added = idOf(send(post("/api/groups/%d/professors".formatted(groupId)).contentType(MediaType.APPLICATION_JSON)
+                .content("{\"fullName\":\"A. %s\",\"titleCode\":\"conf\"}".formatted(surname)), leaderId), "$.id");
+        int again = idOf(send(post("/api/groups/%d/professors".formatted(groupId)).contentType(MediaType.APPLICATION_JSON)
+                .content("{\"fullName\":\"  %s   A. \",\"titleCode\":\"conf\"}".formatted(surname)), leaderId), "$.id");
+        assertThat(again).isEqualTo(added);
+        send(post("/api/groups/%d/professors".formatted(groupId)).contentType(MediaType.APPLICATION_JSON)
+                .content("{\"fullName\":\"<script>\",\"titleCode\":\"conf\"}"), leaderId)
+                .andExpect(jsonPath("$.detail").value("invalid_name"));
+
+        String rename = "/api/groups/%d/professors/%d".formatted(groupId, added);
+        send(patch(rename).contentType(MediaType.APPLICATION_JSON).content("{\"fullName\":\"Ana %s\"}".formatted(surname)), leaderId)
+                .andExpect(status().isForbidden());
+        send(put("/api/groups/%d/teaching".formatted(groupId)).contentType(MediaType.APPLICATION_JSON)
+                .content("[{\"offeringId\":%d,\"component\":\"lecture\",\"professorId\":%d}]".formatted(offeringId, added)), leaderId)
+                .andExpect(status().isNoContent());
+        send(patch(rename).contentType(MediaType.APPLICATION_JSON).content("{\"fullName\":\"Ana %s\"}".formatted(surname)), leaderId)
+                .andExpect(jsonPath("$.fullName").value("Ana " + surname))
+                .andExpect(jsonPath("$.renamable").value(true));
+        send(patch(rename).contentType(MediaType.APPLICATION_JSON).content("{\"fullName\":\"Ana %s\"}".formatted(surname)), account("student"))
+                .andExpect(status().isForbidden());
+
+        send(put("/api/groups/%d/teaching".formatted(groupId)).contentType(MediaType.APPLICATION_JSON)
+                .content("[{\"offeringId\":%d,\"component\":\"lecture\",\"professorId\":%d}]".formatted(offeringId, confirmed)), leaderId)
+                .andExpect(status().isNoContent());
+        send(patch("/api/groups/%d/professors/%d".formatted(groupId, confirmed)).contentType(MediaType.APPLICATION_JSON)
+                .content("{\"fullName\":\"Elena Popescu\"}"), leaderId)
+                .andExpect(status().isForbidden());
     }
 
     @Test

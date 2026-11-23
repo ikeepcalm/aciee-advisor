@@ -49,6 +49,7 @@ public enum AdminTable {
             derived("study_year", "(SELECT study_year FROM core.study_group WHERE id = CAST(:group_id AS integer))")),
     PROFESSOR("core.professor", "full_name",
             text("full_name"), ref("title_code", "academic_title"), ref("department_id", "department"), text("slug"),
+            derived("name_confirmed", "true"),
             readOnly("archived_at", "timestamptz")),
     TEACHING_ASSIGNMENT("core.teaching_assignment",
             "(SELECT p.full_name FROM core.professor p WHERE p.id = professor_id) || ' · ' || component"

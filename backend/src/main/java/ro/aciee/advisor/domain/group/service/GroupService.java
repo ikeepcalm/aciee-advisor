@@ -8,6 +8,7 @@ import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
+import ro.aciee.advisor.domain.catalog.model.Option;
 import ro.aciee.advisor.domain.group.model.CreatedInvite;
 import ro.aciee.advisor.domain.group.model.GroupSummary;
 import ro.aciee.advisor.domain.group.model.GroupTeaching;
@@ -16,12 +17,14 @@ import ro.aciee.advisor.domain.group.model.InvitePreview;
 import ro.aciee.advisor.domain.group.model.JoinRequest;
 import ro.aciee.advisor.domain.group.model.Membership;
 import ro.aciee.advisor.domain.group.model.MyGroups;
+import ro.aciee.advisor.domain.group.model.NewProfessor;
 import ro.aciee.advisor.domain.group.model.Occupancy;
 import ro.aciee.advisor.domain.group.model.PendingRequests;
 import ro.aciee.advisor.domain.group.model.ProfessorOption;
 import ro.aciee.advisor.domain.group.model.RosterEntry;
 import ro.aciee.advisor.domain.group.model.Subgroup;
 import ro.aciee.advisor.domain.group.model.TeachingSlot;
+import ro.aciee.advisor.domain.professor.service.ProfessorDirectory;
 
 import java.security.SecureRandom;
 import java.time.OffsetDateTime;
@@ -46,6 +49,7 @@ public class GroupService {
             """;
 
     private final JdbcClient jdbc;
+    private final ProfessorDirectory professorDirectory;
     private final SecureRandom random = new SecureRandom();
 
     @Transactional(readOnly = true)
@@ -299,15 +303,76 @@ public class GroupService {
     public GroupTeaching teaching(int groupId) {
         requireLeader(groupId);
         var professors = jdbc.sql("""
-                        SELECT p.id, t.label_ro || ' ' || p.full_name || ' · ' || d.name_ro AS label
+                        SELECT p.id, t.label_ro || ' ' || p.full_name || ' · ' || d.name_ro AS label, p.full_name,
+                               NOT p.name_confirmed AND EXISTS (
+                                   SELECT 1 FROM core.teaching_assignment ta
+                                   WHERE ta.professor_id = p.id AND ta.group_id = :group
+                                     AND ta.valid_during && daterange(current_date, NULL)) AS renamable
                         FROM core.professor p
                         JOIN ref.academic_title t ON t.code = p.title_code
                         JOIN core.department d ON d.id = p.department_id
                         WHERE p.archived_at IS NULL
                         ORDER BY p.full_name, d.name_ro""")
+                .param("group", groupId)
                 .query(ProfessorOption.class)
                 .list();
-        return new GroupTeaching(slots(groupId), professors);
+        var titles = jdbc.sql("SELECT code, label_ro AS label FROM ref.academic_title ORDER BY label_ro")
+                .query(Option.class)
+                .list();
+        return new GroupTeaching(slots(groupId), professors, titles);
+    }
+
+    @Transactional
+    public ProfessorOption addProfessor(int groupId, NewProfessor body) {
+        requireLeader(groupId);
+        String name = cleanName(body.getFullName());
+        Integer existing = jdbc.sql("""
+                        SELECT id FROM core.professor
+                        WHERE archived_at IS NULL AND core.name_key(full_name) = core.name_key(:name)
+                        ORDER BY id LIMIT 1""")
+                .param("name", name)
+                .query(Integer.class)
+                .optional()
+                .orElse(null);
+        int id;
+        try {
+            id = existing != null ? existing : professorDirectory.create(name, body.getTitleCode());
+        } catch (DataIntegrityViolationException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "invalid_title");
+        }
+        return professorOption(groupId, id);
+    }
+
+    @Transactional
+    public ProfessorOption renameProfessor(int groupId, int professorId, NewProfessor body) {
+        requireLeader(groupId);
+        int updated = jdbc.sql("""
+                        UPDATE core.professor p SET full_name = :name
+                        WHERE p.id = :professor AND NOT p.name_confirmed AND p.archived_at IS NULL
+                          AND EXISTS (SELECT 1 FROM core.teaching_assignment ta
+                                      WHERE ta.professor_id = p.id AND ta.group_id = :group
+                                        AND ta.valid_during && daterange(current_date, NULL))""")
+                .param("name", cleanName(body.getFullName()))
+                .param("professor", professorId)
+                .param("group", groupId)
+                .update();
+        if (updated == 0) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "not_renamable");
+        }
+        return professorOption(groupId, professorId);
+    }
+
+    private ProfessorOption professorOption(int groupId, int professorId) {
+        return teaching(groupId).getProfessors().stream().filter(p -> p.getId() == professorId).findFirst()
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "not_found"));
+    }
+
+    private static String cleanName(String name) {
+        String cleaned = name == null ? "" : name.strip().replaceAll("\\s+", " ");
+        if (cleaned.length() < 3 || cleaned.length() > 200 || !cleaned.matches("[\\p{L} .'-]+")) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "invalid_name");
+        }
+        return cleaned;
     }
 
     @Transactional
@@ -350,13 +415,13 @@ public class GroupService {
                                 ORDER BY lower(ta.valid_during) DESC LIMIT 1) AS professor_id
                         FROM core.course_offering o
                         JOIN core.curriculum_item ci ON ci.id = o.curriculum_item_id
-                        CROSS JOIN LATERAL (VALUES ('seminar', ci.seminar_hours), ('lab', ci.lab_hours),
-                                                   ('project', ci.project_hours)) c(component, hours)
+                        CROSS JOIN LATERAL (VALUES (1, 'lecture', ci.lecture_hours), (2, 'seminar', ci.seminar_hours),
+                                                   (3, 'lab', ci.lab_hours), (4, 'project', ci.project_hours)) c(no, component, hours)
                         CROSS JOIN LATERAL (SELECT NULL::integer AS id, NULL AS label
                                             UNION ALL
                                             SELECT id, label FROM core.subgroup WHERE group_id = o.group_id) s
-                        WHERE o.group_id = :group AND c.hours > 0
-                        ORDER BY ci.semester_no, o.title_snapshot, c.component, s.label NULLS FIRST""")
+                        WHERE o.group_id = :group AND c.hours > 0 AND (c.component <> 'lecture' OR s.id IS NULL)
+                        ORDER BY ci.semester_no, o.title_snapshot, c.no, s.label NULLS FIRST""")
                 .param("group", groupId)
                 .query(TeachingSlot.class)
                 .list();

@@ -289,3 +289,15 @@ Format: context → decision → consequences. Never rewrite an accepted ADR; su
 
 **Consequences.** Nothing changes until the profile and two secrets are set (DEPLOY.md). A student keeps their password after linking and can use either method. A student whose UPN changes gets a new `oid`, which is refused for the old address; an admin has to clear `entra_oid` by hand.
 
+
+## ADR-031 — Teachers imported from the timetable, corrected by group leaders
+**Context.** Entering every professor and teaching assignment by hand was one admin's job, and prod still had no professors. The faculty timetable we already sync every hour names the teacher of each lecture, seminar, lab and project, but loosely. The 478 lessons carry 233 different strings for about 90 people (`B. Dumitrașcu`, `Dumitrascu Bogdan`, `Ș.l.dr.ing. Bogdan Dumitrașcu`), with name order swapped, typos (`Dimitivevici`, `N.Ttigau`) and "prof." used for any teacher.
+
+**Decision.**
+- `TeacherImportService` runs after each timetable refresh. It matches a lesson to an offering by group code (`study_group.code` equals the timetable column label) and the folded course name against `course_offering.title_snapshot` of the current academic year. It maps C/S/L/P to lecture/seminar/lab/project and writes only the group-level slot (`subgroup_id IS NULL`), and only when the curriculum has hours for that component.
+- `TeacherNames` groups spellings of one person: two full names match when one's words contain the other's; a short form (`A. Cocu`) matches a full name by surname and first initial, with the surname taken from the first or last word; two short forms match with the same initial and a surname at most one edit apart (two from 9 letters). A slot whose lessons name two different people is skipped.
+- An unknown teacher is created with the most complete spelling, the title from a prefix that is reliable (`conf`, `ș.l.`, `lect`, `as`/`drd`, or `prof` only together with `dr`; otherwise the new `cadru` title), department `Nespecificat` and `name_confirmed = false`.
+- `core.timetable_import` stores what the importer last applied per slot. It fills an empty slot or replaces its own earlier choice only when the timetable's teacher text changes; a slot a leader or admin set, or a leader emptied, is left alone. The stored texts also act as aliases, so a renamed professor is still found.
+- Group leaders may now set lecture teachers, add a missing professor (deduplicated on `core.name_key`), and fix the name of an unconfirmed professor who teaches their group this year. Any admin create or edit of a professor sets `name_confirmed = true`, which locks the name against leaders. The slug never changes, so links stay valid. All writes go through the audit triggers.
+
+**Consequences.** About half the lessons match an offering by name; the rest need an admin to align titles or a leader to pick the teacher. Typos beyond one edit and two people with the same surname and initial still produce duplicate or merged professors that only an admin can fix (there is no merge tool yet). Imported assignments start on the import day, like a leader's.
