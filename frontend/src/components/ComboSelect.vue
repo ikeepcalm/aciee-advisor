@@ -78,6 +78,7 @@ const inner = computed({
             {{ o.label }}
           </ComboboxItem>
         </ComboboxViewport>
+        <slot name="footer" />
       </ComboboxContent>
     </ComboboxPortal>
   </ComboboxRoot>

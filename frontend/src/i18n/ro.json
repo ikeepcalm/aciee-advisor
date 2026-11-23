@@ -123,6 +123,9 @@
     "next_year_missing": "Adaugă întâi anul universitar următor.",
     "invalid_slot": "Componenta sau subgrupa nu există în planul grupei.",
     "invalid_professor": "Profesorul nu există sau a fost arhivat.",
+    "invalid_name": "Folosește între 3 și 200 de caractere: doar litere, spații, puncte, apostrofuri și cratime.",
+    "invalid_title": "Alege un titlu din listă.",
+    "not_renamable": "Numele este deja confirmat sau profesorul nu mai predă la grupa ta.",
     "generic": "Ceva nu a mers. Încearcă din nou.",
     "foreign_key": "Nu se poate: înregistrarea este folosită în altă parte sau trimite la ceva inexistent ({constraint}).",
     "duplicate": "Există deja o înregistrare cu aceste valori ({constraint}).",
@@ -213,14 +216,24 @@
     "joinHint": "Șeful de grupă îți va aproba cererea.",
     "joinSent": "Cererea a fost trimisă.",
     "component": {
+      "lecture": "Curs",
       "seminar": "Seminar",
       "lab": "Laborator",
       "project": "Proiect"
     },
     "wholeGroup": "Toată grupa",
     "pickProfessor": "alege profesorul",
-    "noTeaching": "Grupa nu are încă laboratoare, seminare sau proiecte în plan.",
-    "teachingSaved": "Profesorii au fost salvați."
+    "noTeaching": "Grupa nu are încă discipline în plan.",
+    "teachingSaved": "Profesorii au fost salvați.",
+    "teachingAuto": "Profesorii se completează automat din orarul facultății, la fiecare oră. Ce modifici aici nu se suprascrie niciodată.",
+    "addProfessor": "Nu e în listă? Adaugă un profesor",
+    "addProfessorTitle": "Adaugă un profesor",
+    "addProfessorHint": "Dacă profesorul este deja în listă, îl alegem noi pentru tine.",
+    "fixName": "Corectează numele",
+    "fixNameTitle": "Corectează numele",
+    "fixNameHint": "Numele vin din orar și pot fi prescurtate, de exemplu „A. Cocu”. Scrie numele întreg dacă îl știi.",
+    "fullName": "Nume și prenume",
+    "academicTitle": "Titlu"
   },
   "admin": {
     "leadersTitle": "Șefi de grupă",

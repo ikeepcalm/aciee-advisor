@@ -2,9 +2,10 @@
 import { computed, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { TabsContent, TabsList, TabsRoot, TabsTrigger } from 'reka-ui'
-import { Check, Copy } from 'lucide-vue-next'
+import { Check, Copy, Pencil, UserPlus } from 'lucide-vue-next'
 import ComboSelect from '@/components/ComboSelect.vue'
 import AppNotice from '@/components/AppNotice.vue'
+import AppSheet from '@/components/AppSheet.vue'
 import { api, describeError } from '@/api'
 
 interface Membership {
@@ -57,6 +58,12 @@ interface TeachingSlot {
   subgroup: string | null
   professorId: number | null
 }
+interface ProfessorOption {
+  id: number
+  label: string
+  fullName: string
+  renamable: boolean
+}
 
 const { t, d } = useI18n()
 const memberships = ref<Membership[]>([])
@@ -70,10 +77,24 @@ const pending = ref<{ requests: JoinRequest[]; members: number; maxSize: number 
 })
 const roster = ref<RosterEntry[]>([])
 const invites = ref<Invite[]>([])
-const teaching = ref<{ slots: TeachingSlot[]; professors: { id: number; label: string }[] }>({
+const teaching = ref<{
+  slots: TeachingSlot[]
+  professors: ProfessorOption[]
+  titles: { code: string; label: string }[]
+}>({
   slots: [],
   professors: [],
+  titles: [],
 })
+const nameForm = ref<{
+  slot: number | null
+  professorId: number | null
+  fullName: string
+  titleCode: string
+} | null>(null)
+const nameError = ref('')
+const nameSaving = ref(false)
+const namesVersion = ref(0)
 const inviteDays = ref(7)
 const inviteUses = ref(30)
 const newInviteLink = ref('')
@@ -96,6 +117,13 @@ const groupOptions = computed(() =>
 const professorOptions = computed(() =>
   teaching.value.professors.map((p) => ({ value: p.id, label: p.label })),
 )
+const renamable = computed(
+  () => new Set(teaching.value.professors.filter((p) => p.renamable).map((p) => p.id)),
+)
+const nameFormOpen = computed({
+  get: () => nameForm.value !== null,
+  set: () => (nameForm.value = null),
+})
 const isNewCourse = (index: number) =>
   index === 0 ||
   teaching.value.slots[index - 1]!.offeringId !== teaching.value.slots[index]!.offeringId ||
@@ -192,6 +220,41 @@ function saveTeaching(groupId: number) {
     await api('PUT', `/api/groups/${groupId}/teaching`, teaching.value.slots)
     teaching.value = await api<typeof teaching.value>('GET', `/api/groups/${groupId}/teaching`)
   }, t('group.teachingSaved'))
+}
+
+function openNameForm(slot: number | null, professorId: number | null) {
+  const titles = teaching.value.titles
+  nameError.value = ''
+  nameForm.value = {
+    slot,
+    professorId,
+    fullName: teaching.value.professors.find((p) => p.id === professorId)?.fullName ?? '',
+    titleCode: (titles.find((title) => title.code === 'cadru') ?? titles[0])?.code ?? '',
+  }
+}
+
+async function saveName(groupId: number) {
+  const form = nameForm.value!
+  nameError.value = ''
+  nameSaving.value = true
+  try {
+    const saved = await api<ProfessorOption>(
+      form.professorId ? 'PATCH' : 'POST',
+      `/api/groups/${groupId}/professors${form.professorId ? `/${form.professorId}` : ''}`,
+      { fullName: form.fullName, titleCode: form.titleCode },
+    )
+    const fresh = await api<typeof teaching.value>('GET', `/api/groups/${groupId}/teaching`)
+    teaching.value = { ...fresh, slots: teaching.value.slots }
+    if (form.slot !== null) {
+      teaching.value.slots[form.slot]!.professorId = saved.id
+    }
+    namesVersion.value++
+    nameForm.value = null
+  } catch (e) {
+    nameError.value = describeError(t, e)
+  } finally {
+    nameSaving.value = false
+  }
 }
 
 onMounted(() => run(load))
@@ -392,6 +455,17 @@ onMounted(() => run(load))
 
       <TabsContent value="teaching" class="pt-4">
         <p v-if="!teaching.slots.length" class="text-sm text-muted">{{ t('group.noTeaching') }}</p>
+        <template v-else>
+          <p class="quote max-w-prose text-sm text-muted">{{ t('group.teachingAuto') }}</p>
+          <button
+            type="button"
+            class="btn btn-ghost btn-sm mt-1 mb-4 px-2"
+            @click="openNameForm(null, null)"
+          >
+            <UserPlus class="size-4" aria-hidden="true" />
+            {{ t('group.addProfessorTitle') }}
+          </button>
+        </template>
         <template
           v-for="(slot, index) in teaching.slots"
           :key="`${slot.offeringId}-${slot.component}-${slot.subgroupId}`"
@@ -410,11 +484,32 @@ onMounted(() => run(load))
             </label>
             <ComboSelect
               :id="`teacher-${index}`"
+              :key="namesVersion"
               v-model="slot.professorId"
               :options="professorOptions"
               :placeholder="t('group.pickProfessor')"
               clearable
-            />
+            >
+              <template #footer>
+                <button
+                  type="button"
+                  class="btn btn-ghost w-full justify-start rounded-none border-t border-line px-4"
+                  @click="openNameForm(index, null)"
+                >
+                  <UserPlus class="size-4" aria-hidden="true" />
+                  {{ t('group.addProfessor') }}
+                </button>
+              </template>
+            </ComboSelect>
+            <button
+              v-if="slot.professorId !== null && renamable.has(slot.professorId)"
+              type="button"
+              class="btn btn-ghost btn-sm -mt-1 justify-self-start px-2"
+              @click="openNameForm(index, slot.professorId)"
+            >
+              <Pencil class="size-3.5" aria-hidden="true" />
+              {{ t('group.fixName') }}
+            </button>
           </div>
         </template>
         <div v-if="teaching.slots.length" class="card action-bar mt-6 flex justify-end">
@@ -424,5 +519,45 @@ onMounted(() => run(load))
         </div>
       </TabsContent>
     </TabsRoot>
+
+    <AppSheet
+      v-model="nameFormOpen"
+      :title="t(nameForm?.professorId ? 'group.fixNameTitle' : 'group.addProfessorTitle')"
+    >
+      <form v-if="nameForm" class="grid gap-4" @submit.prevent="saveName(current!.groupId)">
+        <p class="text-sm text-muted">
+          {{ t(nameForm.professorId ? 'group.fixNameHint' : 'group.addProfessorHint') }}
+        </p>
+        <label class="field" for="professor-name">
+          {{ t('group.fullName') }}
+          <input
+            id="professor-name"
+            v-model.trim="nameForm.fullName"
+            class="input"
+            autocomplete="off"
+            autocapitalize="words"
+            required
+            minlength="3"
+            maxlength="200"
+            :aria-invalid="!!nameError"
+            aria-describedby="professor-name-error"
+          />
+        </label>
+        <label v-if="!nameForm.professorId" class="field" for="professor-title">
+          {{ t('group.academicTitle') }}
+          <select id="professor-title" v-model="nameForm.titleCode" class="input">
+            <option v-for="title in teaching.titles" :key="title.code" :value="title.code">
+              {{ title.label }}
+            </option>
+          </select>
+        </label>
+        <AppNotice v-if="nameError" id="professor-name-error" kind="error" class="my-0">{{
+          nameError
+        }}</AppNotice>
+        <button class="btn btn-primary" :disabled="nameSaving">
+          {{ t(nameForm.professorId ? 'admin.save' : 'group.addProfessorTitle') }}
+        </button>
+      </form>
+    </AppSheet>
   </main>
 </template>

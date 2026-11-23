@@ -123,6 +123,9 @@
     "next_year_missing": "Add the next academic year first.",
     "invalid_slot": "The component or subgroup does not exist in the group's plan.",
     "invalid_professor": "The professor does not exist or has been archived.",
+    "invalid_name": "Use 3 to 200 characters: letters, spaces, dots, apostrophes and hyphens only.",
+    "invalid_title": "Choose a title from the list.",
+    "not_renamable": "This name is already confirmed, or the professor no longer teaches your group.",
     "generic": "Something went wrong. Try again.",
     "foreign_key": "Not possible: the record is used elsewhere or points to something that does not exist ({constraint}).",
     "duplicate": "A record with these values already exists ({constraint}).",
@@ -213,14 +216,24 @@
     "joinHint": "Your group leader will approve the request.",
     "joinSent": "The request was sent.",
     "component": {
+      "lecture": "Lecture",
       "seminar": "Seminar",
       "lab": "Laboratory",
       "project": "Project"
     },
     "wholeGroup": "Whole group",
     "pickProfessor": "choose the professor",
-    "noTeaching": "The group has no laboratories, seminars or projects in its plan yet.",
-    "teachingSaved": "The professors were saved."
+    "noTeaching": "The group has no courses in its plan yet.",
+    "teachingSaved": "The professors were saved.",
+    "teachingAuto": "Professors are filled in from the faculty timetable every hour. What you change here is never overwritten.",
+    "addProfessor": "Not in the list? Add a professor",
+    "addProfessorTitle": "Add a professor",
+    "addProfessorHint": "If this professor is already in the list, we will pick them for you.",
+    "fixName": "Fix name",
+    "fixNameTitle": "Fix the name",
+    "fixNameHint": "Names come from the timetable and may be shortened, like “A. Cocu”. Write the full name if you know it.",
+    "fullName": "First and last name",
+    "academicTitle": "Title"
   },
   "admin": {
     "leadersTitle": "Group leaders",
