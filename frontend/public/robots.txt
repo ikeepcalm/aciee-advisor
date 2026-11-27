@@ -1,6 +1,7 @@
 User-agent: *
 Disallow: /api/
 Disallow: /anon/
+Allow: /og/img/
 Disallow: /og/
 Disallow: /admin
 Disallow: /moderation
