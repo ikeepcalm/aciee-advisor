@@ -86,7 +86,7 @@ const facts = [
       <section
         class="col-span-2 flex items-center gap-x-8 gap-y-3 lg:col-span-1 lg:w-56 lg:flex-col lg:items-start"
       >
-        <div class="coffee-note border-on-mark bg-mark px-4 pt-2.5 pb-1 text-on-mark">
+        <div v-if="false" class="coffee-note border-on-mark bg-mark px-4 pt-2.5 pb-1 text-on-mark">
           <p class="display text-xl">{{ t('footer.useful') }}</p>
           <a
             href="https://buymeacoffee.com/ikeepcalm"
