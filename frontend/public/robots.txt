@@ -1,0 +1,15 @@
+User-agent: *
+Disallow: /api/
+Disallow: /anon/
+Disallow: /og/
+Disallow: /admin
+Disallow: /moderation
+Disallow: /me/
+Disallow: /rate
+Disallow: /group
+Disallow: /join/
+Disallow: /signin
+Disallow: /signup
+Disallow: /verify
+
+Sitemap: https://acieeadvisor.com/sitemap.xml
