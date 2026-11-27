@@ -20,7 +20,7 @@ public class TeacherRating {
     @NotNull
     private Integer teachingAssignmentId;
     @NotNull
-    @Size(min = 14, max = 14)
+    @Size(min = 24, max = 24)
     private List<@Min(0) @Max(10) Integer> scores;
     @Size(max = 280)
     private String comment;

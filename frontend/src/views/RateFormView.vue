@@ -23,6 +23,7 @@ import { rateDraftPrefix, readStored, removeStored, writeStored } from '@/storag
 
 interface Assignment {
   id: number
+  component: string
   componentLabel: string
   professor: string
   title: string
@@ -89,7 +90,7 @@ const tip = ref('')
 const step = ref(0)
 const part = ref(0)
 const draftRestored = ref(false)
-const quickAxisCodes = ['a04', 'a07', 'a10', 'a14']
+const quickGradingCodes = ['a01', 'a04']
 const prefersAllCriteria = ref(false)
 const criteriaChoice = reactive<Record<number, boolean>>({})
 const wideScreen = matchMedia('(min-width: 64rem)')
@@ -128,16 +129,19 @@ const indexedAxes = computed(() =>
   (labels.value?.axes ?? []).map((axis, index) => ({ ...axis, index })),
 )
 
-const pillars = computed(() =>
-  (labels.value?.pillars ?? []).map((pillar) => ({
-    ...pillar,
-    axes: indexedAxes.value.filter((axis) => axis.group === pillar.code),
-  })),
-)
+function pillarsFor(assignment: Assignment) {
+  return (labels.value?.pillars ?? [])
+    .filter((pillar) => pillar.code === assignment.component || pillar.code === 'grading')
+    .map((pillar) => ({
+      ...pillar,
+      axes: indexedAxes.value.filter((axis) => axis.group === pillar.code),
+    }))
+}
 
-const quickAxes = computed(() =>
-  indexedAxes.value.filter((axis) => quickAxisCodes.includes(axis.code)),
-)
+function quickAxesFor(assignment: Assignment) {
+  const lead = indexedAxes.value.find((axis) => axis.group === assignment.component)
+  return indexedAxes.value.filter((axis) => axis === lead || quickGradingCodes.includes(axis.code))
+}
 
 const steps = computed(() => [
   { key: 'course', label: t('rateForm.howToPass'), assignment: null },
@@ -149,7 +153,9 @@ const steps = computed(() => [
   { key: 'finish', label: t('rateForm.finish'), assignment: null },
 ])
 const teacher = computed(() => steps.value[step.value]?.assignment ?? null)
-const teacherShowsAll = computed(() => !!teacher.value && showsAllCriteria(teacher.value.id))
+const teacherShowsAll = computed(() => !!teacher.value && showsAllCriteria(teacher.value))
+const pillars = computed(() => (teacher.value ? pillarsFor(teacher.value) : []))
+const quickAxes = computed(() => (teacher.value ? quickAxesFor(teacher.value) : []))
 const shownPillars = computed(() =>
   showsAllPillars.value ? pillars.value : pillars.value.slice(part.value, part.value + 1),
 )
@@ -166,20 +172,21 @@ const ratings = computed(() =>
     .filter((r) => r.scores!.some((s) => s !== null) || r.comment),
 )
 
-function showsAllCriteria(assignmentId: number) {
+function showsAllCriteria(assignment: Assignment) {
+  const quick = quickAxesFor(assignment)
   return (
-    criteriaChoice[assignmentId] ??
+    criteriaChoice[assignment.id] ??
     (prefersAllCriteria.value ||
-      !quickAxes.value.length ||
-      scores[assignmentId]!.some(
-        (score, index) => score !== null && quickAxes.value.every((axis) => axis.index !== index),
+      !quick.length ||
+      scores[assignment.id]!.some(
+        (score, index) => score !== null && quick.every((axis) => axis.index !== index),
       ))
   )
 }
 
-function toggleCriteria(assignmentId: number) {
-  prefersAllCriteria.value = !showsAllCriteria(assignmentId)
-  criteriaChoice[assignmentId] = prefersAllCriteria.value
+function toggleCriteria(assignment: Assignment) {
+  prefersAllCriteria.value = !showsAllCriteria(assignment)
+  criteriaChoice[assignment.id] = prefersAllCriteria.value
   part.value = 0
 }
 
@@ -187,9 +194,9 @@ function partCount(stepIndex: number) {
   const assignment = steps.value[stepIndex]?.assignment
   return assignment &&
     hadTeacher[assignment.id] === 'yes' &&
-    showsAllCriteria(assignment.id) &&
+    showsAllCriteria(assignment) &&
     !showsAllPillars.value
-    ? Math.max(pillars.value.length, 1)
+    ? Math.max(pillarsFor(assignment).length, 1)
     : 1
 }
 
@@ -198,11 +205,14 @@ function isStepDone(stepIndex: number) {
   return assignment ? hadTeacher[assignment.id] !== null : stepIndex < step.value
 }
 
-function scoredCount(assignmentId: number) {
-  const shown = showsAllCriteria(assignmentId)
-    ? scores[assignmentId]!
-    : quickAxes.value.map((axis) => scores[assignmentId]![axis.index])
-  return shown.filter((s) => s !== null).length
+function shownAxes(assignment: Assignment) {
+  return showsAllCriteria(assignment)
+    ? pillarsFor(assignment).flatMap((pillar) => pillar.axes)
+    : quickAxesFor(assignment)
+}
+
+function scoredCount(assignment: Assignment) {
+  return shownAxes(assignment).filter((axis) => scores[assignment.id]![axis.index] !== null).length
 }
 
 async function goTo(stepIndex: number, partIndex = 0) {
@@ -237,7 +247,7 @@ function restoreDraft() {
     }
     Object.assign(survival, draft.survival)
     for (const a of form.value!.assignments) {
-      if (draft.scores[a.id]?.length === 14) {
+      if (draft.scores[a.id]?.length === labels.value!.axes.length) {
         scores[a.id] = draft.scores[a.id]!
       }
       comments[a.id] = draft.comments[a.id] ?? comments[a.id]!
@@ -316,7 +326,7 @@ onMounted(async () => {
       lookups(),
     ])
     for (const a of form.value.assignments) {
-      scores[a.id] = Array(14).fill(null)
+      scores[a.id] = Array(labels.value.axes.length).fill(null)
       comments[a.id] = ''
       hadTeacher[a.id] = null
     }
@@ -577,8 +587,8 @@ async function submit() {
             >
               {{
                 t('rateForm.scored', {
-                  n: scoredCount(teacher.id),
-                  total: teacherShowsAll ? 14 : quickAxes.length,
+                  n: scoredCount(teacher),
+                  total: shownAxes(teacher).length,
                 })
               }}
             </span>
@@ -606,7 +616,7 @@ async function submit() {
                 v-if="quickAxes.length"
                 type="button"
                 class="btn btn-outline"
-                @click="toggleCriteria(teacher.id)"
+                @click="toggleCriteria(teacher)"
               >
                 <component
                   :is="teacherShowsAll ? ListMinus : ListPlus"

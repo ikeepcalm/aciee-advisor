@@ -30,6 +30,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 @Service
 @RequiredArgsConstructor
@@ -40,15 +41,17 @@ public class CatalogService {
             JOIN core.subject_root_v sr ON sr.subject_id = o.subject_id
             WHERE sr.root_id = :root""";
 
-    private static final String AXES = "a01, a02, a03, a04, a05, a06, a07, a08, a09, a10, a11, a12, a13, a14";
+    private static final String AXES = IntStream.rangeClosed(1, 24).mapToObj("a%02d"::formatted).collect(Collectors.joining(", "));
 
-    private static final String RADAR_COLUMNS = "n, ARRAY[" + AXES + "] AS scores";
+    private static final String RADAR_COLUMNS = "component, n, ARRAY[" + AXES + "] AS scores";
 
     private static final String PROFESSOR_SCORES = """
             SELECT cell.professor_id, rated.ratings,
                    sum(cell.n * cell.score) / sum(cell.n) AS overall,
-                   sum(cell.n * cell.score) FILTER (WHERE cell.pillar = 'teaching') / sum(cell.n) FILTER (WHERE cell.pillar = 'teaching') AS teaching,
-                   sum(cell.n * cell.score) FILTER (WHERE cell.pillar = 'practice') / sum(cell.n) FILTER (WHERE cell.pillar = 'practice') AS practice,
+                   sum(cell.n * cell.score) FILTER (WHERE cell.pillar = 'lecture') / sum(cell.n) FILTER (WHERE cell.pillar = 'lecture') AS lecture,
+                   sum(cell.n * cell.score) FILTER (WHERE cell.pillar = 'lab') / sum(cell.n) FILTER (WHERE cell.pillar = 'lab') AS lab,
+                   sum(cell.n * cell.score) FILTER (WHERE cell.pillar = 'seminar') / sum(cell.n) FILTER (WHERE cell.pillar = 'seminar') AS seminar,
+                   sum(cell.n * cell.score) FILTER (WHERE cell.pillar = 'project') / sum(cell.n) FILTER (WHERE cell.pillar = 'project') AS project,
                    sum(cell.n * cell.score) FILTER (WHERE cell.pillar = 'grading') / sum(cell.n) FILTER (WHERE cell.pillar = 'grading') AS grading
             FROM (SELECT r.professor_id, r.n, ax.pillar_code AS pillar, u.score
                   FROM anon.prof_subject_radar r
@@ -61,6 +64,7 @@ public class CatalogService {
 
     private static final RowMapper<Radar> RADAR = (rs, row) -> {
         var radar = new Radar();
+        radar.setComponent(rs.getString("component"));
         radar.setN(rs.getInt("n"));
         radar.setScores(Arrays.stream((Object[]) rs.getArray("scores").getArray())
                 .map(score -> score == null ? null : ((Number) score).doubleValue())
@@ -170,10 +174,13 @@ public class CatalogService {
                 .query(CourseTeacher.class)
                 .list());
         page.setOfferingIds(jdbc.sql("SELECT offering_id FROM (" + SUBJECT_OFFERINGS + ") o").param("root", root).query(Integer.class).list());
-        Map<Integer, Radar> radars = radars("subject_id = :key", "professor_id", root);
+        Map<Integer, List<Radar>> radars = radars("subject_id = :key", "professor_id", root);
         Map<Integer, List<PublishedText>> comments = comments("sr.root_id = :key", "ta.professor_id", root);
         page.getTeachers().forEach(teacher -> {
-            teacher.setRadar(radars.get(teacher.getProfessorId()));
+            teacher.setRadar(radars.getOrDefault(teacher.getProfessorId(), List.of()).stream()
+                    .filter(radar -> radar.getComponent().equals(teacher.getComponent()))
+                    .findFirst()
+                    .orElse(null));
             teacher.setComments(comments.getOrDefault(teacher.getProfessorId(), List.of()));
         });
         page.setSurvival(jdbc.sql("""
@@ -204,7 +211,7 @@ public class CatalogService {
         var page = jdbc.sql("""
                         SELECT p.id, p.full_name, t.label_ro AS title, d.name_ro AS department, p.archived_at IS NOT NULL AS archived,
                                pr.bio_ro, pr.bio_en, pr.photo, pr.cv_url,
-                               coalesce(sc.ratings, 0) AS ratings, sc.overall, sc.teaching, sc.practice, sc.grading
+                               coalesce(sc.ratings, 0) AS ratings, sc.overall, sc.lecture, sc.lab, sc.seminar, sc.project, sc.grading
                         FROM core.professor p
                         JOIN ref.academic_title t ON t.code = p.title_code
                         JOIN core.department d ON d.id = p.department_id
@@ -237,10 +244,10 @@ public class CatalogService {
                 .param("professor", page.getId())
                 .query(ProfessorSubject.class)
                 .list());
-        Map<Integer, Radar> radars = radars("professor_id = :key", "subject_id", page.getId());
+        Map<Integer, List<Radar>> radars = radars("professor_id = :key", "subject_id", page.getId());
         Map<Integer, List<PublishedText>> comments = comments("ta.professor_id = :key", "sr.root_id", page.getId());
         page.getSubjects().forEach(subject -> {
-            subject.setRadar(radars.get(subject.getSubjectId()));
+            subject.setRadars(radars.getOrDefault(subject.getSubjectId(), List.of()));
             subject.setComments(comments.getOrDefault(subject.getSubjectId(), List.of()));
         });
         if (page.getOverall() != null) {
@@ -284,13 +291,16 @@ public class CatalogService {
                 .list();
     }
 
-    private Map<Integer, Radar> radars(String filter, String keyColumn, int key) {
-        return jdbc.sql("SELECT %s AS key, %s FROM anon.prof_subject_radar WHERE %s".formatted(keyColumn, RADAR_COLUMNS, filter))
+    private Map<Integer, List<Radar>> radars(String filter, String keyColumn, int key) {
+        return jdbc.sql("""
+                        SELECT %s AS key, %s FROM anon.prof_subject_radar WHERE %s
+                        ORDER BY array_position(ARRAY['lecture', 'seminar', 'lab', 'project'], component)"""
+                        .formatted(keyColumn, RADAR_COLUMNS, filter))
                 .param("key", key)
                 .query((rs, row) -> Map.entry(rs.getInt("key"), RADAR.mapRow(rs, row)))
                 .list()
                 .stream()
-                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+                .collect(Collectors.groupingBy(Map.Entry::getKey, Collectors.mapping(Map.Entry::getValue, Collectors.toList())));
     }
 
     private Map<Integer, List<PublishedText>> comments(String filter, String keyColumn, int key) {

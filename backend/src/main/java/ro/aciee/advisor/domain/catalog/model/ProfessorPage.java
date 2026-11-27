@@ -18,8 +18,10 @@ public class ProfessorPage {
     private int threshold;
     private int ratings;
     private Double overall;
-    private Double teaching;
-    private Double practice;
+    private Double lecture;
+    private Double lab;
+    private Double seminar;
+    private Double project;
     private Double grading;
     private Radar radar;
     private String bioRo;

@@ -179,6 +179,22 @@ class SchemaTests {
     }
 
     @Test
+    void eachCriterionNeedsKAnswersOfItsOwn() {
+        for (int i = 0; i < 4; i++) {
+            rate(submission(), 8);
+        }
+        byte[] keyHash = submission();
+        jdbc.sql("""
+                        INSERT INTO anon.rating (key_hash, teaching_assignment_id, offering_id, a01, a05)
+                        VALUES (:hash, :assignment, :offering, 8, 2)""")
+                .param("hash", keyHash).param("assignment", assignmentId).param("offering", offeringId).update();
+        refresh();
+        Map<String, Object> row = jdbc.sql("SELECT component, n, a01, a05 FROM anon.prof_subject_radar").query().singleRow();
+        assertThat(row).containsEntry("component", "lecture").containsEntry("n", 5L).containsEntry("a05", null);
+        assertThat(row.get("a01").toString()).isEqualTo("8.0");
+    }
+
+    @Test
     void examSharesCountOnlyStudentsWhoAnsweredAndStayLockedBelowK() {
         for (String exam : List.of("{written,theory}", "{written,oral,theory}", "{written}", "{oral}")) {
             jdbc.sql("UPDATE anon.submission SET exam = CAST(:exam AS text[]) WHERE key_hash = :hash")

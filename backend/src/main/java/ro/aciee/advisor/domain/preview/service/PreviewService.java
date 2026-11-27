@@ -111,8 +111,10 @@ public class PreviewService {
             metrics.add(new PreviewMetric("Scor general", score(page.getOverall()), true));
             for (Option pillar : catalogService.lookups().getPillars()) {
                 Double average = switch (pillar.getCode()) {
-                    case "teaching" -> page.getTeaching();
-                    case "practice" -> page.getPractice();
+                    case "lecture" -> page.getLecture();
+                    case "lab" -> page.getLab();
+                    case "seminar" -> page.getSeminar();
+                    case "project" -> page.getProject();
                     case "grading" -> page.getGrading();
                     default -> null;
                 };

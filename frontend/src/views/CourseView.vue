@@ -8,15 +8,11 @@ import RadarChart from '@/components/RadarChart.vue'
 import ReportButton from '@/components/ReportButton.vue'
 import CommentList from '@/components/CommentList.vue'
 import RateInvite from '@/components/RateInvite.vue'
-import { ApiError, api, describeError, lookups, type Lookups } from '@/api'
+import { ApiError, api, describeError, lookups, type Lookups, type Radar } from '@/api'
+import { radarFor } from '@/professors'
 import { showNotFound } from '@/router'
 import { useAuthStore } from '@/stores/auth'
 import { localTokens } from '@/crypto/tokens'
-
-interface Radar {
-  n: number
-  scores: (number | null)[]
-}
 
 interface Text {
   id: string
@@ -29,6 +25,7 @@ interface Teacher {
   slug: string
   fullName: string
   title: string
+  component: string
   componentLabel: string
   subgroups: string | null
   radar: Radar | null
@@ -242,9 +239,9 @@ onMounted(async () => {
             </p>
             <RadarChart
               v-else-if="labels"
-              :scores="teacher.radar.scores"
-              :axes="labels.axes"
-              :pillars="labels.pillars"
+              v-bind="
+                radarFor(labels.axes, labels.pillars, teacher.radar.scores, teacher.component)
+              "
             />
             <CommentList :comments="teacher.comments ?? []" />
           </article>

@@ -198,10 +198,29 @@ SELECT key_hash, offering_id, sha256(convert_to('fx-key-' || offering_id, 'UTF8'
 FROM fx_submission;
 
 INSERT INTO anon.rating (key_hash, teaching_assignment_id, offering_id,
-                         a01, a02, a03, a04, a05, a06, a07, a08, a09, a10, a11, a12, a13, a14)
+                         a01, a02, a03, a04, a05, a06, a07, a08, a09, a10, a11, a12,
+                         a13, a14, a15, a16, a17, a18, a19, a20, a21, a22, a23, a24)
 SELECT s.key_hash, ta.id, s.offering_id, pg_temp.score(1), pg_temp.score(0.8), pg_temp.score(0.8), pg_temp.score(0.8),
-       pg_temp.score(0.8), pg_temp.score(0.8), pg_temp.score(0.8), pg_temp.score(0.8), pg_temp.score(0.8),
-       pg_temp.score(0.8), pg_temp.score(0.8), pg_temp.score(0.8), pg_temp.score(0.8), pg_temp.score(0.8)
+       CASE ta.component WHEN 'lecture' THEN pg_temp.score(0.8) END,
+       CASE ta.component WHEN 'lecture' THEN pg_temp.score(0.8) END,
+       CASE ta.component WHEN 'lecture' THEN pg_temp.score(0.8) END,
+       CASE ta.component WHEN 'lecture' THEN pg_temp.score(0.8) END,
+       CASE ta.component WHEN 'lecture' THEN pg_temp.score(0.8) END,
+       CASE ta.component WHEN 'lab' THEN pg_temp.score(0.8) END,
+       CASE ta.component WHEN 'lab' THEN pg_temp.score(0.8) END,
+       CASE ta.component WHEN 'lab' THEN pg_temp.score(0.8) END,
+       CASE ta.component WHEN 'lab' THEN pg_temp.score(0.8) END,
+       CASE ta.component WHEN 'lab' THEN pg_temp.score(0.8) END,
+       CASE ta.component WHEN 'lab' THEN pg_temp.score(0.8) END,
+       CASE ta.component WHEN 'seminar' THEN pg_temp.score(0.8) END,
+       CASE ta.component WHEN 'seminar' THEN pg_temp.score(0.8) END,
+       CASE ta.component WHEN 'seminar' THEN pg_temp.score(0.8) END,
+       CASE ta.component WHEN 'seminar' THEN pg_temp.score(0.8) END,
+       CASE ta.component WHEN 'project' THEN pg_temp.score(0.8) END,
+       CASE ta.component WHEN 'project' THEN pg_temp.score(0.8) END,
+       CASE ta.component WHEN 'project' THEN pg_temp.score(0.8) END,
+       CASE ta.component WHEN 'project' THEN pg_temp.score(0.8) END,
+       CASE ta.component WHEN 'project' THEN pg_temp.score(0.8) END
 FROM fx_submission s
 JOIN core.teaching_assignment ta ON ta.offering_id = s.offering_id AND (ta.subgroup_id IS NULL OR ta.subgroup_id = s.subgroup_id);
 

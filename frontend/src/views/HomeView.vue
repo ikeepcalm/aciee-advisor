@@ -39,7 +39,7 @@ const features = [
   },
 ]
 const steps = ['account', 'token', 'submit', 'recovery']
-const sampleScores = [8.4, 7.6, 9.1, 6.8, 7.9, 8.8, 6.2, 7.4, 9, 8.1, 6.9, 7.7, 8.6, 7.2]
+const sampleScores = [8.4, 7.6, 9.1, 6.8, 7.9, 8.8, 6.2, 7.4, 9]
 const sampleAxes = sampleScores.map((_, index) => ({ code: String(index), label: '', group: null }))
 const sampleStats = computed(() => [
   [t('rateForm.examDifficulty'), '6.8/10'],

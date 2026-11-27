@@ -10,6 +10,7 @@ import java.util.List;
 @Setter
 @NoArgsConstructor
 public class Radar {
+    private String component;
     private int n;
     private List<Double> scores;
 }

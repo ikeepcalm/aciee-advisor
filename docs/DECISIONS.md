@@ -32,6 +32,8 @@ Format: context → decision → consequences. Never rewrite an accepted ADR; su
 
 **Consequences.** Aggregation is a single scan, constraints are trivial, and NULL semantics come for free. Adding an axis means `ALTER TABLE ADD COLUMN`.
 
+**Update (027).** Each component now has its own criteria plus four shared grading ones: 24 columns, of which a rating fills only its component's and the shared ones. The pillar of an axis is its component code or `grading`. The radar is grouped per professor × subject × component, and each criterion needs k answers of its own, because quick mode leaves most criteria empty and the row's `n` would otherwise expose a single student's score. Old ratings kept the criteria that ask the same thing; the rest were dropped.
+
 ## ADR-004 — k = 5, pooled per professor × subject, refreshed nightly
 **Context.** Cohorts are 12–100 students. Showing results per group would rarely reach any threshold. Live aggregates let anyone recover a single rating by comparing the averages before and after it was added.
 

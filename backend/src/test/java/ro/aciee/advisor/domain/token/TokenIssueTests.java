@@ -42,6 +42,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.greaterThan;
+import static org.hamcrest.Matchers.nullValue;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.authentication;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
@@ -171,7 +172,7 @@ class TokenIssueTests {
         String msg = Base64.getEncoder().encodeToString(token.msg);
         String form = """
                 {"offeringId":%d,"fingerprint":"%s","msg":"%s","sig":"%%s","examDifficulty":6,"exam":["practical","theory"],
-                 "ratings":[{"teachingAssignmentId":%d,"scores":[7,null,null,null,null,null,null,null,null,null,null,null,null,9],"comment":""}],
+                 "ratings":[{"teachingAssignmentId":%d,"scores":[7,null,null,null,9,null,null,null,null,null,null,null,null,5,null,null,null,null,null,null,null,null,null,null],"comment":""}],
                  "tip":"%%s"}""".formatted(offeringId, Base64.getEncoder().encodeToString(fingerprint), msg, assignmentId);
         String goodSig = Base64.getEncoder().encodeToString(sig);
         byte[] badSig = sig.clone();
@@ -185,7 +186,8 @@ class TokenIssueTests {
         anon(get("/anon/offerings/" + offeringId)).andExpect(jsonPath("$.assignments[0].professor").value("Ion Popescu"));
         anon(get("/anon/submissions/" + offeringId).header("X-Token", msg))
                 .andExpect(jsonPath("$.exam[0]").value("practical"))
-                .andExpect(jsonPath("$.ratings[0].scores[13]").value(9))
+                .andExpect(jsonPath("$.ratings[0].scores[4]").value(9))
+                .andExpect(jsonPath("$.ratings[0].scores[13]").value(nullValue()))
                 .andExpect(jsonPath("$.posts[0].status").value("pending"));
 
         String postId = jdbc.sql("SELECT id::text FROM anon.post WHERE offering_id = :id AND kind = 'tip'")

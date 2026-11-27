@@ -39,10 +39,10 @@ class ReportTests {
         var unlocked = reportService.table(ReportType.RADAR, null, null, false);
         var all = reportService.table(ReportType.RADAR, null, null, true);
 
-        assertThat(unlocked.getColumns()).hasSize(18);
+        assertThat(unlocked.getColumns()).hasSize(29);
         assertThat(unlocked.getSections()).extracting("fromColumn", "toColumn")
-                .containsExactly(tuple(4, 8), tuple(8, 12), tuple(12, 18));
-        assertThat(unlocked.getRows()).isNotEmpty().allSatisfy(row -> assertThat((Long) row.get(3)).isGreaterThanOrEqualTo(5));
+                .containsExactly(tuple(5, 9), tuple(9, 14), tuple(14, 20), tuple(20, 24), tuple(24, 29));
+        assertThat(unlocked.getRows()).isNotEmpty().allSatisfy(row -> assertThat((Long) row.get(4)).isGreaterThanOrEqualTo(5));
         assertThat(all.getRows()).hasSizeGreaterThanOrEqualTo(unlocked.getRows().size());
     }
 

@@ -119,6 +119,12 @@ export interface PublicComment {
   week: string
 }
 
+export interface Radar {
+  component: string | null
+  n: number
+  scores: (number | null)[]
+}
+
 export interface ProfessorSubject {
   subjectId: number
   subjectName: string
@@ -126,7 +132,7 @@ export interface ProfessorSubject {
   components: string
   firstYear: number
   lastYear: number
-  radar: { n: number; scores: (number | null)[] } | null
+  radars: Radar[]
   comments: PublicComment[]
 }
 
@@ -138,14 +144,16 @@ export interface ProfessorPage {
   threshold: number
   ratings: number
   overall: number | null
-  teaching: number | null
-  practice: number | null
+  lecture: number | null
+  lab: number | null
+  seminar: number | null
+  project: number | null
   grading: number | null
   bioRo: string | null
   bioEn: string | null
   photo: string | null
   cvUrl: string | null
-  radar: { n: number; scores: (number | null)[] } | null
+  radar: Radar | null
   subjects: ProfessorSubject[]
 }
 

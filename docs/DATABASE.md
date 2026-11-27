@@ -48,7 +48,7 @@ A domain is a named type with its constraint attached, defined once and reused.
 
 | Domain | Base | Constraint | Used by |
 |---|---|---|---|
-| `score` | `smallint` | `0..10` | 14 rating axes, survival scales |
+| `score` | `smallint` | `0..10` | 24 rating axes, survival scales |
 | `sha256` | `bytea` | `octet_length = 32` | `key_hash`, token and key fingerprints |
 | `week_start` | `date` | `extract(isodow) = 1` | every coarse date in `anon` and on issuance |
 
@@ -120,7 +120,7 @@ Changing a domain's CHECK re-validates every column that uses it (3M rows for `s
 |---|---|---|---|
 | `offering_key` | `fingerprint sha256` | `offering_id`, `public_key bytea`, `active boolean` | `UNIQUE (offering_id) WHERE active`: one active key per offering, so a key can be rotated. |
 | `submission` | `key_hash sha256` | `offering_id`, `key_fingerprint` → `offering_key`, survival columns (`exam_difficulty score`, `labs_help score`, `attendance_useful`, `weekly_hours`, `exam text[]` (codes from `ref.exam_option`, checked), `attendance_strictness score`); UQ(`key_hash`, `offering_id`) | One per token (ADR-011). All tokens of an offering share a key, so `key_fingerprint` reveals nothing new. |
-| `rating` | (`key_hash`, `teaching_assignment_id`) | pinned `offering_id`, `a01..a14 score` | FK (`key_hash`, `offering_id`) → `submission` `ON DELETE CASCADE`. FK (`offering_id`, `teaching_assignment_id`) → `teaching_assignment`: a token can rate only its own offering's teachers. `CHECK (num_nonnulls(a01..a14) >= 1)` |
+| `rating` | (`key_hash`, `teaching_assignment_id`) | pinned `offering_id`, `a01..a24 score` (only the shared a01..a04 and the assignment's component are filled) | FK (`key_hash`, `offering_id`) → `submission` `ON DELETE CASCADE`. FK (`offering_id`, `teaching_assignment_id`) → `teaching_assignment`: a token can rate only its own offering's teachers. `CHECK (num_nonnulls(a01..a24) >= 1)` |
 | `post` | `id uuid` (v4) | `key_hash`, pinned `offering_id`, `kind`, `teaching_assignment_id` NULL; UQ(`id`, `kind`); UQ(`key_hash`, `teaching_assignment_id`) | Course tips and teaching comments in one table. FK (`key_hash`, `offering_id`) → `submission` `ON DELETE CASCADE`. FK (`offering_id`, `teaching_assignment_id`) → `teaching_assignment`, as on `rating`. `CHECK ((kind = 'comment') = (teaching_assignment_id IS NOT NULL))`. At most one tip per submission (partial UQ on `key_hash WHERE kind = 'tip'`) and one comment per assignment per token. |
 | `post_version` | (`post_id`, `version_no`) | pinned `kind`, `body`, `status`, `reason_code` NULL, `submitted_week`, `moderated_week` | Cascades from `post`. Each edit adds a version. The length CHECK depends on `kind` (1,000 / 280). `CHECK ((status = 'rejected') = (reason_code IS NOT NULL))` |
 | `post_report` | `id uuid` (v4) | `post_id`, `reason_code`, `reported_week`, `status CHECK IN ('open','dismissed','upheld')` | Cascades from `post`. No reporter id: `anon` holds no account ids. |
@@ -181,7 +181,7 @@ erDiagram
 
 ## 4. Normal forms
 
-**1NF.** Every column is atomic and there are no repeating groups. The 14 axes are 14 *different* attributes with their own meaning, not one attribute repeated (ADR-003). Validity ranges are single range values, not two loose dates.
+**1NF.** Every column is atomic and there are no repeating groups. The 24 axes are 24 *different* attributes with their own meaning, not one attribute repeated (ADR-003). Validity ranges are single range values, not two loose dates.
 
 **2NF.** Composite keys were checked for partial dependencies. For example, in `rating(key_hash, teaching_assignment_id)` every axis depends on the pair: the same student rates two teachers differently.
 
@@ -296,7 +296,7 @@ PostgreSQL does not index foreign keys automatically. Each FK below is either in
 
 - `anon.rating_v` is a plain view over `rating` joined to its assignment and root subject. Both materialised views read it, so adding an axis changes one view.
 - **Root subject** is resolved once, in the view `core.subject_root_v(subject_id, root_id)`: `WITH RECURSIVE` walks each subject up its `replaced_by_id` chain with `CYCLE current_id SET is_cycle USING path`. A subject merged twice still pools, and a replacement cycle ends the recursion instead of hanging the refresh; subjects on a cycle have no root and drop out of the aggregates until the data is fixed.
-- `anon.prof_subject_radar`: every (`professor_id`, root subject) pair with `n = count(DISTINCT key_hash)`. Not `count(*)`: one submission rates a professor once per assignment, so a professor teaching both the lecture and the lab would reach k with fewer than k students. The 14 averages are `CASE WHEN n >= k THEN round(avg, 1) END`, with `k` from `ref.setting`. The UI shows "locked — `k - n` more ratings needed" from the same row. Unique index on (`professor_id`, `subject_id`).
+- `anon.prof_subject_radar`: every (`professor_id`, root subject, `component`) with `n = count(DISTINCT key_hash)`. Not `count(*)`: a student in two subgroups' history could rate the same professor twice. Each of the 24 averages is `CASE WHEN count(DISTINCT key_hash) FILTER (WHERE aNN IS NOT NULL) >= k THEN round(avg, 1) END`, with `k` from `ref.setting`, so a criterion few students answered stays hidden even when the row's `n` reaches k. The UI shows "locked — `k - n` more ratings needed" from the same row. Unique index on (`professor_id`, `subject_id`, `component`). A comment is published only when its own component's row reaches k.
 - `anon.course_survival`: per root subject, the same rule.
 - `anon.refresh_aggregates()` refreshes both with `REFRESH MATERIALIZED VIEW CONCURRENTLY` nightly, so readers are never blocked.
 - Known limit: a student who repeats a course rates it once per offering and counts twice towards k.

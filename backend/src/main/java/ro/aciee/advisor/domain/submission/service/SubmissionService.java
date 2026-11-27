@@ -23,6 +23,8 @@ import java.security.spec.X509EncodedKeySpec;
 import java.sql.Types;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -31,7 +33,7 @@ import java.util.stream.IntStream;
 @RequiredArgsConstructor
 public class SubmissionService {
 
-    private static final List<String> AXES = IntStream.rangeClosed(1, 14).mapToObj("a%02d"::formatted).toList();
+    private static final List<String> AXES = IntStream.rangeClosed(1, 24).mapToObj("a%02d"::formatted).toList();
 
     private final JdbcClient jdbc;
 
@@ -169,6 +171,7 @@ public class SubmissionService {
     }
 
     private void writeDetails(byte[] keyHash, int offeringId, SubmissionBody body) {
+        keepOwnCriteria(offeringId, body.getRatings());
         var columns = String.join(", ", AXES);
         var values = AXES.stream().map(axis -> ":" + axis).collect(Collectors.joining(", "));
         for (var rating : body.getRatings().stream().filter(TeacherRating::scored).toList()) {
@@ -184,6 +187,22 @@ public class SubmissionService {
         }
         writePost(keyHash, offeringId, null, body.getTip());
         body.getRatings().forEach(rating -> writePost(keyHash, offeringId, rating.getTeachingAssignmentId(), rating.getComment()));
+    }
+
+    private void keepOwnCriteria(int offeringId, List<TeacherRating> ratings) {
+        Map<Integer, String> components = jdbc.sql("SELECT id, component FROM core.teaching_assignment WHERE offering_id = :offering")
+                .param("offering", offeringId)
+                .query((rs, row) -> Map.entry(rs.getInt("id"), rs.getString("component")))
+                .list()
+                .stream()
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+        List<String> pillars = jdbc.sql("SELECT pillar_code FROM ref.axis ORDER BY code").query(String.class).list();
+        for (var rating : ratings) {
+            String component = components.get(rating.getTeachingAssignmentId());
+            rating.setScores(IntStream.range(0, AXES.size())
+                    .mapToObj(i -> pillars.get(i).equals("grading") || pillars.get(i).equals(component) ? rating.getScores().get(i) : null)
+                    .toList());
+        }
     }
 
     private void writePost(byte[] keyHash, int offeringId, Integer assignmentId, String text) {

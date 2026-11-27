@@ -16,6 +16,6 @@ public class ProfessorSubject {
     private String components;
     private int firstYear;
     private int lastYear;
-    private Radar radar;
+    private List<Radar> radars;
     private List<PublishedText> comments;
 }

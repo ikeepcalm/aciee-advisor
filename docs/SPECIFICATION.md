@@ -23,29 +23,31 @@ Students sign up with a `@student.ugal.ro` address (password + emailed code, or 
 
 ## 3. Evaluation model
 
-Each teaching assignment (a professor teaching one component — lecture, lab, seminar or project — of a course) is rated on 14 axes, scored 0–10. An axis the student did not experience is left empty (`NULL`).
+Each teaching assignment (a professor teaching one component — lecture, lab, seminar or project — of a course) is rated on the criteria of its component plus four shared grading criteria, each scored 0–10. A criterion the student did not experience is left empty (`NULL`). The four components work differently (a lecture is the professor presenting, a lab is students working while the professor checks and takes attendance, a seminar is solving problems together at the board, a project is work at home that the professor checks), so each asks its own questions. Quick mode asks the component's first criterion plus fair grading and respect.
 
-**Pillar 1 — Teaching, organisation and technology**
-1. Mastery of digital / remote learning platforms (*Stăpânirea platformelor digitale / online*)
-2. Modernity and industry relevance of technologies taught (*Actualitatea tehnologiilor predate*)
-3. Sufficiency and quality of asynchronous materials (*Calitatea suportului de curs și a materialelor asincrone*)
-4. Class organisation and structure (*Organizarea și structura orelor*)
+**Shared, every component — Notare și comunicare**
+1. Fair and clear grading (*Notare corectă și clară*)
+2. Rules that stay the same all semester (*Reguli stabile tot semestrul*)
+3. Grades visible during the semester (*Note vizibile pe parcurs*)
+4. Respectful and easy to reach (*Respectuos și ușor de contactat*)
 
-**Pillar 2 — Laboratories and practical work**
+**Curs (lecture)**
 
-5. Alignment of laboratories with theory (*Corelarea laboratoarelor cu teoria*)
-6. Clarity and convenience of lab check-ins (*Claritatea și confortul predării laboratoarelor*)
-7. Relevance of practical/project work (*Relevanța lucrărilor practice / proiectelor*)
-8. Convenience of practical/project defences (*Confortul predării lucrărilor practice / proiectelor*)
+5. Clear explanations · 6. Structure and pace · 7. Quality of course materials · 8. Up-to-date content · 9. Answers questions in class
 
-**Pillar 3 — Grading and communication**
+**Laborator (lab)**
 
-9. Transparency of the grading system (*Transparența sistemului de notare*)
-10. Fairness of the grading system (*Corectitudinea și relevanța sistemului de notare*)
-11. Stability of grading rules during the semester (*Stabilitatea regulilor de notare pe parcursul semestrului*)
-12. Accessibility and visibility of grades (*Accesibilitatea și vizibilitatea punctajelor pe parcurs*)
-13. Openness to communication and availability (*Deschiderea la comunicare și disponibilitatea*)
-14. Respectful treatment of students (*Atitudinea respectuoasă față de studenți*)
+10. Clear lab instructions · 11. Help during the lab · 12. Linked to what the course teaches · 13. Fair checking of lab work · 14. Enough time for the work set · 15. Clear attendance and make-up rules
+
+**Seminar**
+
+16. Problems useful for the exam · 17. Solutions explained well · 18. Encourages taking part; mistakes are fine · 19. Fair grading of seminar activity
+
+**Proiect (project)**
+
+20. Clear requirements and deadlines · 21. Useful, relevant topic · 22. Guidance and feedback along the way · 23. Fair final presentation and evaluation · 24. Realistic amount of work
+
+Romanian labels live in `ref.axis`. The server drops any score sent for a criterion outside the assignment's component.
 
 ### Publication rules
 - Results are aggregated per **professor × subject**, pooled across groups and semesters.

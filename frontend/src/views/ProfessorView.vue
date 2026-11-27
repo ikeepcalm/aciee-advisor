@@ -9,10 +9,18 @@ import CommentList from '@/components/CommentList.vue'
 import RateInvite from '@/components/RateInvite.vue'
 import ProfessorAvatar from '@/components/ProfessorAvatar.vue'
 import SegmentedChips from '@/components/SegmentedChips.vue'
-import { ApiError, api, describeError, lookups, type Lookups, type ProfessorPage } from '@/api'
+import {
+  ApiError,
+  api,
+  describeError,
+  lookups,
+  type Lookups,
+  type ProfessorPage,
+  type Radar,
+} from '@/api'
 import { showNotFound } from '@/router'
 import { useAuthStore } from '@/stores/auth'
-import { academicYear, pillarAverages } from '@/professors'
+import { academicYear, pillarAverages, radarFor } from '@/professors'
 
 const ALL = 'all'
 const { t, locale } = useI18n()
@@ -62,14 +70,23 @@ const bio = computed(() =>
 )
 
 const pillars = computed(() =>
-  (labels.value?.pillars ?? []).map((pillar) => ({
-    label: pillar.label,
-    value: page.value?.[pillar.code as 'teaching' | 'practice' | 'grading'] ?? null,
-  })),
+  (labels.value?.pillars ?? [])
+    .map((pillar) => ({
+      label: pillar.label,
+      value:
+        page.value?.[pillar.code as 'lecture' | 'lab' | 'seminar' | 'project' | 'grading'] ?? null,
+    }))
+    .filter((pillar) => pillar.value !== null),
 )
 
-function subjectPillars(scores: (number | null)[]) {
-  return pillarAverages(labels.value?.axes ?? [], labels.value?.pillars ?? [], scores)
+function subjectPillars(radar: Radar) {
+  const own = radarFor(
+    labels.value?.axes ?? [],
+    labels.value?.pillars ?? [],
+    radar.scores,
+    radar.component,
+  )
+  return pillarAverages(own.axes, own.pillars, own.scores)
 }
 
 const years = computed(() => {
@@ -190,12 +207,7 @@ const subjects = computed(() =>
               class="border-t border-line pt-4 lg:border-t-0 lg:border-l lg:pt-0 lg:pl-10"
             >
               <h3 class="eyebrow">{{ t('professor.radar') }}</h3>
-              <RadarChart
-                :scores="page.radar.scores"
-                :axes="labels.axes"
-                :pillars="[]"
-                :open="wide"
-              />
+              <RadarChart v-bind="radarFor(labels.axes, [], page.radar.scores)" :open="wide" />
             </div>
           </div>
           <template v-else>
@@ -249,19 +261,26 @@ const subjects = computed(() =>
             class="flex min-h-11 items-center font-semibold"
             >{{ subject.subjectName }}</RouterLink
           >
-          <p
-            v-if="!subject.radar || subject.radar.n < page.threshold"
-            class="text-sm text-muted italic"
-          >
-            {{ missing(subject.radar?.n ?? 0) }}
+          <p v-if="!subject.radars.length" class="text-sm text-muted italic">
+            {{ missing(0) }}
           </p>
-          <template v-else>
-            <p class="text-xs text-muted">
-              {{ t('course.ratingsCount', { n: subject.radar.n }) }}
-            </p>
-            <dl class="m-0 mt-2 text-sm">
+          <section v-for="radar in subject.radars" :key="radar.component ?? ''" class="mt-2">
+            <h3 class="flex flex-wrap items-baseline justify-between gap-x-3 text-sm font-semibold">
+              {{ t(`group.component.${radar.component}`) }}
+              <span
+                class="text-xs font-normal text-muted"
+                :class="{ italic: radar.n < page.threshold }"
+              >
+                {{
+                  radar.n < page.threshold
+                    ? missing(radar.n)
+                    : t('course.ratingsCount', { n: radar.n })
+                }}
+              </span>
+            </h3>
+            <dl v-if="radar.n >= page.threshold" class="m-0 mt-1 text-sm">
               <div
-                v-for="pillar in subjectPillars(subject.radar.scores)"
+                v-for="pillar in subjectPillars(radar)"
                 :key="pillar.label"
                 class="flex justify-between gap-4 border-t border-line py-1.5"
               >
@@ -271,8 +290,12 @@ const subjects = computed(() =>
                 </dd>
               </div>
             </dl>
-            <CommentList :comments="subject.comments" :open="year !== ALL" />
-          </template>
+          </section>
+          <CommentList
+            v-if="subject.comments.length"
+            :comments="subject.comments"
+            :open="year !== ALL"
+          />
         </article>
       </div>
     </template>
