@@ -140,7 +140,8 @@ function pillarsFor(assignment: Assignment) {
 
 function quickAxesFor(assignment: Assignment) {
   const lead = indexedAxes.value.find((axis) => axis.group === assignment.component)
-  return indexedAxes.value.filter((axis) => axis === lead || quickGradingCodes.includes(axis.code))
+  const grading = indexedAxes.value.filter((axis) => quickGradingCodes.includes(axis.code))
+  return lead ? [lead, ...grading] : grading
 }
 
 const steps = computed(() => [

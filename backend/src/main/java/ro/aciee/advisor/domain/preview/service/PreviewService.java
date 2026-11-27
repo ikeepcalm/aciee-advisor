@@ -109,7 +109,9 @@ public class PreviewService {
         var metrics = new ArrayList<PreviewMetric>();
         if (page.getOverall() != null) {
             metrics.add(new PreviewMetric("Scor general", score(page.getOverall()), true));
-            for (Option pillar : catalogService.lookups().getPillars()) {
+            // the card draws four tiles, so the grading block that every professor shares goes before the class types
+            for (Option pillar : catalogService.lookups().getPillars().stream()
+                    .sorted(Comparator.comparing(pillar -> !pillar.getCode().equals("grading"))).toList()) {
                 Double average = switch (pillar.getCode()) {
                     case "lecture" -> page.getLecture();
                     case "lab" -> page.getLab();

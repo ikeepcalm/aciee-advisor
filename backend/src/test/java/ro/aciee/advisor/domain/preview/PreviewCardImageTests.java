@@ -120,13 +120,15 @@ class PreviewCardImageTests {
         page.setOverall(8.4);
         page.setLecture(8.9);
         page.setLab(7.6);
+        page.setSeminar(6.9);
+        page.setProject(7.2);
         page.setGrading(8.1);
         return page;
     }
 
     private Lookups lookups() {
         var lookups = new Lookups();
-        lookups.setPillars(Stream.of("lecture:Curs", "lab:Laborator", "grading:Notare").map(pair -> {
+        lookups.setPillars(Stream.of("lecture:Curs", "lab:Laborator", "seminar:Seminar", "project:Proiect", "grading:Notare și comunicare").map(pair -> {
             var option = new Option();
             option.setCode(pair.split(":")[0]);
             option.setLabel(pair.split(":")[1]);
