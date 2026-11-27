@@ -99,7 +99,7 @@ class PreviewCardImageTests {
         var survival = new Survival();
         survival.setN(23);
         survival.setExamDifficulty(6.84);
-        survival.setExamFormat("Scris");
+        survival.setExamForm("Scris 85%");
         survival.setWeeklyHours(4.5);
         survival.setAttendanceStrictness(7.2);
         var page = new CoursePage();

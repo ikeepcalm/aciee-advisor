@@ -85,7 +85,7 @@ public class CatalogService {
         var lookups = new Lookups();
         lookups.setAxes(options("SELECT code, label_ro AS label, pillar_code AS \"group\" FROM ref.axis ORDER BY code"));
         lookups.setPillars(options("SELECT code, label_ro AS label FROM ref.pillar ORDER BY no"));
-        lookups.setExamFormats(options("SELECT code, label_ro AS label FROM ref.exam_format ORDER BY label_ro"));
+        lookups.setExamOptions(options("SELECT code, label_ro AS label, kind AS \"group\" FROM ref.exam_option ORDER BY no"));
         lookups.setAttendance(options("SELECT code, label_ro AS label FROM ref.attendance_usefulness"));
         lookups.setReportReasons(options("SELECT code, label_ro AS label FROM ref.report_reason"));
         lookups.setModerationReasons(options("SELECT code, label_ro AS label FROM ref.moderation_reason"));
@@ -178,10 +178,9 @@ public class CatalogService {
         });
         page.setSurvival(jdbc.sql("""
                         SELECT cs.n, cs.exam_difficulty, cs.labs_help, cs.attendance_strictness, cs.weekly_hours,
-                               au.label_ro AS attendance_useful, ef.label_ro AS exam_format
+                               au.label_ro AS attendance_useful, cs.exam_form, cs.exam_content
                         FROM anon.course_survival cs
                         LEFT JOIN ref.attendance_usefulness au ON au.code = cs.attendance_useful
-                        LEFT JOIN ref.exam_format ef ON ef.code = cs.exam_format
                         WHERE cs.subject_id = :root""")
                 .param("root", root)
                 .query(Survival.class)

@@ -483,12 +483,12 @@ Before the list loads, the client needs a master secret in IndexedDB. Without on
 
 **Data read**
 - Assignments of the offering (Q3), via `/anon/offerings/:id/assignments` so the fetch carries no session. Subgroup labels let the student expand the teachers they actually had; the rest stay collapsed and unrated.
-- Labels: `ref.axis`, `ref.pillar`, `ref.exam_format`, `ref.attendance_usefulness`.
+- Labels: `ref.axis`, `ref.pillar`, `ref.exam_option`, `ref.attendance_usefulness`.
 
 **Validation** (client, then the database CHECKs on redeem)
 - Axes: 0–10 or empty (`score` domain). An untouched axis is sent as `NULL` ("N/A").
 - A teacher is included only if at least one axis is set (`CHECK (num_nonnulls(a01..a14) >= 1)`).
-- Survival fields: scales 0–10, weekly hours a non-negative number, exam format and attendance from their lookup tables. All optional.
+- Survival fields: scales 0–10, weekly hours a non-negative number, exam options (any number, grouped by how it is given and what it covers) and attendance from their lookup tables. All optional.
 - Comment ≤ 280 characters, tip ≤ 1,000 (CHECK on `post_version`). At most one tip and one comment per teacher.
 - Under the comment box: "Scrie despre cum se predă, nu despre persoană. Fără nume, date personale sau acuzații."
 

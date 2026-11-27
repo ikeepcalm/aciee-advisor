@@ -178,6 +178,29 @@ class SchemaTests {
         assertThat(radar().get("a01").toString()).isEqualTo("7.0");
     }
 
+    @Test
+    void examSharesCountOnlyStudentsWhoAnsweredAndStayLockedBelowK() {
+        for (String exam : List.of("{written,theory}", "{written,oral,theory}", "{written}", "{oral}")) {
+            jdbc.sql("UPDATE anon.submission SET exam = CAST(:exam AS text[]) WHERE key_hash = :hash")
+                    .param("exam", exam).param("hash", submission()).update();
+        }
+        submission();
+        refresh();
+        assertThat(survival()).containsEntry("exam_form", null);
+
+        jdbc.sql("UPDATE anon.submission SET exam = '{written,problems}' WHERE key_hash = :hash").param("hash", submission()).update();
+        refresh();
+        assertThat(survival())
+                .containsEntry("exam_form", "Scris 80% · Oral 40%")
+                .containsEntry("exam_content", null);
+        assertThatThrownBy(() -> jdbc.sql("UPDATE anon.submission SET exam = '{essay}'").update())
+                .isInstanceOf(DataIntegrityViolationException.class);
+    }
+
+    private Map<String, Object> survival() {
+        return jdbc.sql("SELECT exam_form, exam_content FROM anon.course_survival").query().singleRow();
+    }
+
     private Map<String, Object> radar() {
         return jdbc.sql("SELECT n, a01 FROM anon.prof_subject_radar").query().singleRow();
     }

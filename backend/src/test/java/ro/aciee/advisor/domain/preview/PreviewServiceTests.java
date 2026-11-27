@@ -66,13 +66,13 @@ class PreviewServiceTests {
         var survival = new Survival();
         survival.setN(23);
         survival.setExamDifficulty(6.84);
-        survival.setExamFormat("Scris");
+        survival.setExamForm("Scris 85%");
         page.setSurvival(survival);
         when(catalog.course(12, null)).thenReturn(page);
 
         var card = previews.cardForPath("/courses/12");
 
-        assertThat(card.description()).isEqualTo("Dificultate examen: 6.8/10 · Format examen: Scris · 23 evaluări");
+        assertThat(card.description()).isEqualTo("Dificultate examen: 6.8/10 · Format examen: Scris 85% · 23 evaluări");
     }
 
     @Test

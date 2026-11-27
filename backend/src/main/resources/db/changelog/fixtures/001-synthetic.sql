@@ -190,10 +190,11 @@ JOIN core.course_offering o ON o.group_id = g.id
 WHERE random() < 0.75;
 
 INSERT INTO anon.submission (key_hash, offering_id, key_fingerprint, exam_difficulty, labs_help, attendance_useful,
-                             weekly_hours, exam_format, attendance_strictness)
+                             weekly_hours, exam, attendance_strictness)
 SELECT key_hash, offering_id, sha256(convert_to('fx-key-' || offering_id, 'UTF8')), pg_temp.score(0.9), pg_temp.score(0.9),
        (ARRAY['yes', 'partly', 'no'])[1 + floor(random() * 3)::int], floor(random() * 16)::smallint,
-       (ARRAY['theory', 'practical', 'oral', 'mixed'])[1 + floor(random() * 4)::int], pg_temp.score(0.9)
+       (ARRAY['{written,theory}', '{written,problems}', '{oral,theory}', '{practical}', '{test,theory,problems}'])[1 + floor(random() * 5)::int]::text[],
+       pg_temp.score(0.9)
 FROM fx_submission;
 
 INSERT INTO anon.rating (key_hash, teaching_assignment_id, offering_id,

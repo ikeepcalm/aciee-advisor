@@ -79,9 +79,9 @@ public class SubmissionService {
         byte[] keyHash = sha256(body.getMsg());
         int inserted = jdbc.sql("""
                         INSERT INTO anon.submission (key_hash, offering_id, key_fingerprint, exam_difficulty, labs_help,
-                                                     attendance_useful, weekly_hours, exam_format, attendance_strictness)
+                                                     attendance_useful, weekly_hours, exam, attendance_strictness)
                         VALUES (:keyHash, :offering, :fingerprint, :examDifficulty, :labsHelp, :attendanceUseful, :weeklyHours,
-                                :examFormat, :attendanceStrictness)
+                                :exam, :attendanceStrictness)
                         ON CONFLICT (key_hash) DO NOTHING""")
                 .paramSource(survival(body)
                         .addValue("keyHash", keyHash)
@@ -100,7 +100,7 @@ public class SubmissionService {
         int updated = jdbc.sql("""
                         UPDATE anon.submission
                         SET exam_difficulty = :examDifficulty, labs_help = :labsHelp, attendance_useful = :attendanceUseful,
-                            weekly_hours = :weeklyHours, exam_format = :examFormat, attendance_strictness = :attendanceStrictness
+                            weekly_hours = :weeklyHours, exam = :exam, attendance_strictness = :attendanceStrictness
                         WHERE key_hash = :keyHash AND offering_id = :offering""")
                 .paramSource(survival(body).addValue("keyHash", keyHash).addValue("offering", offeringId))
                 .update();
@@ -126,13 +126,18 @@ public class SubmissionService {
     public Submission find(int offeringId, byte[] msg) {
         byte[] keyHash = sha256(msg);
         var submission = jdbc.sql("""
-                        SELECT offering_id, exam_difficulty, labs_help, attendance_strictness, attendance_useful, exam_format, weekly_hours
+                        SELECT offering_id, exam_difficulty, labs_help, attendance_strictness, attendance_useful, weekly_hours
                         FROM anon.submission WHERE key_hash = :keyHash AND offering_id = :offering""")
                 .param("keyHash", keyHash)
                 .param("offering", offeringId)
                 .query(Submission.class)
                 .optional()
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "submission_not_found"));
+        submission.setExam(jdbc.sql("SELECT unnest(exam) FROM anon.submission WHERE key_hash = :keyHash AND offering_id = :offering")
+                .param("keyHash", keyHash)
+                .param("offering", offeringId)
+                .query(String.class)
+                .list());
         submission.setRatings(jdbc.sql("SELECT teaching_assignment_id, ARRAY[%s]::smallint[] AS scores FROM anon.rating WHERE key_hash = :keyHash"
                         .formatted(String.join(", ", AXES)))
                 .param("keyHash", keyHash)
@@ -220,7 +225,8 @@ public class SubmissionService {
                 .addValue("labsHelp", body.getLabsHelp(), Types.SMALLINT)
                 .addValue("attendanceUseful", body.getAttendanceUseful(), Types.VARCHAR)
                 .addValue("weeklyHours", body.getWeeklyHours(), Types.SMALLINT)
-                .addValue("examFormat", body.getExamFormat(), Types.VARCHAR)
+                .addValue("exam", body.getExam() == null || body.getExam().isEmpty() ? null
+                        : body.getExam().stream().distinct().toArray(String[]::new), Types.ARRAY)
                 .addValue("attendanceStrictness", body.getAttendanceStrictness(), Types.SMALLINT);
     }
 

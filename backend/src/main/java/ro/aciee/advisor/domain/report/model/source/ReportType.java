@@ -20,8 +20,8 @@ public enum ReportType {
               AND (:locked OR n >= (SELECT k_threshold FROM ref.setting))
             ORDER BY professor, subject"""),
     SURVIVAL("Supraviețuire pe disciplină", List.of("Disciplină", "n", "Dificultatea examenului", "Cât ajută laboratoarele",
-            "Strictețea prezenței", "Ore pe săptămână", "Prezența la curs e utilă", "Forma examenului"), false, """
-            SELECT subject, n, exam_difficulty, labs_help, attendance_strictness, weekly_hours, attendance_useful, exam_format
+            "Strictețea prezenței", "Ore pe săptămână", "Prezența la curs e utilă", "Forma examenului", "Conținutul examenului"), false, """
+            SELECT subject, n, exam_difficulty, labs_help, attendance_strictness, weekly_hours, attendance_useful, exam_form, exam_content
             FROM report.course_survival
             WHERE (CAST(:specialization AS integer) IS NULL OR :specialization = ANY (specialization_ids))
               AND (:locked OR n >= (SELECT k_threshold FROM ref.setting))

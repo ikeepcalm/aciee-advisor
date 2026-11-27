@@ -15,7 +15,7 @@ public class Submission {
     private Integer labsHelp;
     private Integer attendanceStrictness;
     private String attendanceUseful;
-    private String examFormat;
+    private List<String> exam;
     private Integer weeklyHours;
     private List<TeacherRating> ratings;
     private List<PostState> posts;

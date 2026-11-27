@@ -56,7 +56,7 @@ Changing a domain's CHECK re-validates every column that uses it (3M rows for `s
 
 ### 3.2 Lookup tables vs CHECK
 
-- **Lookup table in `ref`** (text natural key, so reading a row needs no join): when the value has a UI label or the set can grow. Examples: `component`, `academic_title`, `exam_format`, `attendance_usefulness`, `moderation_reason`, `report_reason`, `pillar`, `axis`, `app_role`, `membership_kind`.
+- **Lookup table in `ref`** (text natural key, so reading a row needs no join): when the value has a UI label or the set can grow. Examples: `component`, `academic_title`, `exam_option`, `attendance_usefulness`, `moderation_reason`, `report_reason`, `pillar`, `axis`, `app_role`, `membership_kind`.
 - **CHECK**: when the set is closed and code branches on it. Examples: `degree IN ('BSc','MSc')`, `semester.no IN (1,2)`, every `status` column.
 - **Never PostgreSQL `ENUM`**: values cannot be removed or reordered without rewriting the type.
 - `ref.setting` is a one-row table (`CHECK (id = 1)`) holding values the views read, starting with `k_threshold = 5`.
@@ -119,7 +119,7 @@ Changing a domain's CHECK re-validates every column that uses it (3M rows for `s
 | Table | Key | Columns | Notes |
 |---|---|---|---|
 | `offering_key` | `fingerprint sha256` | `offering_id`, `public_key bytea`, `active boolean` | `UNIQUE (offering_id) WHERE active`: one active key per offering, so a key can be rotated. |
-| `submission` | `key_hash sha256` | `offering_id`, `key_fingerprint` → `offering_key`, survival columns (`exam_difficulty score`, `labs_help score`, `attendance_useful`, `weekly_hours`, `exam_format`, `attendance_strictness score`); UQ(`key_hash`, `offering_id`) | One per token (ADR-011). All tokens of an offering share a key, so `key_fingerprint` reveals nothing new. |
+| `submission` | `key_hash sha256` | `offering_id`, `key_fingerprint` → `offering_key`, survival columns (`exam_difficulty score`, `labs_help score`, `attendance_useful`, `weekly_hours`, `exam text[]` (codes from `ref.exam_option`, checked), `attendance_strictness score`); UQ(`key_hash`, `offering_id`) | One per token (ADR-011). All tokens of an offering share a key, so `key_fingerprint` reveals nothing new. |
 | `rating` | (`key_hash`, `teaching_assignment_id`) | pinned `offering_id`, `a01..a14 score` | FK (`key_hash`, `offering_id`) → `submission` `ON DELETE CASCADE`. FK (`offering_id`, `teaching_assignment_id`) → `teaching_assignment`: a token can rate only its own offering's teachers. `CHECK (num_nonnulls(a01..a14) >= 1)` |
 | `post` | `id uuid` (v4) | `key_hash`, pinned `offering_id`, `kind`, `teaching_assignment_id` NULL; UQ(`id`, `kind`); UQ(`key_hash`, `teaching_assignment_id`) | Course tips and teaching comments in one table. FK (`key_hash`, `offering_id`) → `submission` `ON DELETE CASCADE`. FK (`offering_id`, `teaching_assignment_id`) → `teaching_assignment`, as on `rating`. `CHECK ((kind = 'comment') = (teaching_assignment_id IS NOT NULL))`. At most one tip per submission (partial UQ on `key_hash WHERE kind = 'tip'`) and one comment per assignment per token. |
 | `post_version` | (`post_id`, `version_no`) | pinned `kind`, `body`, `status`, `reason_code` NULL, `submitted_week`, `moderated_week` | Cascades from `post`. Each edit adds a version. The length CHECK depends on `kind` (1,000 / 280). `CHECK ((status = 'rejected') = (reason_code IS NOT NULL))` |

@@ -170,7 +170,7 @@ class TokenIssueTests {
                 .param("id", offeringId).query(byte[].class).single();
         String msg = Base64.getEncoder().encodeToString(token.msg);
         String form = """
-                {"offeringId":%d,"fingerprint":"%s","msg":"%s","sig":"%%s","examDifficulty":6,"examFormat":"practical",
+                {"offeringId":%d,"fingerprint":"%s","msg":"%s","sig":"%%s","examDifficulty":6,"exam":["practical","theory"],
                  "ratings":[{"teachingAssignmentId":%d,"scores":[7,null,null,null,null,null,null,null,null,null,null,null,null,9],"comment":""}],
                  "tip":"%%s"}""".formatted(offeringId, Base64.getEncoder().encodeToString(fingerprint), msg, assignmentId);
         String goodSig = Base64.getEncoder().encodeToString(sig);
@@ -184,7 +184,7 @@ class TokenIssueTests {
                 .andExpect(jsonPath("$.detail").value("already_submitted"));
         anon(get("/anon/offerings/" + offeringId)).andExpect(jsonPath("$.assignments[0].professor").value("Ion Popescu"));
         anon(get("/anon/submissions/" + offeringId).header("X-Token", msg))
-                .andExpect(jsonPath("$.examFormat").value("practical"))
+                .andExpect(jsonPath("$.exam[0]").value("practical"))
                 .andExpect(jsonPath("$.ratings[0].scores[13]").value(9))
                 .andExpect(jsonPath("$.posts[0].status").value("pending"));
 

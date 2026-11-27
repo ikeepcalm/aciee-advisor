@@ -83,8 +83,8 @@ public class PreviewService {
         Survival survival = page.getSurvival();
         if (survival != null && survival.getExamDifficulty() != null) {
             metrics.add(new PreviewMetric("Dificultate examen", score(survival.getExamDifficulty()), true));
-            if (survival.getExamFormat() != null) {
-                metrics.add(new PreviewMetric("Format examen", survival.getExamFormat(), false));
+            if (survival.getExamForm() != null) {
+                metrics.add(new PreviewMetric("Format examen", survival.getExamForm().split(" · ")[0], false));
             }
             if (survival.getWeeklyHours() != null) {
                 metrics.add(new PreviewMetric("Ore pe săptămână", number(survival.getWeeklyHours()), false));

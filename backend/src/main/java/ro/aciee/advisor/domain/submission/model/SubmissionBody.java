@@ -29,7 +29,8 @@ public class SubmissionBody {
     @Max(10)
     private Integer attendanceStrictness;
     private String attendanceUseful;
-    private String examFormat;
+    @Size(max = 7)
+    private List<String> exam;
     @Min(0)
     @Max(80)
     private Integer weeklyHours;

@@ -12,7 +12,7 @@ import java.util.List;
 public class Lookups {
     private List<Option> axes;
     private List<Option> pillars;
-    private List<Option> examFormats;
+    private List<Option> examOptions;
     private List<Option> attendance;
     private List<Option> reportReasons;
     private List<Option> moderationReasons;

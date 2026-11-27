@@ -63,7 +63,7 @@ export interface Option {
 export interface Lookups {
   axes: Option[]
   pillars: Option[]
-  examFormats: Option[]
+  examOptions: Option[]
   attendance: Option[]
   reportReasons: Option[]
   moderationReasons: Option[]

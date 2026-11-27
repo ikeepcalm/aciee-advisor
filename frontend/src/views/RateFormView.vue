@@ -54,7 +54,7 @@ interface Existing {
   labsHelp: number | null
   attendanceStrictness: number | null
   attendanceUseful: string | null
-  examFormat: string | null
+  exam: string[]
   weeklyHours: number | null
   ratings: { teachingAssignmentId: number; scores: (number | null)[] }[]
   posts: { kind: string; teachingAssignmentId: number | null; body: string }[]
@@ -79,7 +79,7 @@ const survival = reactive({
   labsHelp: null as number | null,
   attendanceStrictness: null as number | null,
   attendanceUseful: null as string | null,
-  examFormat: null as string | null,
+  exam: [] as string[],
   weeklyHours: null as number | null,
 })
 const scores = reactive<Record<number, (number | null)[]>>({})
@@ -116,8 +116,12 @@ const yesNo = computed(() => [
 const attendanceOptions = computed(() =>
   (labels.value?.attendance ?? []).map((o) => ({ value: o.code, label: o.label })),
 )
-const examFormatOptions = computed(() =>
-  (labels.value?.examFormats ?? []).map((o) => ({ value: o.code, label: o.label })),
+const examGroups = computed(() =>
+  (['form', 'content'] as const).map((kind) => ({
+    kind,
+    label: t(kind === 'form' ? 'rateForm.examForm' : 'rateForm.examContent'),
+    options: (labels.value?.examOptions ?? []).filter((o) => o.group === kind),
+  })),
 )
 
 const indexedAxes = computed(() =>
@@ -273,7 +277,7 @@ function prefill(existing: Existing) {
     labsHelp: existing.labsHelp,
     attendanceStrictness: existing.attendanceStrictness,
     attendanceUseful: existing.attendanceUseful,
-    examFormat: existing.examFormat,
+    exam: existing.exam,
     weeklyHours: existing.weeklyHours,
   })
   for (const rating of existing.ratings) {
@@ -470,17 +474,26 @@ async function submit() {
                 size="sm"
               />
             </div>
-            <div :class="rowClass">
-              <span :id="`${fieldId}-examFormat`" class="text-sm font-medium">{{
-                t('rateForm.examFormat')
-              }}</span>
-              <SegmentedChips
-                v-model="survival.examFormat"
-                :options="examFormatOptions"
-                :null-label="t('rateForm.dontKnow')"
-                :aria-labelledby="`${fieldId}-examFormat`"
-                size="sm"
-              />
+            <div v-for="group in examGroups" :key="group.kind" :class="rowClass">
+              <span :id="`${fieldId}-exam-${group.kind}`" :class="hintedLabel">
+                {{ group.label }}
+                <span class="text-xs font-normal text-muted">{{ t('rateForm.pickAny') }}</span>
+              </span>
+              <div
+                class="flex flex-wrap gap-1.5"
+                role="group"
+                :aria-labelledby="`${fieldId}-exam-${group.kind}`"
+              >
+                <label
+                  v-for="o in group.options"
+                  :key="o.code"
+                  class="chip min-w-11 px-3 text-xs has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-copper"
+                  :class="{ 'chip-on': survival.exam.includes(o.code) }"
+                >
+                  <input v-model="survival.exam" type="checkbox" class="sr-only" :value="o.code" />
+                  {{ o.label }}
+                </label>
+              </div>
             </div>
             <div :class="rowClass">
               <span :id="`${fieldId}-labsHelp`" :class="hintedLabel">

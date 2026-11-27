@@ -14,5 +14,6 @@ public class Survival {
     private Double attendanceStrictness;
     private Double weeklyHours;
     private String attendanceUseful;
-    private String examFormat;
+    private String examForm;
+    private String examContent;
 }

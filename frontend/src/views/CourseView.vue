@@ -42,7 +42,8 @@ interface Survival {
   attendanceStrictness: number | null
   weeklyHours: number | null
   attendanceUseful: string | null
-  examFormat: string | null
+  examForm: string | null
+  examContent: string | null
 }
 
 interface CoursePage {
@@ -103,7 +104,8 @@ const stats = computed(() => {
     [t('rateForm.attendanceStrictness'), score(s.attendanceStrictness)],
     [t('rateForm.weeklyHours'), s.weeklyHours?.toFixed(1) ?? '—'],
     [t('rateForm.attendanceUseful'), s.attendanceUseful ?? '—'],
-    [t('rateForm.examFormat'), s.examFormat ?? '—'],
+    [t('rateForm.examForm'), s.examForm ?? '—'],
+    [t('rateForm.examContent'), s.examContent ?? '—'],
   ]
 })
 

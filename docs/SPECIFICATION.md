@@ -72,7 +72,7 @@ Collected with each rating submission and shown on the course page:
 - How much the labs help with the exam (0–10).
 - Whether lecture attendance is useful (yes / partly / no).
 - Weekly workload in hours.
-- Exam format: theory / practical / oral / mixed.
+- How the exam is given, tick any: written / multiple-choice test / oral / practical (at the computer) / project defence. What it covers, tick any: theory / problems. The course page shows the share of students who ticked each option.
 - Attendance strictness (0–10).
 
 ## 6. Views
